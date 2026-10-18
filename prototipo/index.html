@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lotofácil — Protótipo</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="barra-app">
+    <button class="botao-icone" id="botao-menu" aria-label="Abrir ou fechar menu" data-icone="menu"></button>
+    <span class="barra-app-titulo">Lotofácil</span>
+    <span class="etiqueta-prototipo">protótipo · dados fictícios</span>
+    <span class="espaco"></span>
+    <span class="barra-app-info">Base local: concurso 3807 · 17/10/2026</span>
+</header>
+
+<div class="layout">
+    <nav class="menu-lateral">
+        <a href="#painel" data-icone="painel">Painel</a>
+        <a href="#resultados" data-icone="historico">Resultados</a>
+        <a href="#estatisticas" data-icone="grafico">Estatísticas</a>
+        <a href="#gerar" data-icone="dado">Gerar jogos</a>
+        <a href="#meus-jogos" data-icone="conferir">Meus jogos</a>
+        <a href="#configuracoes" data-icone="engrenagem">Configurações</a>
+        <div class="rodape-menu">Executando em localhost<br>Banco: lotofacil.db</div>
+    </nav>
+
+    <main class="conteudo">
+
+        <!-- ==================== PAINEL ==================== -->
+        <section id="pagina-painel" class="pagina">
+            <div class="cabecalho-pagina">
+                <div>
+                    <h1>Painel</h1>
+                    <p class="subtitulo">Resumo da base local e dos seus jogos</p>
+                </div>
+                <button class="botao botao-primario" id="botao-atualizar"><span data-icone="atualizar"></span>Atualizar resultados</button>
+            </div>
+
+            <div class="card bloco oculto" id="progresso-atualizacao">
+                <div class="linha-progresso-texto">
+                    <span>Buscando concursos na fonte oficial da Caixa…</span>
+                    <span id="progresso-texto"></span>
+                </div>
+                <div class="barra-progresso"><div class="barra-progresso-valor" id="barra-progresso-valor"></div></div>
+            </div>
+
+            <div class="grade-indicadores">
+                <div class="card indicador">
+                    <div class="indicador-icone" data-icone="banco"></div>
+                    <div>
+                        <div class="indicador-rotulo">Concursos na base</div>
+                        <div class="indicador-valor">3.807</div>
+                        <div class="indicador-detalhe">Atualizado em 18/10/2026 09:12</div>
+                    </div>
+                </div>
+                <div class="card indicador">
+                    <div class="indicador-icone info" data-icone="calendario"></div>
+                    <div>
+                        <div class="indicador-rotulo">Próximo concurso</div>
+                        <div class="indicador-valor">3808</div>
+                        <div class="indicador-detalhe">seg, 19/10/2026 · estimativa R$ 1,8 mi</div>
+                    </div>
+                </div>
+                <div class="card indicador">
+                    <div class="indicador-icone aviso" data-icone="relogio"></div>
+                    <div>
+                        <div class="indicador-rotulo">Jogos aguardando</div>
+                        <div class="indicador-valor">10</div>
+                        <div class="indicador-detalhe">Concurso 3808</div>
+                    </div>
+                </div>
+                <div class="card indicador">
+                    <div class="indicador-icone sucesso" data-icone="trofeu"></div>
+                    <div>
+                        <div class="indicador-rotulo">Prêmios a receber</div>
+                        <div class="indicador-valor" id="painel-total-premios"></div>
+                        <div class="indicador-detalhe">Prazo: 90 dias após o sorteio</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grade-2">
+                <div class="card">
+                    <div class="card-cabecalho">
+                        <div>
+                            <h2>Último resultado · concurso 3807</h2>
+                            <p class="subtitulo">sábado, 17/10/2026 · arrecadação R$ 24.873.112,50</p>
+                        </div>
+                        <span class="chip sucesso">1 ganhador</span>
+                    </div>
+                    <div class="bolas grandes bloco" id="painel-ultimo-resultado"></div>
+                    <p class="texto-secundario">Ordem do sorteio: <span id="painel-ordem-sorteio"></span></p>
+                    <div class="tabela-rolagem">
+                        <table class="tabela">
+                            <thead><tr><th>Faixa</th><th class="numero">Ganhadores</th><th class="numero">Prêmio</th></tr></thead>
+                            <tbody id="painel-rateio"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="coluna">
+                    <div class="card">
+                        <div class="card-cabecalho">
+                            <h2>Destaques</h2>
+                            <a href="#estatisticas" class="botao">Estatísticas</a>
+                        </div>
+                        <div class="grade-rankings">
+                            <div>
+                                <h3 class="texto-secundario">Mais sorteadas</h3>
+                                <ul class="lista-ranking" id="painel-mais-sorteadas"></ul>
+                            </div>
+                            <div>
+                                <h3 class="texto-secundario">Mais atrasadas</h3>
+                                <ul class="lista-ranking" id="painel-mais-atrasadas"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt">
+                <div class="card-cabecalho">
+                    <div>
+                        <h2>Seus jogos no concurso 3807</h2>
+                        <p class="subtitulo">Conferidos automaticamente na atualização</p>
+                    </div>
+                    <a href="#meus-jogos" class="botao">Ver todos</a>
+                </div>
+                <div id="painel-jogos"></div>
+            </div>
+        </section>
+
+        <!-- ==================== RESULTADOS ==================== -->
+        <section id="pagina-resultados" class="pagina">
+            <div class="cabecalho-pagina">
+                <div>
+                    <h1>Resultados</h1>
+                    <p class="subtitulo">Concursos gravados na base local · clique em uma linha para ver o rateio</p>
+                </div>
+                <div class="campo-busca">
+                    <span data-icone="busca"></span>
+                    <input type="search" placeholder="Buscar concurso">
+                </div>
+            </div>
+            <div class="card">
+                <div class="tabela-rolagem">
+                    <table class="tabela">
+                        <thead>
+                        <tr>
+                            <th>Concurso</th><th>Data</th><th>Dezenas sorteadas</th>
+                            <th class="numero">Ganhadores 15</th><th class="numero">Prêmio 15</th><th>Situação</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabela-resultados"></tbody>
+                    </table>
+                </div>
+                <div class="paginacao">
+                    <span>1–10 de 3.807</span>
+                    <button class="botao-icone" data-icone="anterior" aria-label="Anterior"></button>
+                    <button class="botao-icone" data-icone="proximo" aria-label="Próximo"></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ESTATÍSTICAS ==================== -->
+        <section id="pagina-estatisticas" class="pagina">
+            <div class="cabecalho-pagina">
+                <div>
+                    <h1>Estatísticas</h1>
+                    <p class="subtitulo">Calculadas a partir da base local</p>
+                </div>
+                <div class="filtro-chips" id="filtro-periodo">
+                    <button class="selecionado">Todos (3.807)</button>
+                    <button>Últimos 10</button>
+                    <button>Últimos 20</button>
+                    <button>Últimos 50</button>
+                    <button>Últimos 100</button>
+                    <button>Intervalo…</button>
+                </div>
+            </div>
+
+            <div class="alerta">
+                <span data-icone="info"></span>
+                <div>As estatísticas descrevem o passado. Cada combinação de 15 dezenas tem a mesma chance
+                    (1 em 3.268.760) em todo concurso; os números servem como critério de escolha, não como previsão.</div>
+            </div>
+
+            <div class="abas" data-grupo-abas="estatisticas">
+                <button class="selecionada" data-aba="aba-dezenas">Por dezena</button>
+                <button data-aba="aba-perfis">Por perfil do concurso</button>
+            </div>
+
+            <div class="aba-conteudo visivel" id="aba-dezenas">
+                <div class="grade-2 bloco">
+                    <div class="card">
+                        <div class="card-cabecalho">
+                            <h2>Mapa de calor</h2>
+                            <div class="grupo-botoes" id="seletor-mapa">
+                                <button class="selecionado" data-metrica="frequencia">Frequência</button>
+                                <button data-metrica="atraso">Atraso</button>
+                                <button data-metrica="desvio">Desvio</button>
+                            </div>
+                        </div>
+                        <div class="mapa-calor" id="mapa-calor"></div>
+                        <p class="texto-secundario" id="legenda-mapa"></p>
+                    </div>
+                    <div class="card">
+                        <div class="grade-rankings">
+                            <div>
+                                <h3 class="texto-secundario">Mais sorteadas</h3>
+                                <ul class="lista-ranking" id="ranking-mais-sorteadas"></ul>
+                            </div>
+                            <div>
+                                <h3 class="texto-secundario">Menos sorteadas</h3>
+                                <ul class="lista-ranking" id="ranking-menos-sorteadas"></ul>
+                            </div>
+                            <div>
+                                <h3 class="texto-secundario">Há mais tempo sem sair</h3>
+                                <ul class="lista-ranking" id="ranking-mais-atrasadas"></ul>
+                            </div>
+                            <div>
+                                <h3 class="texto-secundario">Há menos tempo sem sair</h3>
+                                <ul class="lista-ranking" id="ranking-menos-atrasadas"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-cabecalho">
+                        <h2>Todas as dezenas</h2>
+                        <span class="texto-secundario">Esperado por dezena: 2.284,2 (60% dos concursos)</span>
+                    </div>
+                    <div class="tabela-rolagem">
+                        <table class="tabela tabela-compacta">
+                            <thead>
+                            <tr>
+                                <th>Dezena</th><th class="numero">Sorteios</th><th class="numero">% dos concursos</th>
+                                <th class="numero">Diferença do esperado</th><th class="numero">Desvio (σ)</th>
+                                <th class="numero">Atraso</th><th class="numero">Última vez</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabela-dezenas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="aba-conteudo" id="aba-perfis">
+                <div class="legenda bloco">
+                    <span><span class="barra-perfil" style="min-width:40px"><span class="observado" style="width:100%"></span></span> Observado</span>
+                    <span><span style="display:inline-block;width:2px;height:16px;background:var(--texto)"></span> Teórico (combinatória)</span>
+                </div>
+                <div class="grade-perfis" id="grade-perfis"></div>
+            </div>
+        </section>
+
+        <!-- ==================== GERAR JOGOS ==================== -->
+        <section id="pagina-gerar" class="pagina">
+            <div class="cabecalho-pagina">
+                <div>
+                    <h1>Gerar jogos</h1>
+                    <p class="subtitulo">Defina o concurso, a quantidade e as dezenas fixas</p>
+                </div>
+            </div>
+
+            <div class="grade-gerador">
+                <div class="card">
+                    <div class="campo">
+                        <label>Concurso alvo</label>
+                        <select id="campo-concurso-alvo"></select>
+                    </div>
+                    <div class="linha-campos">
+                        <div class="campo">
+                            <label>Quantidade de jogos</label>
+                            <input type="number" id="campo-quantidade" value="10" min="1" max="100">
+                        </div>
+                        <div class="campo">
+                            <label>Dezenas por jogo <span class="marcador-pendente">a definir</span></label>
+                            <select id="campo-dezenas-por-jogo"></select>
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label>Estratégia <span class="marcador-pendente">a definir</span></label>
+                        <select disabled><option>Aguardando definição da estratégia</option></select>
+                    </div>
+
+                    <div class="campo">
+                        <label>Dezenas fixas e excluídas</label>
+                        <span class="campo-ajuda">Clique uma vez para fixar, de novo para excluir, e outra vez para limpar.</span>
+                    </div>
+                    <div class="volante interativo" id="volante-gerador"></div>
+                    <div class="legenda">
+                        <span><span class="bola fixa"></span><span>Fixas: <b id="contador-fixas">0</b></span></span>
+                        <span><span class="bola excluida"></span><span>Excluídas: <b id="contador-excluidas">0</b></span></span>
+                        <span><span class="bola"></span> Livre</span>
+                    </div>
+
+                    <div class="campo mt">
+                        <label>Filtros de perfil <span class="marcador-pendente">a definir</span></label>
+                    </div>
+                    <div class="linha-campos">
+                        <div class="campo"><label>Pares (mín – máx)</label><input disabled value="6 – 9"></div>
+                        <div class="campo"><label>Soma (mín – máx)</label><input disabled value="170 – 220"></div>
+                    </div>
+
+                    <div class="resumo-custo">
+                        <span id="resumo-custo-texto"></span>
+                        <strong id="resumo-custo-valor"></strong>
+                    </div>
+                    <button class="botao botao-primario botao-bloco" id="botao-gerar"><span data-icone="dado"></span>Gerar jogos</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-cabecalho">
+                        <div>
+                            <h2>Jogos gerados</h2>
+                            <p class="subtitulo" id="subtitulo-gerados">Nenhum jogo gerado ainda</p>
+                        </div>
+                    </div>
+                    <div id="lista-gerados">
+                        <div class="estado-vazio">
+                            <span data-icone="dado"></span>
+                            <p>Configure ao lado e clique em <b>Gerar jogos</b>.</p>
+                        </div>
+                    </div>
+                    <div class="acoes mt oculto" id="acoes-gerados">
+                        <button class="botao botao-contorno" id="botao-gerar-novamente"><span data-icone="atualizar"></span>Gerar novamente</button>
+                        <button class="botao botao-primario" id="botao-salvar-jogos"><span data-icone="salvar"></span>Salvar jogos</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== MEUS JOGOS ==================== -->
+        <section id="pagina-meus-jogos" class="pagina">
+            <div class="cabecalho-pagina">
+                <div>
+                    <h1>Meus jogos</h1>
+                    <p class="subtitulo">Jogos salvos por concurso · clique em um jogo para ver a conferência</p>
+                </div>
+                <div class="filtro-chips" id="filtro-situacao">
+                    <button class="selecionado">Todos</button>
+                    <button>Aguardando sorteio</button>
+                    <button>Conferidos</button>
+                    <button>Premiados</button>
+                </div>
+            </div>
+
+            <div class="grade-indicadores">
+                <div class="card indicador">
+                    <div class="indicador-icone" data-icone="conferir"></div>
+                    <div><div class="indicador-rotulo">Jogos salvos</div><div class="indicador-valor">18</div><div class="indicador-detalhe">3 concursos</div></div>
+                </div>
+                <div class="card indicador">
+                    <div class="indicador-icone info" data-icone="dinheiro"></div>
+                    <div><div class="indicador-rotulo">Investido</div><div class="indicador-valor">R$ 63,00</div><div class="indicador-detalhe">18 apostas de 15 dezenas</div></div>
+                </div>
+                <div class="card indicador">
+                    <div class="indicador-icone sucesso" data-icone="trofeu"></div>
+                    <div><div class="indicador-rotulo">Premiados</div><div class="indicador-valor" id="meus-jogos-premiados"></div><div class="indicador-detalhe">11 a 15 acertos</div></div>
+                </div>
+                <div class="card indicador">
+                    <div class="indicador-icone aviso" data-icone="trofeu"></div>
+                    <div><div class="indicador-rotulo">Total em prêmios</div><div class="indicador-valor" id="meus-jogos-total"></div><div class="indicador-detalhe">Valor bruto divulgado pela Caixa</div></div>
+                </div>
+            </div>
+
+            <div id="grupos-jogos"></div>
+        </section>
+
+        <!-- ==================== CONFIGURAÇÕES ==================== -->
+        <section id="pagina-configuracoes" class="pagina">
+            <div class="cabecalho-pagina">
+                <div>
+                    <h1>Configurações</h1>
+                    <p class="subtitulo">Valores usados nos cálculos e na atualização dos dados</p>
+                </div>
+                <button class="botao botao-primario" data-acao-prototipo="Configurações salvas."><span data-icone="salvar"></span>Salvar</button>
+            </div>
+
+            <div class="grade-config">
+                <div class="card">
+                    <h2 class="bloco">Preço da aposta</h2>
+                    <div class="linha-campos">
+                        <div class="campo"><label>Aposta mínima (15 dezenas)</label><input value="R$ 3,50"></div>
+                        <div class="campo"><label>Vigência a partir de</label><input placeholder="dd/mm/aaaa"></div>
+                    </div>
+                    <table class="tabela tabela-compacta">
+                        <thead><tr><th>Dezenas</th><th class="numero">Apostas equivalentes</th><th class="numero">Valor</th></tr></thead>
+                        <tbody id="tabela-precos"></tbody>
+                    </table>
+                </div>
+
+                <div class="coluna">
+                    <div class="card">
+                        <h2 class="bloco">Prêmios fixos</h2>
+                        <div class="linha-campos">
+                            <div class="campo"><label>11 acertos</label><input value="R$ 7,00"></div>
+                            <div class="campo"><label>12 acertos</label><input value="R$ 14,00"></div>
+                        </div>
+                        <div class="linha-campos">
+                            <div class="campo"><label>13 acertos</label><input value="R$ 35,00"></div>
+                            <div class="campo"><label>14 e 15 acertos</label><input disabled value="Rateio do concurso"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="bloco">Fonte de dados</h2>
+                        <div class="campo"><label>URL base da API da Caixa</label><input value="https://servicebus3.caixa.gov.br/portaldeloterias"></div>
+                        <div class="linha-campos">
+                            <div class="campo"><label>Intervalo entre requisições</label><input value="500 ms"></div>
+                            <div class="campo"><label>Arquivo do banco</label><input value="lotofacil.db"></div>
+                        </div>
+                        <div class="acoes">
+                            <button class="botao botao-contorno" data-acao-prototipo="Importação do histórico (XLSX) iniciada."><span data-icone="importar"></span>Importar histórico (XLSX)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div class="dialogo-fundo" id="dialogo-conferencia">
+    <div class="dialogo">
+        <div class="dialogo-titulo">
+            <h2 id="dialogo-titulo"></h2>
+            <button class="botao-icone" data-icone="fechar" data-fechar-dialogo aria-label="Fechar"></button>
+        </div>
+        <div class="dialogo-conteudo">
+            <div class="conferencia">
+                <div>
+                    <div class="volante" id="dialogo-volante"></div>
+                    <div class="legenda">
+                        <span><span class="bola acerto"></span> Acertou</span>
+                        <span><span class="bola erro"></span> Marcou e não saiu</span>
+                        <span><span class="bola nao-marcada"></span> Saiu e não marcou</span>
+                    </div>
+                </div>
+                <dl id="dialogo-detalhes"></dl>
+            </div>
+        </div>
+        <div class="dialogo-acoes acoes">
+            <button class="botao" data-fechar-dialogo>Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div class="snackbar" id="snackbar"></div>
+
+<script src="dados-mock.js"></script>
+<script src="prototipo.js"></script>
+</body>
+</html>
