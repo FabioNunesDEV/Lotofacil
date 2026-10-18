@@ -1,0 +1,89 @@
+// <copyright file="MainLayoutTestes.cs" company="Fábio Nunes">
+// Copyright (c) Fábio Nunes. Todos os direitos reservados.
+// </copyright>
+
+using Bunit;
+using Lotofacil.Web.Components.Layout;
+using Microsoft.AspNetCore.Components;
+
+namespace Lotofacil.Testes.Unidade.Web;
+
+/// <summary>
+/// Testes do layout principal.
+/// </summary>
+public class MainLayoutTestes : ComponenteTesteBase
+{
+    /// <summary>
+    /// A barra superior mostra o título da aplicação.
+    /// </summary>
+    [Fact]
+    public void ExibeTituloNaBarraSuperior()
+    {
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        Assert.Contains("Lotofácil", layout.Find(".mud-appbar").TextContent);
+    }
+
+    /// <summary>
+    /// O menu lateral mostra o item Painel, selecionado quando a rota atual é a raiz.
+    /// </summary>
+    [Fact]
+    public void ExibeItemPainelSelecionadoNaRaiz()
+    {
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        var itemPainel = layout.Find(".mud-drawer a.mud-nav-link");
+        Assert.Equal("Painel", itemPainel.TextContent.Trim());
+        Assert.Contains("active", itemPainel.ClassList);
+    }
+
+    /// <summary>
+    /// Cada acionamento do botão de menu inverte o estado do menu lateral; o segundo volta ao estado inicial.
+    /// </summary>
+    [Fact]
+    public void BotaoDeMenuAlternaMenuLateral()
+    {
+        // O estado inicial depende da largura da tela, que o MudBlazor obtém por JavaScript.
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+        var botaoMenu = layout.Find("button[aria-label='Abrir ou fechar menu']");
+        bool abertoNoInicio = MenuLateralAberto(layout);
+
+        botaoMenu.Click();
+        Assert.Equal(!abertoNoInicio, MenuLateralAberto(layout));
+
+        botaoMenu.Click();
+        Assert.Equal(abertoNoInicio, MenuLateralAberto(layout));
+    }
+
+    /// <summary>
+    /// O conteúdo da página é exibido dentro do layout.
+    /// </summary>
+    [Fact]
+    public void ExibeConteudoDaPagina()
+    {
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        Assert.Contains("conteúdo da página", layout.Find(".mud-main-content").TextContent);
+    }
+
+    /// <summary>
+    /// Indica se o menu lateral está aberto no layout renderizado.
+    /// </summary>
+    /// <param name="layout">Layout renderizado.</param>
+    /// <returns><c>true</c> se o menu lateral estiver aberto.</returns>
+    private static bool MenuLateralAberto(IRenderedComponent<MainLayout> layout)
+    {
+        return layout.Find(".mud-drawer").ClassList.Contains("mud-drawer--open");
+    }
+
+    /// <summary>
+    /// Renderiza o layout com um conteúdo de página fictício.
+    /// </summary>
+    /// <returns>Layout renderizado.</returns>
+    private IRenderedComponent<MainLayout> RenderizarLayout()
+    {
+        RenderFragment conteudo = construtor => construtor.AddContent(0, "conteúdo da página");
+
+        return this.Render<MainLayout>(parametros => parametros.Add(layout => layout.Body, conteudo));
+    }
+}

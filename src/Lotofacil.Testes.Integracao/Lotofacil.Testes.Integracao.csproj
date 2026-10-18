@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lotofacil.Dominio\Lotofacil.Dominio.csproj" />
+    <ProjectReference Include="..\Lotofacil.Aplicacao\Lotofacil.Aplicacao.csproj" />
+    <ProjectReference Include="..\Lotofacil.Infraestrutura\Lotofacil.Infraestrutura.csproj" />
+    <ProjectReference Include="..\Lotofacil.Web\Lotofacil.Web.csproj" />
+  </ItemGroup>
+
+</Project>

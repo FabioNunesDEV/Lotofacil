@@ -19,11 +19,15 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
 - 25 dezenas disponíveis (01 a 25); são sorteadas 15 por concurso.
 - Aposta de 15 a 20 dezenas; preço da aposta mínima configurável (hoje R$ 3,50).
 - Faixas de prêmio: 11, 12, 13, 14 e 15 acertos.
-  - 11, 12 e 13: valores fixos.
-  - 14 e 15: variam conforme o rateio do concurso (vem nos dados oficiais).
+  - 11, 12 e 13: valores fixos hoje (R$ 7, R$ 14, R$ 35), mas já foram diferentes no passado.
+  - 14 e 15: variam conforme o rateio do concurso.
+  - A conferência de um jogo usa **sempre o rateio gravado do próprio concurso**, em todas as faixas.
+    Os valores fixos da configuração servem apenas para estimativas.
 - Fonte dos resultados: API usada pelo portal de loterias da Caixa
-  (`servicebus2.caixa.gov.br/portaldeloterias/api/lotofacil/{concurso}`). Não é documentada:
-  tratar falhas, buscar de forma incremental e com pausa entre requisições.
+  (`servicebus3.caixa.gov.br/portaldeloterias/api/lotofacil/{concurso}`). Não é documentada e o
+  host já mudou (era `servicebus2`): manter a URL base em configuração, tratar falhas, buscar de
+  forma incremental e com pausa entre requisições.
+- Referências detalhadas sobre regras, dados e estatísticas ficam em `docs/`.
 
 ## Pendências de negócio (não implementar sem definição do usuário)
 - Estratégia de geração de jogos (o usuário enviará material específico).
@@ -44,7 +48,8 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
 Autorizadas:
 - `MudBlazor`, `Newtonsoft.Json`, `StyleCop.Analyzers`
 - `Microsoft.EntityFrameworkCore.Sqlite` (e ferramentas do EF Core para migrations)
-- Testes: `xunit`, `NSubstitute`, `bunit`
+- Log: `Serilog.Extensions.Logging`, `Serilog.Sinks.File` (somente erros, em arquivo na pasta `log`)
+- Testes: `xunit` (`xunit.v3`, executado pela Microsoft.Testing.Platform), `NSubstitute`, `bunit`
 
 Regras:
 - **Nunca** adicionar pacote fora desta lista sem pedir autorização e explicar o motivo.
@@ -104,6 +109,7 @@ Proibido:
 ## Fluxo de trabalho
 - Mudanças passam pelo OpenSpec (`openspec/`): `/opsx:propose` → `/opsx:apply` → `/opsx:archive`.
 - Artefatos do OpenSpec em pt-BR.
-- Antes de concluir uma tarefa: `dotnet build` sem avisos e `dotnet test` passando.
+- Antes de concluir uma tarefa: `dotnet build src/Lotofacil.slnx` sem avisos e
+  `dotnet test --solution src/Lotofacil.slnx` passando.
 - Fixar o SDK 10 com `global.json` (há SDK 11 RC instalado na máquina).
 - Não fazer commit sem o usuário pedir.
