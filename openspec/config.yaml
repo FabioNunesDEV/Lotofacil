@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  Language: pt-BR
+  All artifacts must be written in pt-BR.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Projeto: sistema local para analisar resultados da Lotofacil (Caixa), gerar jogos
+  e conferir jogos salvos contra o resultado real.
+  Stack: .NET 10, C#, Blazor Server + MudBlazor, EF Core + SQLite, xUnit/NSubstitute/bUnit.
+  Todas as regras de codigo, arquitetura, nomenclatura e dependencias estao no CLAUDE.md
+  da raiz; as propostas e tarefas devem respeita-las.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

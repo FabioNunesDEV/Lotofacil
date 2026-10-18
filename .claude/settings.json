@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(openspec list:*)",
+      "Bash(openspec status:*)",
+      "Bash(openspec validate:*)",
+      "Bash(openspec show:*)",
+      "PowerShell(dotnet build:*)",
+      "PowerShell(dotnet test:*)",
+      "PowerShell(dotnet restore:*)",
+      "PowerShell(openspec list:*)",
+      "PowerShell(openspec status:*)",
+      "PowerShell(openspec validate:*)",
+      "PowerShell(openspec show:*)"
+    ]
+  }
+}
