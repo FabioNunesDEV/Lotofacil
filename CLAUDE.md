@@ -64,7 +64,7 @@ Arquitetura limpa, enxuta. Projetos:
 | `Lotofacil.Dominio` | Entidades, regras de negócio, interfaces (repositórios, fonte de resultados) | nada |
 | `Lotofacil.Aplicacao` | Casos de uso / serviços que orquestram o domínio | Dominio |
 | `Lotofacil.Infraestrutura` | EF Core/SQLite, cliente da API da Caixa, implementações das interfaces | Dominio, Aplicacao |
-| `Lotofacil.Web` | Blazor Server + MudBlazor, composição da injeção de dependência | Aplicacao, Infraestrutura |
+| `Lotofacil.Web` | Blazor Server + MudBlazor, composição da injeção de dependência | Dominio (somente leitura dos tipos), Aplicacao, Infraestrutura |
 | `Lotofacil.Testes.Unidade` | Testes de unidade (Dominio, Aplicacao, componentes com bUnit) | — |
 | `Lotofacil.Testes.Integracao` | Testes com SQLite em memória e cliente HTTP falso | — |
 

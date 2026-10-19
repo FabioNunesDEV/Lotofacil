@@ -5,6 +5,7 @@
 using Bunit;
 using Lotofacil.Web.Components.Layout;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lotofacil.Testes.Unidade.Web;
 
@@ -35,6 +36,23 @@ public class MainLayoutTestes : ComponenteTesteBase
         var itemPainel = layout.Find(".mud-drawer a.mud-nav-link");
         Assert.Equal("Painel", itemPainel.TextContent.Trim());
         Assert.Contains("active", itemPainel.ClassList);
+    }
+
+    /// <summary>
+    /// O item Resultados vem logo abaixo de Painel e fica selecionado na rota /resultados.
+    /// </summary>
+    [Fact]
+    public void ExibeItemResultadosSelecionadoNaRotaResultados()
+    {
+        this.Services.GetRequiredService<NavigationManager>().NavigateTo("resultados");
+
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
+        Assert.Equal(["Painel", "Resultados"], itens.Select(item => item.TextContent.Trim()));
+        Assert.Equal("resultados", itens[1].GetAttribute("href"));
+        Assert.Contains("active", itens[1].ClassList);
+        Assert.DoesNotContain("active", itens[0].ClassList);
     }
 
     /// <summary>

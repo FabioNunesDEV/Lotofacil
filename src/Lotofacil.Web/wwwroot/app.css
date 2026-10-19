@@ -2,6 +2,17 @@ h1:focus {
     outline: none;
 }
 
+/* Células numéricas alinhadas à direita (tabelas do MudBlazor não recebem CSS isolado). */
+.numero,
+.mud-simple-table table td.numero,
+.mud-simple-table table th.numero {
+    text-align: right;
+}
+
+.linha-clicavel {
+    cursor: pointer;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

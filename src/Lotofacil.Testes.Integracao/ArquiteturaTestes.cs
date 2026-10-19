@@ -25,7 +25,7 @@ public class ArquiteturaTestes
     [InlineData("Lotofacil.Dominio")]
     [InlineData("Lotofacil.Aplicacao", "Lotofacil.Dominio")]
     [InlineData("Lotofacil.Infraestrutura", "Lotofacil.Dominio", "Lotofacil.Aplicacao")]
-    [InlineData("Lotofacil.Web", "Lotofacil.Aplicacao", "Lotofacil.Infraestrutura")]
+    [InlineData("Lotofacil.Web", "Lotofacil.Dominio", "Lotofacil.Aplicacao", "Lotofacil.Infraestrutura")]
     public void ProjetoReferenciaApenasCamadasPermitidas(string projeto, params string[] permitidos)
     {
         IEnumerable<string> referenciasDaSolucao = Assembly.Load(projeto)

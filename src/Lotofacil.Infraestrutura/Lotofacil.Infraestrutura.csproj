@@ -1,6 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <!-- Necessário apenas para gerar migrations com o dotnet-ef; não vai para a aplicação. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lotofacil.Testes.Integracao" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Lotofacil.Dominio\Lotofacil.Dominio.csproj" />
     <ProjectReference Include="..\Lotofacil.Aplicacao\Lotofacil.Aplicacao.csproj" />
   </ItemGroup>
