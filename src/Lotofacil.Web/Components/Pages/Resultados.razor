@@ -1,0 +1,62 @@
+@page "/resultados"
+
+<PageTitle>Resultados · Lotofácil</PageTitle>
+
+<div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-4">
+    <div>
+        <MudText Typo="Typo.h4" HtmlTag="h1">Resultados</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            Concursos gravados na base local · clique em uma linha para ver o rateio
+        </MudText>
+    </div>
+    <MudNumericField T="int?" Value="this.numeroBusca" ValueChanged="this.BuscarAsync" Label="Buscar concurso"
+                     Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" HideSpinButtons="true" Clearable="true"
+                     Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                     Style="max-width: 220px" Class="campo-busca" />
+</div>
+
+<MudTable @ref="this.tabela" T="Concurso" ServerData="this.CarregarAsync" OnRowClick="this.AlternarDetalhe"
+          RowsPerPage="10" RowClass="linha-clicavel" Hover="true" Elevation="1">
+    <HeaderContent>
+        <MudTh>Concurso</MudTh>
+        <MudTh>Data</MudTh>
+        <MudTh>Dezenas sorteadas</MudTh>
+        <MudTh Class="numero">Ganhadores 15</MudTh>
+        <MudTh Class="numero">Prêmio 15</MudTh>
+        <MudTh>Situação</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Concurso"><b>@context.Numero</b></MudTd>
+        <MudTd DataLabel="Data">@FormatacaoConcurso.Data(context.Data)</MudTd>
+        <MudTd DataLabel="Dezenas sorteadas"><Dezenas Valores="context.Dezenas" /></MudTd>
+        <MudTd DataLabel="Ganhadores 15" Class="numero">@FormatacaoConcurso.Ganhadores(Rateio15(context))</MudTd>
+        <MudTd DataLabel="Prêmio 15" Class="numero">@FormatacaoConcurso.Premio(Rateio15(context))</MudTd>
+        <MudTd DataLabel="Situação">
+            @if (Rateio15(context).Ganhadores > 0)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">Saiu</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">Acumulou</MudChip>
+            }
+        </MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        @if (this.expandidos.Contains(context.Numero))
+        {
+            <MudTr>
+                <td colspan="6" class="detalhe">
+                    <DetalheConcurso Concurso="context" />
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+    <NoRecordsContent>
+        <MudText Class="sem-registros">@this.mensagemSemRegistros</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="OpcoesTamanhoPagina" RowsPerPageString="Concursos por página:"
+                       InfoFormat="{first_item}–{last_item} de {all_items}" />
+    </PagerContent>
+</MudTable>

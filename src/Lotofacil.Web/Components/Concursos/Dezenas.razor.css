@@ -1,0 +1,18 @@
+.bolas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.bola {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-size: 12px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}

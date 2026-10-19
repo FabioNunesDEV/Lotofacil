@@ -1,0 +1,35 @@
+<div class="detalhe-concurso">
+    <MudSimpleTable Dense="true" Elevation="0" Class="rateio">
+        <thead>
+            <tr>
+                <th>Faixa</th>
+                <th class="numero">Ganhadores</th>
+                <th class="numero">Prêmio</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Rateio rateio in this.RateiosDaMaiorFaixa)
+            {
+                <tr>
+                    <td>@rateio.Faixa acertos</td>
+                    <td class="numero">@FormatacaoConcurso.Ganhadores(rateio)</td>
+                    <td class="numero">@FormatacaoConcurso.Premio(rateio)</td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+
+    <div>
+        <MudText Typo="Typo.body2" Class="arrecadacao">
+            Arrecadação: <b>@FormatacaoConcurso.Arrecadacao(this.Concurso.Arrecadacao)</b>
+        </MudText>
+
+        @if (this.Concurso.OrdemSorteio is not null)
+        {
+            <div class="ordem-sorteio mt-3">
+                <MudText Typo="Typo.body2" Class="mb-1">Ordem do sorteio:</MudText>
+                <Dezenas Valores="this.Concurso.OrdemSorteio" />
+            </div>
+        }
+    </div>
+</div>
