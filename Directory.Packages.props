@@ -1,0 +1,25 @@
+<Project>
+
+  <!-- Versões dos pacotes NuGet em um só lugar; os .csproj referenciam sem versão. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Aplicado a todos os projetos. A 1.1.118 (última estável) não reconhece a sintaxe atual do C#. -->
+    <GlobalPackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="MudBlazor" Version="9.11.0" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="bunit" Version="2.11.3" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+  </ItemGroup>
+
+</Project>

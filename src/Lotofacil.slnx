@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Lotofacil.Aplicacao/Lotofacil.Aplicacao.csproj" />
+  <Project Path="Lotofacil.Dominio/Lotofacil.Dominio.csproj" />
+  <Project Path="Lotofacil.Infraestrutura/Lotofacil.Infraestrutura.csproj" />
+  <Project Path="Lotofacil.Testes.Integracao/Lotofacil.Testes.Integracao.csproj" />
+  <Project Path="Lotofacil.Testes.Unidade/Lotofacil.Testes.Unidade.csproj" />
+  <Project Path="Lotofacil.Web/Lotofacil.Web.csproj" />
+</Solution>

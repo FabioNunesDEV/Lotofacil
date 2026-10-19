@@ -1,0 +1,11 @@
+@page "/erro"
+
+<PageTitle>Erro · Lotofácil</PageTitle>
+
+<MudText Typo="Typo.h4" HtmlTag="h1" Color="Color.Error">Erro</MudText>
+<MudText Class="mt-2">Ocorreu um erro ao processar a solicitação. Os detalhes foram gravados no log.</MudText>
+
+@if (this.IdentificadorRequisicao is not null)
+{
+    <MudText Class="mt-2"><strong>Identificador da requisição:</strong> <code>@this.IdentificadorRequisicao</code></MudText>
+}

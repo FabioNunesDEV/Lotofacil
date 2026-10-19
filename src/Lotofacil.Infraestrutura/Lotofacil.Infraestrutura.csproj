@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lotofacil.Dominio\Lotofacil.Dominio.csproj" />
+    <ProjectReference Include="..\Lotofacil.Aplicacao\Lotofacil.Aplicacao.csproj" />
+  </ItemGroup>
+
+</Project>

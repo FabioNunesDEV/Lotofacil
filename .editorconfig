@@ -1,0 +1,18 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{json,props,csproj,slnx,xml}]
+indent_size = 2
+
+[*.cs]
+# Desativadas porque exigem texto padrão em inglês no summary.
+# SA1623: summary de propriedade deve começar com "Gets" / "Sets".
+dotnet_diagnostic.SA1623.severity = none
+# SA1642: summary de construtor deve começar com "Initializes a new instance".
+dotnet_diagnostic.SA1642.severity = none
