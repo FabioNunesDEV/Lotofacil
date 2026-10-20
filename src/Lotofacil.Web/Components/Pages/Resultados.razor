@@ -9,11 +9,25 @@
             Concursos gravados na base local · clique em uma linha para ver o rateio
         </MudText>
     </div>
-    <MudNumericField T="int?" Value="this.numeroBusca" ValueChanged="this.BuscarAsync" Label="Buscar concurso"
-                     Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" HideSpinButtons="true" Clearable="true"
-                     Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                     Style="max-width: 220px" Class="campo-busca" />
+    <div class="d-flex flex-wrap align-center gap-4">
+        <MudNumericField T="int?" Value="this.numeroBusca" ValueChanged="this.BuscarAsync" Label="Buscar concurso"
+                         Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" HideSpinButtons="true" Clearable="true"
+                         Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                         Style="max-width: 220px" Class="campo-busca" />
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="this.ImportarHistoricoAsync" Disabled="this.importando" Class="botao-importar">
+            Importar histórico
+        </MudButton>
+    </div>
 </div>
+
+@if (this.importando)
+{
+    <div class="importando mb-4">
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1" />
+        <MudText Typo="Typo.body2">Importando o histórico da Caixa…</MudText>
+    </div>
+}
 
 <MudTable @ref="this.tabela" T="Concurso" ServerData="this.CarregarAsync" OnRowClick="this.AlternarDetalhe"
           RowsPerPage="10" RowClass="linha-clicavel" Hover="true" Elevation="1">

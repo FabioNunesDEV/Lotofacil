@@ -18,7 +18,13 @@ public partial class Resultados
     /// <summary>
     /// Mensagem exibida quando a base não tem concursos.
     /// </summary>
-    private const string MensagemBaseVazia = "Nenhum concurso gravado na base local.";
+    private const string MensagemBaseVazia =
+        "Nenhum concurso gravado na base local. Use “Importar histórico” para carregar os concursos da Caixa.";
+
+    /// <summary>
+    /// Início da mensagem de falha da importação.
+    /// </summary>
+    private const string PrefixoFalhaImportacao = "A importação falhou e nada foi gravado.";
 
     /// <summary>
     /// Quantidades de concursos por página oferecidas ao usuário.
@@ -46,10 +52,33 @@ public partial class Resultados
     private string mensagemSemRegistros = MensagemBaseVazia;
 
     /// <summary>
+    /// Indica se a importação do histórico está em andamento.
+    /// </summary>
+    private bool importando;
+
+    /// <summary>
     /// Serviço de consulta dos concursos.
     /// </summary>
     [Inject]
     private ConsultaConcursosServico Servico { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço de importação do histórico da Caixa.
+    /// </summary>
+    [Inject]
+    private ImportacaoHistoricoServico Importacao { get; set; } = null!;
+
+    /// <summary>
+    /// Mensagens rápidas exibidas ao usuário.
+    /// </summary>
+    [Inject]
+    private ISnackbar Mensagens { get; set; } = null!;
+
+    /// <summary>
+    /// Log de erros da aplicação.
+    /// </summary>
+    [Inject]
+    private ILogger<Resultados> Log { get; set; } = null!;
 
     /// <summary>
     /// Devolve o rateio da faixa de 15 acertos.
@@ -103,6 +132,59 @@ public partial class Resultados
         {
             await this.tabela.ReloadServerData();
         }
+    }
+
+    /// <summary>
+    /// Importa o histórico da Caixa, informa o resultado e, se houver concursos novos, volta ao mais recente.
+    /// </summary>
+    /// <returns>Tarefa da importação.</returns>
+    private async Task ImportarHistoricoAsync()
+    {
+        this.importando = true;
+        try
+        {
+            ResultadoImportacao resultado = await this.Importacao.ImportarAsync();
+            if (resultado.ConcursosGravados == 0)
+            {
+                this.Mensagens.Add(
+                    $"A base local já tem todos os {resultado.ConcursosNoArquivo:N0} concursos do arquivo; nada foi gravado.",
+                    Severity.Info);
+            }
+            else
+            {
+                this.Mensagens.Add(
+                    $"Importação concluída: {resultado.ConcursosNoArquivo:N0} concursos no arquivo, "
+                        + $"{resultado.ConcursosGravados:N0} gravados na base local.",
+                    Severity.Success);
+                await this.BuscarAsync(null);
+            }
+        }
+        catch (FonteResultadosException erro)
+        {
+            this.Log.LogError(erro, "Falha na importação do histórico: {Mensagem}", erro.Message);
+            this.MostrarFalhaImportacao(erro.Message);
+        }
+        catch (Exception erro) when (erro is not OperationCanceledException)
+        {
+            this.Log.LogError(erro, "Falha inesperada na importação do histórico.");
+            this.MostrarFalhaImportacao("Erro inesperado; os detalhes foram registrados no log.");
+        }
+        finally
+        {
+            this.importando = false;
+        }
+    }
+
+    /// <summary>
+    /// Mostra a falha da importação numa mensagem que só some quando o usuário fecha.
+    /// </summary>
+    /// <param name="motivo">Motivo da falha.</param>
+    private void MostrarFalhaImportacao(string motivo)
+    {
+        this.Mensagens.Add(
+            $"{PrefixoFalhaImportacao} {motivo}",
+            Severity.Error,
+            opcoes => opcoes.RequireInteraction = true);
     }
 
     /// <summary>

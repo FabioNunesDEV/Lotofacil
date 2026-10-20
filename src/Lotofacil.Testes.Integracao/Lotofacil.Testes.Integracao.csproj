@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Arquivos\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Lotofacil.Dominio\Lotofacil.Dominio.csproj" />
     <ProjectReference Include="..\Lotofacil.Aplicacao\Lotofacil.Aplicacao.csproj" />
     <ProjectReference Include="..\Lotofacil.Infraestrutura\Lotofacil.Infraestrutura.csproj" />

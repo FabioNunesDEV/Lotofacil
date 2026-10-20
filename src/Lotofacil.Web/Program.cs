@@ -4,6 +4,7 @@
 
 using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Infraestrutura;
+using Lotofacil.Infraestrutura.Caixa;
 using Lotofacil.Web;
 using Lotofacil.Web.Components;
 using MudBlazor.Services;
@@ -21,8 +22,12 @@ builder.Services.AddMudServices();
 string caminhoBanco = Path.Combine(
     builder.Environment.ContentRootPath,
     builder.Configuration["BancoDados:Arquivo"] ?? "lotofacil.db");
-builder.Services.AddInfraestrutura(caminhoBanco);
+var opcoesFonte = new OpcoesFonteResultados(
+    builder.Configuration["FonteResultados:UrlBase"] ?? "https://servicebus3.caixa.gov.br/portaldeloterias",
+    builder.Configuration.GetValue("FonteResultados:TempoLimiteSegundos", 60));
+builder.Services.AddInfraestrutura(caminhoBanco, opcoesFonte);
 builder.Services.AddSingleton<ConsultaConcursosServico>();
+builder.Services.AddSingleton<ImportacaoHistoricoServico>();
 
 var app = builder.Build();
 

@@ -9,12 +9,15 @@ using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using MudBlazor;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Lotofacil.Testes.Unidade.Web;
 
 /// <summary>
-/// Testes da página Resultados, com o serviço real sobre um repositório falso em memória.
+/// Testes da página Resultados, com os serviços reais sobre um repositório e uma fonte falsos em memória.
 /// </summary>
 public class ResultadosTestes : ComponenteTesteBase
 {
@@ -24,22 +27,47 @@ public class ResultadosTestes : ComponenteTesteBase
     private readonly List<Concurso> concursos = [];
 
     /// <summary>
-    /// Registra o serviço de consulta com um repositório que responde a partir da lista <see cref="concursos"/>.
+    /// Repositório falso, que lê e grava na lista <see cref="concursos"/>.
+    /// </summary>
+    private readonly IConcursoRepositorio repositorio = Substitute.For<IConcursoRepositorio>();
+
+    /// <summary>
+    /// Fonte falsa do histórico da Caixa.
+    /// </summary>
+    private readonly IFonteHistoricoConcursos fonte = Substitute.For<IFonteHistoricoConcursos>();
+
+    /// <summary>
+    /// Logger da página, para conferir o registro das falhas.
+    /// </summary>
+    private readonly LoggerFalso<Resultados> log = new();
+
+    /// <summary>
+    /// Registra os serviços de consulta e de importação com um repositório que usa a lista
+    /// <see cref="concursos"/>.
     /// </summary>
     public ResultadosTestes()
     {
-        IConcursoRepositorio repositorio = Substitute.For<IConcursoRepositorio>();
-        repositorio.ListarAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+        this.repositorio.ListarAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(chamada => this.concursos
                 .OrderByDescending(concurso => concurso.Numero)
                 .Skip(chamada.ArgAt<int>(0))
                 .Take(chamada.ArgAt<int>(1))
                 .ToList());
-        repositorio.ContarAsync(Arg.Any<CancellationToken>()).Returns(_ => this.concursos.Count);
-        repositorio.ObterAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+        this.repositorio.ContarAsync(Arg.Any<CancellationToken>()).Returns(_ => this.concursos.Count);
+        this.repositorio.ObterAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(chamada => this.concursos.Find(concurso => concurso.Numero == chamada.ArgAt<int>(0)));
+        this.repositorio.ListarNumerosAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => (IReadOnlySet<int>)this.concursos.Select(concurso => concurso.Numero).ToHashSet());
+        this.repositorio.AdicionarAsync(Arg.Any<IReadOnlyCollection<Concurso>>(), Arg.Any<CancellationToken>())
+            .Returns(chamada =>
+            {
+                this.concursos.AddRange(chamada.ArgAt<IReadOnlyCollection<Concurso>>(0));
+                return Task.CompletedTask;
+            });
 
-        this.Services.AddSingleton(new ConsultaConcursosServico(repositorio));
+        this.Services.AddSingleton(new ConsultaConcursosServico(this.repositorio));
+        this.Services.AddSingleton(new ImportacaoHistoricoServico(this.fonte, this.repositorio));
+        this.Services.AddSingleton<ILogger<Resultados>>(this.log);
     }
 
     /// <summary>
@@ -246,8 +274,119 @@ public class ResultadosTestes : ComponenteTesteBase
         IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
 
         pagina.WaitForAssertion(() => Assert.Equal(
-            "Nenhum concurso gravado na base local.",
+            "Nenhum concurso gravado na base local. Use “Importar histórico” para carregar os concursos da Caixa.",
             Texto(pagina.Find(".sem-registros"))));
+    }
+
+    /// <summary>
+    /// Importação com concursos novos: mensagem com separador de milhar e lista a partir do mais recente.
+    /// </summary>
+    [Fact]
+    public void ImportacaoComConcursosNovos()
+    {
+        this.DefinirHistorico(3808);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+        pagina.WaitForElement(".sem-registros");
+
+        pagina.Find(".botao-importar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Importação concluída: 3.808 concursos no arquivo, 3.808 gravados na base local.",
+            MensagensExibidas(mensagens)));
+        pagina.WaitForAssertion(() => Assert.Equal(Enumerable.Range(3799, 10).Reverse(), NumerosExibidos(pagina)));
+    }
+
+    /// <summary>
+    /// Sem concursos novos, a mensagem informa que nada foi gravado.
+    /// </summary>
+    [Fact]
+    public void ImportacaoSemConcursosNovos()
+    {
+        this.AdicionarConcursos(3808);
+        this.DefinirHistorico(3808);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+        pagina.WaitForAssertion(() => Assert.Equal(10, NumerosExibidos(pagina).Count));
+
+        pagina.Find(".botao-importar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "A base local já tem todos os 3.808 concursos do arquivo; nada foi gravado.",
+            MensagensExibidas(mensagens)));
+        this.repositorio.DidNotReceiveWithAnyArgs().AdicionarAsync(default!, Xunit.TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Enquanto a importação não termina, o botão fica desabilitado e a página indica o andamento.
+    /// </summary>
+    [Fact]
+    public void ImportacaoEmAndamento()
+    {
+        var download = new TaskCompletionSource<IReadOnlyList<Concurso>>();
+        this.fonte.ObterHistoricoAsync(Arg.Any<CancellationToken>()).Returns(download.Task);
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-importar").Click();
+
+        Assert.True(pagina.Find(".botao-importar").HasAttribute("disabled"));
+        Assert.Equal("Importando o histórico da Caixa…", Texto(pagina.Find(".importando")));
+
+        download.SetResult([ConcursoFabrica.Criar(numero: 1)]);
+
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-importar").HasAttribute("disabled")));
+        Assert.Empty(pagina.FindAll(".importando"));
+    }
+
+    /// <summary>
+    /// Falha da fonte: mensagem com o motivo, botão habilitado de novo e registro no log de erros.
+    /// </summary>
+    [Fact]
+    public void FalhaNaImportacao()
+    {
+        var falha = new FonteResultadosException("A Caixa respondeu com o código 503 ao baixar o histórico.");
+        this.fonte.ObterHistoricoAsync(Arg.Any<CancellationToken>()).ThrowsAsync(falha);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-importar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "A importação falhou e nada foi gravado. A Caixa respondeu com o código 503 ao baixar o histórico.",
+            MensagensExibidas(mensagens)));
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-importar").HasAttribute("disabled")));
+        Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
+    }
+
+    /// <summary>
+    /// Falha não prevista (por exemplo, na gravação): mensagem genérica e registro no log de erros.
+    /// </summary>
+    [Fact]
+    public void FalhaInesperadaNaImportacao()
+    {
+        this.DefinirHistorico(3);
+        var falha = new InvalidOperationException("Banco bloqueado.");
+        this.repositorio.AdicionarAsync(Arg.Any<IReadOnlyCollection<Concurso>>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(falha);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-importar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "A importação falhou e nada foi gravado. Erro inesperado; os detalhes foram registrados no log.",
+            MensagensExibidas(mensagens)));
+        Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
+    }
+
+    /// <summary>
+    /// Textos das mensagens rápidas exibidas.
+    /// </summary>
+    /// <param name="mensagens">Provedor de mensagens renderizado.</param>
+    /// <returns>Textos das mensagens.</returns>
+    private static List<string> MensagensExibidas(IRenderedComponent<MudSnackbarProvider> mensagens)
+    {
+        return mensagens.FindAll(".mud-snackbar-content-message").Select(Texto).ToList();
     }
 
     /// <summary>
@@ -279,6 +418,16 @@ public class ResultadosTestes : ComponenteTesteBase
     private void AdicionarConcursos(int ultimo)
     {
         this.concursos.AddRange(Enumerable.Range(1, ultimo).Select(numero => ConcursoFabrica.Criar(numero: numero)));
+    }
+
+    /// <summary>
+    /// Faz a fonte do histórico devolver os concursos de 1 até o número informado.
+    /// </summary>
+    /// <param name="ultimo">Número do último concurso do histórico.</param>
+    private void DefinirHistorico(int ultimo)
+    {
+        List<Concurso> historico = Enumerable.Range(1, ultimo).Select(numero => ConcursoFabrica.Criar(numero: numero)).ToList();
+        this.fonte.ObterHistoricoAsync(Arg.Any<CancellationToken>()).Returns(historico);
     }
 
     /// <summary>

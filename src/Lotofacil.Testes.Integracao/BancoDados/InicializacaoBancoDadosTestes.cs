@@ -4,6 +4,7 @@
 
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Infraestrutura;
+using Lotofacil.Infraestrutura.Caixa;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -89,7 +90,7 @@ public sealed class InicializacaoBancoDadosTestes : IDisposable
     private async Task<ServiceProvider> IniciarAsync()
     {
         ServiceProvider provedor = new ServiceCollection()
-            .AddInfraestrutura(this.CaminhoBanco)
+            .AddInfraestrutura(this.CaminhoBanco, new OpcoesFonteResultados("https://exemplo.local", 60))
             .BuildServiceProvider();
         await provedor.InicializarBancoDadosAsync(TestContext.Current.CancellationToken);
 
