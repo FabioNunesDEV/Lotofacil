@@ -1,0 +1,22 @@
+.mapa-calor {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.celula {
+    border-radius: var(--mud-default-borderradius);
+    border: 1px solid var(--mud-palette-lines-default);
+    padding: 10px 4px;
+    text-align: center;
+}
+
+.celula strong {
+    display: block;
+    font-size: 18px;
+}
+
+.celula span {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}

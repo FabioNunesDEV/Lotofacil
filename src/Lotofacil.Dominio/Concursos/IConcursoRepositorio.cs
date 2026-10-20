@@ -42,6 +42,13 @@ public interface IConcursoRepositorio
     Task<IReadOnlySet<int>> ListarNumerosAsync(CancellationToken cancelamento = default);
 
     /// <summary>
+    /// Lista número e dezenas de todos os concursos gravados.
+    /// </summary>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Resultados em ordem crescente de número.</returns>
+    Task<IReadOnlyList<ResultadoSorteio>> ListarResultadosAsync(CancellationToken cancelamento = default);
+
+    /// <summary>
     /// Obtém o maior número de concurso gravado.
     /// </summary>
     /// <param name="cancelamento">Sinal de cancelamento.</param>

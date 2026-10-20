@@ -205,6 +205,37 @@ public sealed class ConcursoRepositorioTestes : IAsyncLifetime
     }
 
     /// <summary>
+    /// Os resultados vêm em ordem crescente de número, com as dezenas gravadas.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ListaResultadosEmOrdemComAsDezenas()
+    {
+        await this.repositorio.AdicionarAsync(
+            [CriarConcurso(3), CriarConcurso(1), CriarConcurso(2)],
+            TestContext.Current.CancellationToken);
+
+        IReadOnlyList<ResultadoSorteio> resultados = await this.repositorio.ListarResultadosAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal([1, 2, 3], resultados.Select(resultado => resultado.Numero));
+        Assert.All(
+            resultados,
+            resultado => Assert.Equal([1, 2, 4, 5, 7, 10, 11, 13, 14, 18, 20, 21, 22, 24, 25], resultado.Dezenas));
+    }
+
+    /// <summary>
+    /// Com a base vazia, a lista de resultados vem vazia.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ListaResultadosComBaseVazia()
+    {
+        IReadOnlyList<ResultadoSorteio> resultados = await this.repositorio.ListarResultadosAsync(TestContext.Current.CancellationToken);
+
+        Assert.Empty(resultados);
+    }
+
+    /// <summary>
     /// Com a base vazia, não há último número.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>

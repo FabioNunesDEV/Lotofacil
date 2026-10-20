@@ -1,0 +1,19 @@
+.grade-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+}
+
+.grade-rankings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+::deep .acima {
+    color: var(--mud-palette-success-darken);
+}
+
+::deep .abaixo {
+    color: var(--mud-palette-error);
+}

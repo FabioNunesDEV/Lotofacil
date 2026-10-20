@@ -1,0 +1,21 @@
+<div class="d-flex flex-wrap align-center justify-space-between gap-2 mb-3">
+    <MudText Typo="Typo.h6" HtmlTag="h2">Mapa de calor</MudText>
+    <MudToggleGroup T="MetricaMapa" Value="this.metrica" ValueChanged="this.TrocarMetrica" Size="Size.Small"
+                    Color="Color.Primary" CheckMark="false" Class="metricas">
+        <MudToggleItem Value="MetricaMapa.Frequencia" Text="Frequência" />
+        <MudToggleItem Value="MetricaMapa.Atraso" Text="Atraso" />
+        <MudToggleItem Value="MetricaMapa.Desvio" Text="Desvio" />
+    </MudToggleGroup>
+</div>
+
+<div class="mapa-calor">
+    @foreach (EstatisticaDezena dezena in this.Estatisticas.Dezenas)
+    {
+        <div class="@this.ClasseCelula(dezena)" style="@this.Estilo(dezena)">
+            <strong>@dezena.Dezena.ToString("00")</strong>
+            <span>@this.Texto(dezena)</span>
+        </div>
+    }
+</div>
+
+<MudText Typo="Typo.body2" Class="mud-text-secondary mt-2 legenda">@this.Legenda</MudText>

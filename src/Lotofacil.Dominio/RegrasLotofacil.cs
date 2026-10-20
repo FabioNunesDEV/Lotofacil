@@ -20,6 +20,11 @@ public static class RegrasLotofacil
     public const int DezenaMaxima = 25;
 
     /// <summary>
+    /// Quantidade de dezenas do volante.
+    /// </summary>
+    public const int QuantidadeDezenas = 25;
+
+    /// <summary>
     /// Quantidade de dezenas sorteadas em cada concurso.
     /// </summary>
     public const int DezenasSorteadas = 15;

@@ -1,0 +1,84 @@
+@page "/estatisticas"
+
+<PageTitle>Estatísticas · Lotofácil</PageTitle>
+
+<div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-4">
+    <div>
+        <MudText Typo="Typo.h4" HtmlTag="h1">Estatísticas</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary intervalo">@this.Intervalo</MudText>
+    </div>
+    @if (this.estatisticas is not null)
+    {
+        <MudChipSet T="int" SelectedValue="this.janela" SelectedValueChanged="this.TrocarJanelaAsync"
+                    SelectionMode="SelectionMode.SingleSelection" CheckMark="false" Color="Color.Primary"
+                    Variant="Variant.Outlined" Class="janelas">
+            <MudChip T="int" Value="TodasAsJanelas" Text="@($"Todos ({FormatacaoEstatistica.Quantidade(this.estatisticas.TotalConcursos)})")" />
+            @foreach (int quantidade in EstatisticasServico.JanelasDisponiveis)
+            {
+                <MudChip T="int" Value="quantidade" Text="@($"Últimos {quantidade}")" />
+            }
+        </MudChipSet>
+    }
+</div>
+
+<MudAlert Severity="Severity.Info" Class="mb-4 aviso">@Aviso</MudAlert>
+
+@if (this.carregado && this.estatisticas is null)
+{
+    <MudText Class="sem-registros">@MensagemBaseVazia</MudText>
+}
+else if (this.estatisticas is EstatisticasDezenas dados)
+{
+    <div class="grade-2 mb-4">
+        <MudPaper Class="pa-4" Elevation="1">
+            <MapaCalor Estatisticas="dados" />
+        </MudPaper>
+        <MudPaper Class="pa-4" Elevation="1">
+            <div class="grade-rankings">
+                <RankingDezenas Titulo="Mais sorteadas" Ranking="dados.MaisSorteadas" Classe="mais-sorteadas" />
+                <RankingDezenas Titulo="Menos sorteadas" Ranking="dados.MenosSorteadas" Classe="menos-sorteadas" />
+                <RankingDezenas Titulo="Há mais tempo sem sair" Ranking="dados.MaisAtrasadas" PorAtraso="true"
+                                Classe="mais-atrasadas" />
+                <RankingDezenas Titulo="Há menos tempo sem sair" Ranking="dados.MenosAtrasadas" PorAtraso="true"
+                                Classe="menos-atrasadas" />
+            </div>
+        </MudPaper>
+    </div>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <div class="d-flex flex-wrap align-center justify-space-between gap-2 mb-2">
+            <MudText Typo="Typo.h6" HtmlTag="h2">Todas as dezenas</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary esperado">
+                Esperado por dezena: @FormatacaoEstatistica.Esperado(dados.Esperado) (60% dos concursos)
+            </MudText>
+        </div>
+        <MudSimpleTable Dense="true" Hover="true" Elevation="0" Class="tabela-dezenas">
+            <thead>
+                <tr>
+                    <th>Dezena</th>
+                    <th class="numero">Sorteios</th>
+                    <th class="numero">% dos concursos</th>
+                    <th class="numero">Diferença do esperado</th>
+                    <th class="numero">Desvio (σ)</th>
+                    <th class="numero">Atraso</th>
+                    <th class="numero">Última vez</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (EstatisticaDezena dezena in dados.Dezenas)
+                {
+                    string classe = FormatacaoEstatistica.ClasseDiferenca(dezena.Diferenca);
+                    <tr>
+                        <td><Dezenas Valores="[dezena.Dezena]" /></td>
+                        <td class="numero">@FormatacaoEstatistica.Quantidade(dezena.Sorteios)</td>
+                        <td class="numero">@FormatacaoEstatistica.Percentual(dezena.Percentual)</td>
+                        <td class="numero @classe">@FormatacaoEstatistica.Diferenca(dezena.Diferenca)</td>
+                        <td class="numero @classe">@FormatacaoEstatistica.Desvio(dezena.Desvio)</td>
+                        <td class="numero">@FormatacaoEstatistica.NumeroOuIndefinido(dezena.Atraso)</td>
+                        <td class="numero">@FormatacaoEstatistica.NumeroOuIndefinido(dezena.UltimaVez)</td>
+                    </tr>
+                }
+            </tbody>
+        </MudSimpleTable>
+    </MudPaper>
+}

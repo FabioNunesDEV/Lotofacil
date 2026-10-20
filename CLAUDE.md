@@ -33,9 +33,13 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
 - Estratégia de geração de jogos (o usuário enviará material específico).
 - Quantidade de dezenas por jogo (15 a 20) na geração e na conferência.
 - Dezenas fixas: regras de validação, dezenas excluídas, jogos duplicados.
-- Janela da análise (todo o histórico ou últimos N concursos).
+- Janela da análise para a geração de jogos (para as estatísticas, já definida abaixo).
 - Jogo cadastrado para concurso que já existe na base.
 - Teimosinha e Bolão.
+
+## Decisões de negócio já definidas
+- Janela das estatísticas: todo o histórico (padrão) ou os últimos 10, 20, 50 ou 100 concursos, sem intervalo
+  personalizado. A janela afeta a frequência; o atraso é sempre calculado sobre todo o histórico.
 
 ## Stack
 - .NET 10, C#, Blazor Server com MudBlazor. Roda apenas em `localhost`.

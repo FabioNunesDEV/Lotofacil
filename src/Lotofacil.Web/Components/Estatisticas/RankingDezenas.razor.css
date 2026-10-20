@@ -1,0 +1,28 @@
+.lista-ranking {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lista-ranking li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.lista-ranking li:last-child {
+    border-bottom: 0;
+}
+
+.valor {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    color: var(--mud-palette-text-secondary);
+}
+
+.empate {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.875rem;
+}
