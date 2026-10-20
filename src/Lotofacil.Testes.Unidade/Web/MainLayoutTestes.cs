@@ -49,10 +49,27 @@ public class MainLayoutTestes : ComponenteTesteBase
         IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
 
         var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
-        Assert.Equal(["Painel", "Resultados"], itens.Select(item => item.TextContent.Trim()));
+        Assert.Equal(["Painel", "Resultados", "Estatísticas"], itens.Select(item => item.TextContent.Trim()));
         Assert.Equal("resultados", itens[1].GetAttribute("href"));
         Assert.Contains("active", itens[1].ClassList);
         Assert.DoesNotContain("active", itens[0].ClassList);
+    }
+
+    /// <summary>
+    /// O item Estatísticas vem logo abaixo de Resultados e fica selecionado na rota /estatisticas.
+    /// </summary>
+    [Fact]
+    public void ExibeItemEstatisticasSelecionadoNaRotaEstatisticas()
+    {
+        this.Services.GetRequiredService<NavigationManager>().NavigateTo("estatisticas");
+
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
+        Assert.Equal("Estatísticas", itens[2].TextContent.Trim());
+        Assert.Equal("estatisticas", itens[2].GetAttribute("href"));
+        Assert.Contains("active", itens[2].ClassList);
+        Assert.DoesNotContain("active", itens[1].ClassList);
     }
 
     /// <summary>

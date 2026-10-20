@@ -1,0 +1,16 @@
+<div class="ranking @this.Classe">
+    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mb-1">@this.Titulo</MudText>
+    <ul class="lista-ranking">
+        @foreach (EstatisticaDezena item in this.Ranking.Itens)
+        {
+            <li>
+                <Dezenas Valores="[item.Dezena]" />
+                <span class="valor">@this.Valor(item)</span>
+            </li>
+        }
+        @if (this.Ranking.Empatadas > 0)
+        {
+            <li class="empate">@this.TextoEmpate</li>
+        }
+    </ul>
+</div>

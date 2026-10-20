@@ -3,6 +3,7 @@
 // </copyright>
 
 using Lotofacil.Aplicacao.Concursos;
+using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Infraestrutura;
 using Lotofacil.Infraestrutura.Caixa;
 using Lotofacil.Web;
@@ -30,6 +31,7 @@ builder.Services.AddInfraestrutura(caminhoBanco, opcoesFonte);
 builder.Services.AddSingleton<ConsultaConcursosServico>();
 builder.Services.AddSingleton<ImportacaoHistoricoServico>();
 builder.Services.AddSingleton<AtualizacaoConcursosServico>();
+builder.Services.AddSingleton<EstatisticasServico>();
 
 var app = builder.Build();
 

@@ -97,6 +97,19 @@ internal sealed class ConcursoRepositorio : IConcursoRepositorio
     }
 
     /// <inheritdoc/>
+    public async Task<IReadOnlyList<ResultadoSorteio>> ListarResultadosAsync(CancellationToken cancelamento = default)
+    {
+        await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
+
+        // A projeção lê só número e dezenas; o rateio, em outra tabela, não é carregado.
+        return await contexto.Concursos
+            .AsNoTracking()
+            .OrderBy(concurso => concurso.Numero)
+            .Select(concurso => new ResultadoSorteio(concurso.Numero, concurso.Dezenas))
+            .ToListAsync(cancelamento);
+    }
+
+    /// <inheritdoc/>
     public async Task<int?> ObterUltimoNumeroAsync(CancellationToken cancelamento = default)
     {
         await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
