@@ -1,0 +1,16 @@
+<div class="volante">
+    @for (int dezena = RegrasLotofacil.DezenaMinima; dezena <= RegrasLotofacil.DezenaMaxima; dezena++)
+    {
+        int atual = dezena;
+        if (this.Interativo)
+        {
+            <button type="button" class="@this.Classe(atual)" disabled="@this.Bloqueada(atual)"
+                    aria-pressed="@(this.Marcadas.Contains(atual) ? "true" : "false")"
+                    @onclick="() => this.AlternarAsync(atual)">@atual.ToString("00")</button>
+        }
+        else
+        {
+            <span class="@this.Classe(atual)">@atual.ToString("00")</span>
+        }
+    }
+</div>

@@ -3,6 +3,7 @@
 // </copyright>
 
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Dominio.Jogos;
 using Lotofacil.Infraestrutura.BancoDados;
 using Lotofacil.Infraestrutura.Caixa;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,7 @@ public static class ConfiguracaoInfraestrutura
     {
         servicos.AddDbContextFactory<LotofacilContexto>(opcoes => opcoes.UseSqlite($"Data Source={caminhoBanco}"));
         servicos.AddSingleton<IConcursoRepositorio, ConcursoRepositorio>();
+        servicos.AddSingleton<IJogoRepositorio, JogoRepositorio>();
 
         // Um único cliente da Caixa para todas as fontes, para a pausa valer entre todas as requisições.
         servicos.AddSingleton(_ => new ClienteCaixa(CriarClienteHttp(opcoesFonte), opcoesFonte));

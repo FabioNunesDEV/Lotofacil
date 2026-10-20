@@ -3,6 +3,7 @@
 // </copyright>
 
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Dominio.Jogos;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lotofacil.Infraestrutura.BancoDados;
@@ -25,6 +26,11 @@ public class LotofacilContexto : DbContext
     /// Concursos gravados.
     /// </summary>
     public DbSet<Concurso> Concursos => this.Set<Concurso>();
+
+    /// <summary>
+    /// Jogos do usuário.
+    /// </summary>
+    public DbSet<Jogo> Jogos => this.Set<Jogo>();
 
     /// <summary>
     /// Aplica os mapeamentos das entidades.
