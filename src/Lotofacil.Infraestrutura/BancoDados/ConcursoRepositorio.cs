@@ -97,6 +97,14 @@ internal sealed class ConcursoRepositorio : IConcursoRepositorio
     }
 
     /// <inheritdoc/>
+    public async Task<int?> ObterUltimoNumeroAsync(CancellationToken cancelamento = default)
+    {
+        await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
+
+        return await contexto.Concursos.MaxAsync(concurso => (int?)concurso.Numero, cancelamento);
+    }
+
+    /// <inheritdoc/>
     public async Task<int> ContarAsync(CancellationToken cancelamento = default)
     {
         await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);

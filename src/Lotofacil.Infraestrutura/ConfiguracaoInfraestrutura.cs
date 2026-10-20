@@ -34,8 +34,11 @@ public static class ConfiguracaoInfraestrutura
     {
         servicos.AddDbContextFactory<LotofacilContexto>(opcoes => opcoes.UseSqlite($"Data Source={caminhoBanco}"));
         servicos.AddSingleton<IConcursoRepositorio, ConcursoRepositorio>();
-        servicos.AddSingleton<IFonteHistoricoConcursos>(
-            _ => new HistoricoCaixaFonte(CriarClienteCaixa(opcoesFonte), opcoesFonte));
+
+        // Um único cliente da Caixa para todas as fontes, para a pausa valer entre todas as requisições.
+        servicos.AddSingleton(_ => new ClienteCaixa(CriarClienteHttp(opcoesFonte), opcoesFonte));
+        servicos.AddSingleton<IFonteHistoricoConcursos, HistoricoCaixaFonte>();
+        servicos.AddSingleton<IFonteConcursos, ConcursosCaixaFonte>();
 
         return servicos;
     }
@@ -61,7 +64,7 @@ public static class ConfiguracaoInfraestrutura
     /// </summary>
     /// <param name="opcoesFonte">Configuração com o tempo limite.</param>
     /// <returns>Cliente HTTP configurado.</returns>
-    private static HttpClient CriarClienteCaixa(OpcoesFonteResultados opcoesFonte)
+    private static HttpClient CriarClienteHttp(OpcoesFonteResultados opcoesFonte)
     {
         var handler = new SocketsHttpHandler { PooledConnectionLifetime = VidaConexao };
 

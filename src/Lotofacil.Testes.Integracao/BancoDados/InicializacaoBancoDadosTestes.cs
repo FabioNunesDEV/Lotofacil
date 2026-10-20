@@ -90,7 +90,7 @@ public sealed class InicializacaoBancoDadosTestes : IDisposable
     private async Task<ServiceProvider> IniciarAsync()
     {
         ServiceProvider provedor = new ServiceCollection()
-            .AddInfraestrutura(this.CaminhoBanco, new OpcoesFonteResultados("https://exemplo.local", 60))
+            .AddInfraestrutura(this.CaminhoBanco, new OpcoesFonteResultados("https://exemplo.local", 60, 0))
             .BuildServiceProvider();
         await provedor.InicializarBancoDadosAsync(TestContext.Current.CancellationToken);
 

@@ -37,16 +37,25 @@ public class ResultadosTestes : ComponenteTesteBase
     private readonly IFonteHistoricoConcursos fonte = Substitute.For<IFonteHistoricoConcursos>();
 
     /// <summary>
+    /// Fonte falsa dos concursos individuais da Caixa.
+    /// </summary>
+    private readonly IFonteConcursos fonteConcursos = Substitute.For<IFonteConcursos>();
+
+    /// <summary>
     /// Logger da página, para conferir o registro das falhas.
     /// </summary>
     private readonly LoggerFalso<Resultados> log = new();
 
     /// <summary>
-    /// Registra os serviços de consulta e de importação com um repositório que usa a lista
+    /// Registra os serviços de consulta, importação e atualização com um repositório que usa a lista
     /// <see cref="concursos"/>.
     /// </summary>
     public ResultadosTestes()
     {
+        this.repositorio.ObterUltimoNumeroAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => this.concursos.Count == 0 ? null : this.concursos.Max(concurso => concurso.Numero));
+        this.fonteConcursos.ObterConcursoAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(chamada => ConcursoFabrica.Criar(numero: chamada.ArgAt<int>(0)));
         this.repositorio.ListarAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(chamada => this.concursos
                 .OrderByDescending(concurso => concurso.Numero)
@@ -67,6 +76,7 @@ public class ResultadosTestes : ComponenteTesteBase
 
         this.Services.AddSingleton(new ConsultaConcursosServico(this.repositorio));
         this.Services.AddSingleton(new ImportacaoHistoricoServico(this.fonte, this.repositorio));
+        this.Services.AddSingleton(new AtualizacaoConcursosServico(this.fonteConcursos, this.repositorio));
         this.Services.AddSingleton<ILogger<Resultados>>(this.log);
     }
 
@@ -318,7 +328,7 @@ public class ResultadosTestes : ComponenteTesteBase
     }
 
     /// <summary>
-    /// Enquanto a importação não termina, o botão fica desabilitado e a página indica o andamento.
+    /// Enquanto a importação não termina, os dois botões ficam desabilitados e a página indica o andamento.
     /// </summary>
     [Fact]
     public void ImportacaoEmAndamento()
@@ -330,12 +340,14 @@ public class ResultadosTestes : ComponenteTesteBase
         pagina.Find(".botao-importar").Click();
 
         Assert.True(pagina.Find(".botao-importar").HasAttribute("disabled"));
-        Assert.Equal("Importando o histórico da Caixa…", Texto(pagina.Find(".importando")));
+        Assert.True(pagina.Find(".botao-atualizar").HasAttribute("disabled"));
+        Assert.Equal("Importando o histórico da Caixa…", Texto(pagina.Find(".andamento")));
 
         download.SetResult([ConcursoFabrica.Criar(numero: 1)]);
 
         pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-importar").HasAttribute("disabled")));
-        Assert.Empty(pagina.FindAll(".importando"));
+        Assert.False(pagina.Find(".botao-atualizar").HasAttribute("disabled"));
+        Assert.Empty(pagina.FindAll(".andamento"));
     }
 
     /// <summary>
@@ -375,6 +387,148 @@ public class ResultadosTestes : ComponenteTesteBase
 
         mensagens.WaitForAssertion(() => Assert.Contains(
             "A importação falhou e nada foi gravado. Erro inesperado; os detalhes foram registrados no log.",
+            MensagensExibidas(mensagens)));
+        Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
+    }
+
+    /// <summary>
+    /// Atualização com vários concursos novos: mensagem com o intervalo e lista a partir do mais recente.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoComConcursosNovos()
+    {
+        this.AdicionarConcursos(3808);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3811);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+        pagina.WaitForAssertion(() => Assert.Equal(10, NumerosExibidos(pagina).Count));
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Atualização concluída: 3 concursos novos gravados (3809 a 3811).",
+            MensagensExibidas(mensagens)));
+        pagina.WaitForAssertion(() => Assert.Equal(3811, NumerosExibidos(pagina)[0]));
+    }
+
+    /// <summary>
+    /// Atualização com um único concurso novo usa o singular.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoComUmConcursoNovo()
+    {
+        this.AdicionarConcursos(3808);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3809);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Atualização concluída: 1 concurso novo gravado (3809).",
+            MensagensExibidas(mensagens)));
+    }
+
+    /// <summary>
+    /// Sem concursos novos, a página informa que a base já está atualizada.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoComBaseJaAtualizada()
+    {
+        this.AdicionarConcursos(3808);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3808);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "A base local já está atualizada: último concurso 3808.",
+            MensagensExibidas(mensagens)));
+    }
+
+    /// <summary>
+    /// Com a base vazia, a página pede a importação antes e a Caixa não é consultada.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoComBaseVazia()
+    {
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "A base local está vazia. Use “Importar histórico” antes de atualizar os resultados.",
+            MensagensExibidas(mensagens)));
+        this.fonteConcursos.DidNotReceiveWithAnyArgs().ObterNumeroUltimoConcursoAsync(Xunit.TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Durante a atualização, a página mostra o concurso sendo buscado e desabilita os dois botões.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoEmAndamento()
+    {
+        this.AdicionarConcursos(3808);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3811);
+        var busca3810 = new TaskCompletionSource<Concurso>();
+        this.fonteConcursos.ObterConcursoAsync(3810, Arg.Any<CancellationToken>()).Returns(busca3810.Task);
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        pagina.WaitForAssertion(() => Assert.Equal("Buscando o concurso 3810 (2 de 3)…", Texto(pagina.Find(".andamento"))));
+        Assert.True(pagina.Find(".botao-atualizar").HasAttribute("disabled"));
+        Assert.True(pagina.Find(".botao-importar").HasAttribute("disabled"));
+
+        busca3810.SetResult(ConcursoFabrica.Criar(numero: 3810));
+
+        pagina.WaitForAssertion(() => Assert.Empty(pagina.FindAll(".andamento")));
+        Assert.False(pagina.Find(".botao-atualizar").HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Interrupção depois de gravar: mensagem com a falha e o que foi gravado, lista recarregada e log.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoInterrompidaDepoisDeGravar()
+    {
+        this.AdicionarConcursos(3808);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3812);
+        var falha = new FonteResultadosException("A Caixa respondeu com o código 503 ao buscar o concurso 3811.");
+        this.fonteConcursos.ObterConcursoAsync(3811, Arg.Any<CancellationToken>()).ThrowsAsync(falha);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "A atualização foi interrompida. A Caixa respondeu com o código 503 ao buscar o concurso 3811. "
+                + "Concursos gravados antes da falha: 2 (até o 3810).",
+            MensagensExibidas(mensagens)));
+        pagina.WaitForAssertion(() => Assert.Equal(3810, NumerosExibidos(pagina)[0]));
+        Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
+    }
+
+    /// <summary>
+    /// Falha não prevista durante a atualização: mensagem genérica e registro no log.
+    /// </summary>
+    [Fact]
+    public void FalhaInesperadaNaAtualizacao()
+    {
+        this.AdicionarConcursos(3808);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3809);
+        var falha = new InvalidOperationException("Banco bloqueado.");
+        this.repositorio.AdicionarAsync(Arg.Any<IReadOnlyCollection<Concurso>>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(falha);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "A atualização foi interrompida. Erro inesperado; os detalhes foram registrados no log.",
             MensagensExibidas(mensagens)));
         Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
     }

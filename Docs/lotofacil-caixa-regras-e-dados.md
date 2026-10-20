@@ -132,6 +132,19 @@ Campos úteis:
 | `valorAcumuladoConcursoEspecial` | Acumulado Independência |
 | `ultimoConcurso` | `true` se for o mais recente |
 
+**Conferido em 20/10/2026** (concurso 3808):
+- `listaRateioPremio[].faixa` vai de 1 a 5: faixa 1 = `"15 acertos"`, 2 = `"14 acertos"` … 5 = `"11 acertos"`.
+- Valores monetários vêm como número JSON (ex.: `1456047.72`); ler como decimal direto do texto para não perder
+  centavos.
+- Correspondência com as colunas do XLSX: `valorArrecadado` = "Arrecadacao Total";
+  `valorAcumuladoProximoConcurso` = "Acumulado 15 acertos"; `valorEstimadoProximoConcurso` = "Estimativa
+  Prêmio"; `valorAcumuladoConcursoEspecial` = "Acumulado sorteio especial Lotofácil da Independência". Os valores
+  do 3808 são iguais nas duas fontes.
+- Concurso que ainda não existe (ex.: o próximo, antes do sorteio, ou `99999`) responde **HTTP 500** com um JSON de
+  erro, e não 404. Por isso a atualização só pede números até o `numero` devolvido por `/api/lotofacil/`.
+- Um concurso recém-sorteado pode vir antes de o rateio ser divulgado; o sistema não grava concurso com
+  `listaRateioPremio` vazia ou com todas as faixas sem ganhadores.
+
 ### 3.3 Preços
 
 - Não há endpoint de preços na API (`/api/loterias` traz só textos).

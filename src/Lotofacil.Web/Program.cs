@@ -24,10 +24,12 @@ string caminhoBanco = Path.Combine(
     builder.Configuration["BancoDados:Arquivo"] ?? "lotofacil.db");
 var opcoesFonte = new OpcoesFonteResultados(
     builder.Configuration["FonteResultados:UrlBase"] ?? "https://servicebus3.caixa.gov.br/portaldeloterias",
-    builder.Configuration.GetValue("FonteResultados:TempoLimiteSegundos", 60));
+    builder.Configuration.GetValue("FonteResultados:TempoLimiteSegundos", 60),
+    builder.Configuration.GetValue("FonteResultados:PausaEntreRequisicoesMs", 500));
 builder.Services.AddInfraestrutura(caminhoBanco, opcoesFonte);
 builder.Services.AddSingleton<ConsultaConcursosServico>();
 builder.Services.AddSingleton<ImportacaoHistoricoServico>();
+builder.Services.AddSingleton<AtualizacaoConcursosServico>();
 
 var app = builder.Build();
 

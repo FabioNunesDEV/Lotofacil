@@ -53,11 +53,10 @@ public sealed class ImportacaoHistoricoTestes : IAsyncLifetime
             .BuildServiceProvider();
         this.repositorio = new ConcursoRepositorio(this.provedor.GetRequiredService<IDbContextFactory<LotofacilContexto>>());
 
-        var handler = new RespostaFalsaHandler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new ByteArrayContent(this.arquivo),
-        }));
-        var fonte = new HistoricoCaixaFonte(new HttpClient(handler), new OpcoesFonteResultados("https://exemplo.local", 60));
+        var handler = new RespostaFalsaHandler(
+            (_, _) => Task.FromResult(RespostaFalsaHandler.CriarResposta(HttpStatusCode.OK, this.arquivo)));
+        var cliente = new ClienteCaixa(new HttpClient(handler), new OpcoesFonteResultados("https://exemplo.local", 60, 0));
+        var fonte = new HistoricoCaixaFonte(cliente);
         this.servico = new ImportacaoHistoricoServico(fonte, this.repositorio);
     }
 

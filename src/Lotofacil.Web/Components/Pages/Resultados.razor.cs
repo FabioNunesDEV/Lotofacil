@@ -27,6 +27,16 @@ public partial class Resultados
     private const string PrefixoFalhaImportacao = "A importação falhou e nada foi gravado.";
 
     /// <summary>
+    /// Início da mensagem de falha da atualização.
+    /// </summary>
+    private const string PrefixoFalhaAtualizacao = "A atualização foi interrompida.";
+
+    /// <summary>
+    /// Motivo exibido quando a falha não foi prevista; o detalhe vai para o log.
+    /// </summary>
+    private const string MotivoErroInesperado = "Erro inesperado; os detalhes foram registrados no log.";
+
+    /// <summary>
     /// Quantidades de concursos por página oferecidas ao usuário.
     /// </summary>
     private static readonly int[] OpcoesTamanhoPagina = [10, 25, 50];
@@ -52,9 +62,9 @@ public partial class Resultados
     private string mensagemSemRegistros = MensagemBaseVazia;
 
     /// <summary>
-    /// Indica se a importação do histórico está em andamento.
+    /// Texto do andamento da importação ou da atualização, ou <c>null</c> quando nenhuma está em andamento.
     /// </summary>
-    private bool importando;
+    private string? andamento;
 
     /// <summary>
     /// Serviço de consulta dos concursos.
@@ -69,6 +79,12 @@ public partial class Resultados
     private ImportacaoHistoricoServico Importacao { get; set; } = null!;
 
     /// <summary>
+    /// Serviço de atualização dos concursos pela API da Caixa.
+    /// </summary>
+    [Inject]
+    private AtualizacaoConcursosServico Atualizacao { get; set; } = null!;
+
+    /// <summary>
     /// Mensagens rápidas exibidas ao usuário.
     /// </summary>
     [Inject]
@@ -79,6 +95,11 @@ public partial class Resultados
     /// </summary>
     [Inject]
     private ILogger<Resultados> Log { get; set; } = null!;
+
+    /// <summary>
+    /// Indica que a importação ou a atualização está em andamento; os dois botões ficam desabilitados.
+    /// </summary>
+    private bool Ocupada => this.andamento is not null;
 
     /// <summary>
     /// Devolve o rateio da faixa de 15 acertos.
@@ -140,7 +161,7 @@ public partial class Resultados
     /// <returns>Tarefa da importação.</returns>
     private async Task ImportarHistoricoAsync()
     {
-        this.importando = true;
+        this.andamento = "Importando o histórico da Caixa…";
         try
         {
             ResultadoImportacao resultado = await this.Importacao.ImportarAsync();
@@ -162,29 +183,116 @@ public partial class Resultados
         catch (FonteResultadosException erro)
         {
             this.Log.LogError(erro, "Falha na importação do histórico: {Mensagem}", erro.Message);
-            this.MostrarFalhaImportacao(erro.Message);
+            this.MostrarFalha($"{PrefixoFalhaImportacao} {erro.Message}");
         }
         catch (Exception erro) when (erro is not OperationCanceledException)
         {
             this.Log.LogError(erro, "Falha inesperada na importação do histórico.");
-            this.MostrarFalhaImportacao("Erro inesperado; os detalhes foram registrados no log.");
+            this.MostrarFalha($"{PrefixoFalhaImportacao} {MotivoErroInesperado}");
         }
         finally
         {
-            this.importando = false;
+            this.andamento = null;
         }
     }
 
     /// <summary>
-    /// Mostra a falha da importação numa mensagem que só some quando o usuário fecha.
+    /// Busca na Caixa os concursos novos, mostrando o andamento, e informa o desfecho.
     /// </summary>
-    /// <param name="motivo">Motivo da falha.</param>
-    private void MostrarFalhaImportacao(string motivo)
+    /// <returns>Tarefa da atualização.</returns>
+    private async Task AtualizarResultadosAsync()
     {
-        this.Mensagens.Add(
-            $"{PrefixoFalhaImportacao} {motivo}",
-            Severity.Error,
-            opcoes => opcoes.RequireInteraction = true);
+        this.andamento = "Consultando o último concurso da Caixa…";
+        try
+        {
+            var progresso = new Progress<AndamentoAtualizacao>(this.MostrarAndamento);
+            ResultadoAtualizacao resultado = await this.Atualizacao.AtualizarAsync(progresso);
+            this.InformarAtualizacao(resultado);
+
+            if (resultado.ConcursosGravados > 0)
+            {
+                await this.BuscarAsync(null);
+            }
+        }
+        catch (Exception erro) when (erro is not OperationCanceledException)
+        {
+            this.Log.LogError(erro, "Falha inesperada na atualização dos resultados.");
+            this.MostrarFalha($"{PrefixoFalhaAtualizacao} {MotivoErroInesperado}");
+        }
+        finally
+        {
+            this.andamento = null;
+        }
+    }
+
+    /// <summary>
+    /// Mostra qual concurso está sendo buscado.
+    /// </summary>
+    /// <param name="atual">Concurso sendo buscado e sua posição.</param>
+    private void MostrarAndamento(AndamentoAtualizacao atual)
+    {
+        _ = this.InvokeAsync(() =>
+        {
+            // O aviso chega de forma assíncrona; a atualização pode já ter terminado.
+            if (this.andamento is null)
+            {
+                return;
+            }
+
+            this.andamento = $"Buscando o concurso {atual.Numero} ({atual.Posicao} de {atual.Total})…";
+            this.StateHasChanged();
+        });
+    }
+
+    /// <summary>
+    /// Mostra a mensagem do desfecho da atualização e registra no log a falha, se houver.
+    /// </summary>
+    /// <param name="resultado">Desfecho da atualização.</param>
+    private void InformarAtualizacao(ResultadoAtualizacao resultado)
+    {
+        int gravados = resultado.ConcursosGravados;
+        int ultimo = resultado.UltimoNumeroNaBase;
+
+        if (resultado.BaseVazia)
+        {
+            this.Mensagens.Add(
+                "A base local está vazia. Use “Importar histórico” antes de atualizar os resultados.",
+                Severity.Warning);
+        }
+        else if (resultado.Falha is FonteResultadosException falha)
+        {
+            this.Log.LogError(falha, "Atualização dos resultados interrompida: {Mensagem}", falha.Message);
+            string mensagem = $"{PrefixoFalhaAtualizacao} {falha.Message}";
+            if (gravados > 0)
+            {
+                mensagem += $" Concursos gravados antes da falha: {gravados:N0} (até o {ultimo}).";
+            }
+
+            this.MostrarFalha(mensagem);
+        }
+        else if (gravados == 0)
+        {
+            this.Mensagens.Add($"A base local já está atualizada: último concurso {ultimo}.", Severity.Info);
+        }
+        else if (gravados == 1)
+        {
+            this.Mensagens.Add($"Atualização concluída: 1 concurso novo gravado ({ultimo}).", Severity.Success);
+        }
+        else
+        {
+            this.Mensagens.Add(
+                $"Atualização concluída: {gravados:N0} concursos novos gravados ({resultado.PrimeiroGravado} a {ultimo}).",
+                Severity.Success);
+        }
+    }
+
+    /// <summary>
+    /// Mostra uma falha numa mensagem que só some quando o usuário fecha.
+    /// </summary>
+    /// <param name="mensagem">Mensagem completa da falha.</param>
+    private void MostrarFalha(string mensagem)
+    {
+        this.Mensagens.Add(mensagem, Severity.Error, opcoes => opcoes.RequireInteraction = true);
     }
 
     /// <summary>
