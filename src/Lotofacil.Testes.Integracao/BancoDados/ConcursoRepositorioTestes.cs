@@ -205,6 +205,34 @@ public sealed class ConcursoRepositorioTestes : IAsyncLifetime
     }
 
     /// <summary>
+    /// Com a base vazia, não há último número.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task UltimoNumeroComBaseVaziaENulo()
+    {
+        int? ultimo = await this.repositorio.ObterUltimoNumeroAsync(TestContext.Current.CancellationToken);
+
+        Assert.Null(ultimo);
+    }
+
+    /// <summary>
+    /// O último número é o maior gravado, mesmo com lacunas e gravação fora de ordem.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task UltimoNumeroEOMaiorGravado()
+    {
+        await this.repositorio.AdicionarAsync(
+            [CriarConcurso(3808), CriarConcurso(1), CriarConcurso(102)],
+            TestContext.Current.CancellationToken);
+
+        int? ultimo = await this.repositorio.ObterUltimoNumeroAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(3808, ultimo);
+    }
+
+    /// <summary>
     /// O modelo do EF Core e as migrations estão em dia: falha se o mapeamento mudar sem nova migration.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>

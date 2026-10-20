@@ -349,7 +349,7 @@ internal static class LeitorPlanilhaHistorico
         }
         catch (ArgumentException erro)
         {
-            throw new FonteResultadosException($"{prefixo} {MensagemSemParametro(erro)}", erro);
+            throw new FonteResultadosException($"{prefixo} {MensagemValidacao.SemParametro(erro)}", erro);
         }
     }
 
@@ -432,18 +432,5 @@ internal static class LeitorPlanilhaHistorico
     {
         return new FonteResultadosException(
             $"{prefixo} a coluna “{TitulosEsperados[coluna]}” tem o valor “{texto}”, que não é {tipoEsperado}.");
-    }
-
-    /// <summary>
-    /// Devolve a mensagem da validação do domínio sem o sufixo <c>(Parameter '...')</c> que o .NET acrescenta.
-    /// </summary>
-    /// <param name="erro">Erro de validação do domínio.</param>
-    /// <returns>Mensagem para o usuário.</returns>
-    private static string MensagemSemParametro(ArgumentException erro)
-    {
-        string sufixo = $" (Parameter '{erro.ParamName}')";
-        bool temSufixo = erro.ParamName is not null && erro.Message.EndsWith(sufixo, StringComparison.Ordinal);
-
-        return temSufixo ? erro.Message[..^sufixo.Length] : erro.Message;
     }
 }

@@ -14,18 +14,22 @@
                          Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" HideSpinButtons="true" Clearable="true"
                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
                          Style="max-width: 220px" Class="campo-busca" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="this.AtualizarResultadosAsync" Disabled="this.Ocupada" Class="botao-atualizar">
+            Atualizar resultados
+        </MudButton>
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
-                   OnClick="this.ImportarHistoricoAsync" Disabled="this.importando" Class="botao-importar">
+                   OnClick="this.ImportarHistoricoAsync" Disabled="this.Ocupada" Class="botao-importar">
             Importar histórico
         </MudButton>
     </div>
 </div>
 
-@if (this.importando)
+@if (this.andamento is not null)
 {
-    <div class="importando mb-4">
+    <div class="andamento mb-4">
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1" />
-        <MudText Typo="Typo.body2">Importando o histórico da Caixa…</MudText>
+        <MudText Typo="Typo.body2">@this.andamento</MudText>
     </div>
 }
 

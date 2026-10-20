@@ -62,7 +62,7 @@ public class HistoricoCaixaFonteTestes
     [Fact]
     public async Task SemConexao()
     {
-        var handler = new RespostaFalsaHandler(_ => throw new HttpRequestException("Host desconhecido."));
+        var handler = new RespostaFalsaHandler((_, _) => throw new HttpRequestException("Host desconhecido."));
 
         var erro = await Assert.ThrowsAsync<FonteResultadosException>(
             () => CriarFonte(handler).ObterHistoricoAsync(TestContext.Current.CancellationToken));
@@ -78,13 +78,14 @@ public class HistoricoCaixaFonteTestes
     [Fact]
     public async Task TempoLimiteExcedido()
     {
-        var handler = new RespostaFalsaHandler(async cancelamento =>
+        var handler = new RespostaFalsaHandler(async (_, cancelamento) =>
         {
             await Task.Delay(Timeout.Infinite, cancelamento);
             return new HttpResponseMessage(HttpStatusCode.OK);
         });
         using var cliente = new HttpClient(handler) { Timeout = TimeSpan.FromMilliseconds(50) };
-        var fonte = new HistoricoCaixaFonte(cliente, new OpcoesFonteResultados("https://exemplo.local", TempoLimiteSegundos));
+        var fonte = new HistoricoCaixaFonte(
+            new ClienteCaixa(cliente, new OpcoesFonteResultados("https://exemplo.local", TempoLimiteSegundos, 0)));
 
         var erro = await Assert.ThrowsAsync<FonteResultadosException>(
             () => fonte.ObterHistoricoAsync(TestContext.Current.CancellationToken));
@@ -99,7 +100,7 @@ public class HistoricoCaixaFonteTestes
     [Fact]
     public async Task CancelamentoDoChamadorNaoViraFalha()
     {
-        var handler = new RespostaFalsaHandler(async cancelamento =>
+        var handler = new RespostaFalsaHandler(async (_, cancelamento) =>
         {
             await Task.Delay(Timeout.Infinite, cancelamento);
             return new HttpResponseMessage(HttpStatusCode.OK);
@@ -134,6 +135,8 @@ public class HistoricoCaixaFonteTestes
     /// <returns>Fonte testada.</returns>
     private static HistoricoCaixaFonte CriarFonte(RespostaFalsaHandler handler, string urlBase = "https://exemplo.local")
     {
-        return new HistoricoCaixaFonte(new HttpClient(handler), new OpcoesFonteResultados(urlBase, TempoLimiteSegundos));
+        var opcoes = new OpcoesFonteResultados(urlBase, TempoLimiteSegundos, 0);
+
+        return new HistoricoCaixaFonte(new ClienteCaixa(new HttpClient(handler), opcoes));
     }
 }

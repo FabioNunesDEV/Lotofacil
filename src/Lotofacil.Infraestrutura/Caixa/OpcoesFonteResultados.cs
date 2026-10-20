@@ -9,4 +9,5 @@ namespace Lotofacil.Infraestrutura.Caixa;
 /// </summary>
 /// <param name="UrlBase">Endereço base da API (ex.: <c>https://servicebus3.caixa.gov.br/portaldeloterias</c>).</param>
 /// <param name="TempoLimiteSegundos">Tempo máximo de espera por uma resposta, em segundos.</param>
-public sealed record OpcoesFonteResultados(string UrlBase, int TempoLimiteSegundos);
+/// <param name="PausaEntreRequisicoesMs">Intervalo mínimo entre o início de duas requisições, em milissegundos.</param>
+public sealed record OpcoesFonteResultados(string UrlBase, int TempoLimiteSegundos, int PausaEntreRequisicoesMs);
