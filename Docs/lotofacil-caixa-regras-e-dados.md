@@ -90,9 +90,21 @@ GET https://servicebus3.caixa.gov.br/portaldeloterias/api/resultados/download?mo
 - Dezenas em **ordem crescente** (não traz ordem do sorteio).
 - Colunas (ordem física): Concurso | Data Sorteio | Bola1–Bola15 | Ganhadores 15 | Cidade/UF | Rateio 15 | Ganhadores 14 | Rateio 14 | Ganhadores 13 | Rateio 13 | Ganhadores 12 | Rateio 12 | Ganhadores 11 | Rateio 11 | Acumulado 15 | Arrecadação Total | Estimativa Prêmio | Acumulado Independência | Observação.
 
+**Formato conferido em 20/10/2026** (concursos 1 a 3.808, todos válidos):
+- Uma única planilha em `xl/worksheets/sheet1.xml`, com prefixo de namespace `x:` (`<x:row>`, `<x:c>`, `<x:v>`).
+- Cabeçalho (linha 1): células `t="s"` com atributo `r`, títulos em `xl/sharedStrings.xml`.
+- Linhas de dados: **sem** atributo `r`, sempre 33 células, valores inline — `t="n"` para números (dezenas
+  com zero à esquerda, `05`) e `t="str"` para data e valores em reais.
+- `<dimension ref="A1:AG1">` não reflete as linhas; não usar.
+- Títulos exatos das 33 colunas: `Concurso`, `Data Sorteio`, `Bola1` … `Bola15`, `Ganhadores 15 acertos`,
+  `Cidade / UF`, `Rateio 15 acertos`, `Ganhadores 14 acertos`, `Rateio 14 acertos`, `Ganhadores 13 acertos`,
+  `Rateio 13 acertos`, `Ganhadores 12 acertos`, `Rateio 12 acertos`, `Ganhadores 11 acertos`,
+  `Rateio 11 acertos`, `Acumulado 15 acertos`, `Arrecadacao Total` (sem cedilha), `Estimativa Prêmio`,
+  `Acumulado sorteio especial Lotofácil da Independência`, `Observação`.
+
 **Cuidados no parser:**
 - Células sem atributo de referência (`r`): ler por posição, não por letra de coluna. Algumas bibliotecas podem desalinhar.
-- Valores monetários como texto (`R$1.388,95`) e data como texto `dd/MM/yyyy`.
+- Valores monetários como texto (`R$1.388,95`, sem espaço após `R$`) e data como texto `dd/MM/yyyy`.
 - Concursos antigos com arrecadação/estimativa = R$ 0,00 (dado ausente).
 - Faixas fixas antigas diferentes (ex.: concurso 1: 11 = R$ 2,00; 12 = R$ 4,00; 13 = R$ 10,00).
 

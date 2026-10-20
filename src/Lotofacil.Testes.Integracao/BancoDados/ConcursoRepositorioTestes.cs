@@ -177,6 +177,34 @@ public sealed class ConcursoRepositorioTestes : IAsyncLifetime
     }
 
     /// <summary>
+    /// Com a base vazia, a lista de números gravados vem vazia.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ListarNumerosComBaseVaziaDevolveVazio()
+    {
+        IReadOnlySet<int> numeros = await this.repositorio.ListarNumerosAsync(TestContext.Current.CancellationToken);
+
+        Assert.Empty(numeros);
+    }
+
+    /// <summary>
+    /// A lista de números traz todos os concursos gravados, inclusive com lacunas na sequência.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ListarNumerosDevolveTodosOsGravados()
+    {
+        await this.repositorio.AdicionarAsync(
+            [CriarConcurso(1), CriarConcurso(2), CriarConcurso(5)],
+            TestContext.Current.CancellationToken);
+
+        IReadOnlySet<int> numeros = await this.repositorio.ListarNumerosAsync(TestContext.Current.CancellationToken);
+
+        Assert.True(numeros.SetEquals([1, 2, 5]));
+    }
+
+    /// <summary>
     /// O modelo do EF Core e as migrations estão em dia: falha se o mapeamento mudar sem nova migration.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>

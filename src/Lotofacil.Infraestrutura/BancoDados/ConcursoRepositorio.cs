@@ -85,6 +85,18 @@ internal sealed class ConcursoRepositorio : IConcursoRepositorio
     }
 
     /// <inheritdoc/>
+    public async Task<IReadOnlySet<int>> ListarNumerosAsync(CancellationToken cancelamento = default)
+    {
+        await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
+
+        List<int> numeros = await contexto.Concursos
+            .Select(concurso => concurso.Numero)
+            .ToListAsync(cancelamento);
+
+        return numeros.ToHashSet();
+    }
+
+    /// <inheritdoc/>
     public async Task<int> ContarAsync(CancellationToken cancelamento = default)
     {
         await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
