@@ -1,0 +1,43 @@
+.indicadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.linha-jogo {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.linha-jogo:last-child {
+    border-bottom: 0;
+}
+
+.clicavel {
+    cursor: pointer;
+}
+
+.clicavel:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.numero-jogo {
+    color: var(--mud-palette-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.resultado-jogo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.premio {
+    min-width: 96px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

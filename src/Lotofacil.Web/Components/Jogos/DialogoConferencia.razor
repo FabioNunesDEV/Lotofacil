@@ -1,0 +1,29 @@
+<MudDialog>
+    <DialogContent>
+        <div class="conferencia">
+            <div>
+                <Volante Marcadas="this.Jogo.Jogo.Dezenas" Sorteadas="this.Concurso.Dezenas" />
+                <div class="legenda mt-3">
+                    <span><span class="marca acerto"></span> Acertou</span>
+                    <span><span class="marca erro"></span> Marcou e não saiu</span>
+                    <span><span class="marca nao-marcada"></span> Saiu e não marcou</span>
+                </div>
+            </div>
+            <dl class="detalhes">
+                <dt>Sorteio</dt>
+                <dd>@FormatacaoConcurso.Data(this.Concurso.Data)</dd>
+                <dt>Acertos</dt>
+                <dd>@this.Conferencia.Acertos de @RegrasLotofacil.DezenasSorteadas</dd>
+                <dt>Faixa</dt>
+                <dd>@(this.Conferencia.Premiado ? FormatacaoJogo.Acertos(this.Conferencia.Acertos) : "Não premiado")</dd>
+                <dt>Prêmio</dt>
+                <dd>@FormatacaoJogo.Premio(this.Conferencia.Premio)</dd>
+                <dt>Prescreve em</dt>
+                <dd>@FormatacaoConcurso.Data(this.Prescricao)</dd>
+            </dl>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="this.Fechar">Fechar</MudButton>
+    </DialogActions>
+</MudDialog>

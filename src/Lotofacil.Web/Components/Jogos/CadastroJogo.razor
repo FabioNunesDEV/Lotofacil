@@ -1,0 +1,17 @@
+<MudDialog>
+    <DialogContent>
+        <MudNumericField T="int?" @bind-Value="this.numeroConcurso" Label="Concurso" Variant="Variant.Outlined"
+                         Margin="Margin.Dense" Min="1" HideSpinButtons="true" Class="campo-concurso mb-4" />
+        <Volante Marcadas="this.marcadas" MarcadasChanged="this.TrocarMarcadas" />
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mt-3 contagem">
+            @this.marcadas.Count de @RegrasLotofacil.DezenasPorJogo dezenas
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="this.Cancelar" Class="botao-cancelar">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="!this.PodeSalvar" OnClick="this.SalvarAsync"
+                   Class="botao-salvar">
+            Salvar
+        </MudButton>
+    </DialogActions>
+</MudDialog>

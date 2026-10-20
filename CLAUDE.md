@@ -31,15 +31,19 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
 
 ## Pendências de negócio (não implementar sem definição do usuário)
 - Estratégia de geração de jogos (o usuário enviará material específico).
-- Quantidade de dezenas por jogo (15 a 20) na geração e na conferência.
-- Dezenas fixas: regras de validação, dezenas excluídas, jogos duplicados.
+- Apostas de 16 a 20 dezenas (hoje só 15; ver abaixo).
+- Dezenas fixas na geração: regras de validação, dezenas excluídas.
 - Janela da análise para a geração de jogos (para as estatísticas, já definida abaixo).
-- Jogo cadastrado para concurso que já existe na base.
 - Teimosinha e Bolão.
 
 ## Decisões de negócio já definidas
 - Janela das estatísticas: todo o histórico (padrão) ou os últimos 10, 20, 50 ou 100 concursos, sem intervalo
   personalizado. A janela afeta a frequência; o atraso é sempre calculado sobre todo o histórico.
+- Jogos: somente apostas de 15 dezenas; cadastro manual num volante (a geração vai salvar pelo mesmo serviço).
+- Jogos só para concursos futuros (número maior que o último concurso gravado); com a base vazia, o cadastro pede
+  a importação do histórico.
+- Jogo com as mesmas dezenas no mesmo concurso é rejeitado com aviso (também por índice único no banco).
+- Conferência calculada ao exibir, pelo rateio gravado do próprio concurso; prêmio prescreve 90 dias após o sorteio.
 
 ## Stack
 - .NET 10, C#, Blazor Server com MudBlazor. Roda apenas em `localhost`.

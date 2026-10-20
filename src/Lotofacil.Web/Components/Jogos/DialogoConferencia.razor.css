@@ -1,0 +1,58 @@
+.conferencia {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.legenda {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.marca {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.marca.acerto {
+    background: var(--mud-palette-success);
+}
+
+.marca.erro {
+    background: var(--mud-palette-error-lighten);
+    border: 1px solid var(--mud-palette-error);
+}
+
+.marca.nao-marcada {
+    border: 2px solid var(--mud-palette-primary);
+}
+
+.detalhes {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    margin: 0;
+}
+
+.detalhes dt {
+    color: var(--mud-palette-text-secondary);
+}
+
+.detalhes dd {
+    margin: 0;
+    font-weight: 500;
+}
+
+@media (max-width: 600px) {
+    .conferencia {
+        grid-template-columns: 1fr;
+    }
+}

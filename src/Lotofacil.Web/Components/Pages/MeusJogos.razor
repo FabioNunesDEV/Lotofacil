@@ -1,0 +1,112 @@
+@page "/meus-jogos"
+
+<PageTitle>Meus jogos · Lotofácil</PageTitle>
+
+<div class="d-flex flex-wrap align-center justify-space-between gap-4 mb-4">
+    <div>
+        <MudText Typo="Typo.h4" HtmlTag="h1">Meus jogos</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            Jogos salvos por concurso · clique em um jogo conferido para ver a conferência
+        </MudText>
+    </div>
+    <div class="d-flex flex-wrap align-center gap-4">
+        <MudChipSet T="FiltroJogos" SelectedValue="this.filtro" SelectedValueChanged="this.TrocarFiltro"
+                    SelectionMode="SelectionMode.SingleSelection" CheckMark="false" Color="Color.Primary"
+                    Variant="Variant.Outlined" Class="filtros">
+            <MudChip T="FiltroJogos" Value="FiltroJogos.Todos" Text="Todos" />
+            <MudChip T="FiltroJogos" Value="FiltroJogos.Aguardando" Text="Aguardando sorteio" />
+            <MudChip T="FiltroJogos" Value="FiltroJogos.Conferidos" Text="Conferidos" />
+            <MudChip T="FiltroJogos" Value="FiltroJogos.Premiados" Text="Premiados" />
+        </MudChipSet>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="this.NovoJogoAsync" Class="botao-novo">
+            Novo jogo
+        </MudButton>
+    </div>
+</div>
+
+<div class="indicadores mb-4">
+    <MudPaper Class="pa-4 indicador jogos-salvos" Elevation="1">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Jogos salvos</MudText>
+        <MudText Typo="Typo.h5" Class="valor">@this.TotalJogos.ToString("N0")</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary detalhe">@FormatacaoJogo.QuantidadeConcursos(this.TotalConcursos)</MudText>
+    </MudPaper>
+    <MudPaper Class="pa-4 indicador investido" Elevation="1">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Investido</MudText>
+        <MudText Typo="Typo.h5" Class="valor">@FormatacaoJogo.Reais(this.TotalJogos * this.Opcoes.PrecoApostaMinima)</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary detalhe">@FormatacaoJogo.QuantidadeApostas(this.TotalJogos)</MudText>
+    </MudPaper>
+    <MudPaper Class="pa-4 indicador premiados" Elevation="1">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Premiados</MudText>
+        <MudText Typo="Typo.h5" Class="valor">@this.JogosPremiados.ToString("N0")</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary detalhe">11 a 15 acertos</MudText>
+    </MudPaper>
+    <MudPaper Class="pa-4 indicador total-premios" Elevation="1">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">Total em prêmios</MudText>
+        <MudText Typo="Typo.h5" Class="valor">@FormatacaoJogo.Reais(this.TotalPremios)</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary detalhe">Valor bruto divulgado pela Caixa</MudText>
+    </MudPaper>
+</div>
+
+@if (this.carregado && this.grupos.Count == 0)
+{
+    <MudText Class="sem-registros">@MensagemSemJogos</MudText>
+}
+
+@foreach (GrupoJogos grupo in this.GruposVisiveis)
+{
+    <MudPaper Class="pa-4 mb-4 grupo" Elevation="1" data-concurso="@grupo.NumeroConcurso">
+        <div class="d-flex flex-wrap align-center gap-2 mb-2 cabecalho-grupo">
+            <MudText Typo="Typo.h6" HtmlTag="h2" Class="titulo-grupo">@TituloGrupo(grupo)</MudText>
+            @if (grupo.Conferido)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">Conferido</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">Aguardando sorteio</MudChip>
+            }
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@FormatacaoJogo.QuantidadeJogos(grupo.Jogos.Count)</MudChip>
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                     Color="@(grupo.PremioTotal > 0 ? Color.Success : Color.Default)">@this.ValorGrupo(grupo)</MudChip>
+        </div>
+
+        @if (grupo.Concurso is Concurso concurso)
+        {
+            <div class="d-flex flex-wrap align-center gap-3 mb-2 resultado-oficial">
+                <b>Resultado</b>
+                <Dezenas Valores="concurso.Dezenas" />
+                <MudText Typo="Typo.body2" Class="mud-text-secondary prescricao">
+                    Prescreve em @FormatacaoConcurso.Data(grupo.Prescricao!.Value)
+                </MudText>
+            </div>
+        }
+
+        @foreach (JogoConferido jogo in grupo.Jogos)
+        {
+            <div class="@(grupo.Conferido ? "linha-jogo clicavel" : "linha-jogo")"
+                 @onclick="() => this.AbrirConferenciaAsync(grupo, jogo)">
+                <span class="numero-jogo">@FormatacaoJogo.NumeroJogo(jogo.Numero)</span>
+                <BolasJogo Dezenas="jogo.Jogo.Dezenas" Sorteadas="grupo.Concurso?.Dezenas" />
+                <div class="resultado-jogo">
+                    @if (jogo.Conferencia is ConferenciaJogo conferencia)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text"
+                                 Color="@(conferencia.Premiado ? Color.Success : Color.Default)">@FormatacaoJogo.Acertos(conferencia.Acertos)</MudChip>
+                        <span class="premio">@FormatacaoJogo.Premio(conferencia.Premio)</span>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">Aguardando</MudChip>
+                    }
+                    @* O clique em excluir não deve abrir a conferência da linha. *@
+                    <span @onclick:stopPropagation="true">
+                        <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Class="botao-excluir"
+                                       aria-label="@($"Excluir o jogo {FormatacaoJogo.NumeroJogo(jogo.Numero)}")"
+                                       OnClick="() => this.ExcluirAsync(grupo, jogo)" />
+                    </span>
+                </div>
+            </div>
+        }
+    </MudPaper>
+}

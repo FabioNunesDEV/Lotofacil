@@ -1,0 +1,52 @@
+.volante {
+    display: grid;
+    grid-template-columns: repeat(5, 40px);
+    gap: 8px;
+}
+
+.dezena {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+button.dezena {
+    cursor: pointer;
+}
+
+button.dezena:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.marcada {
+    background: var(--mud-palette-primary);
+    border-color: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+}
+
+.acerto {
+    background: var(--mud-palette-success);
+    border-color: var(--mud-palette-success);
+    color: var(--mud-palette-success-text);
+}
+
+.erro {
+    background: var(--mud-palette-error-lighten);
+    border-color: var(--mud-palette-error);
+    color: var(--mud-palette-error-darken);
+    text-decoration: line-through;
+}
+
+.nao-marcada {
+    border: 2px solid var(--mud-palette-primary);
+    color: var(--mud-palette-primary);
+}

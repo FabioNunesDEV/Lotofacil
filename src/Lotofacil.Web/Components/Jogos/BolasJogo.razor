@@ -1,0 +1,6 @@
+<div class="bolas">
+    @foreach (int dezena in this.Dezenas)
+    {
+        <span class="@this.Classe(dezena)">@dezena.ToString("00")</span>
+    }
+</div>
