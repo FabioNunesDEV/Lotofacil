@@ -34,7 +34,7 @@ public partial class Volante
     /// Quantidade máxima de dezenas marcadas.
     /// </summary>
     [Parameter]
-    public int Limite { get; set; } = RegrasLotofacil.DezenasPorJogo;
+    public int Limite { get; set; } = RegrasLotofacil.MinimoDezenasPorJogo;
 
     /// <summary>
     /// Indica se o usuário pode marcar e desmarcar dezenas.

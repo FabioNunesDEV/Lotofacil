@@ -25,9 +25,14 @@ public static class RegrasLotofacil
     public const int QuantidadeDezenas = 25;
 
     /// <summary>
-    /// Quantidade de dezenas de um jogo (aposta mínima; apostas de 16 a 20 ainda não são aceitas).
+    /// Menor quantidade de dezenas de um jogo (aposta mínima).
     /// </summary>
-    public const int DezenasPorJogo = 15;
+    public const int MinimoDezenasPorJogo = 15;
+
+    /// <summary>
+    /// Maior quantidade de dezenas de um jogo.
+    /// </summary>
+    public const int MaximoDezenasPorJogo = 20;
 
     /// <summary>
     /// Dias, a partir do sorteio, para o prêmio prescrever.

@@ -26,6 +26,11 @@ public sealed record GrupoJogos(int NumeroConcurso, Concurso? Concurso, IReadOnl
     public bool Premiado => this.Jogos.Any(jogo => jogo.Conferencia?.Premiado == true);
 
     /// <summary>
+    /// Soma das apostas de 15 dezenas que os jogos do grupo valem, usada no custo do grupo.
+    /// </summary>
+    public int QuantidadeApostas => this.Jogos.Sum(jogo => jogo.Jogo.QuantidadeApostas);
+
+    /// <summary>
     /// Soma dos prêmios dos jogos do grupo.
     /// </summary>
     public decimal PremioTotal => this.Jogos.Sum(jogo => jogo.Conferencia?.Premio ?? 0m);

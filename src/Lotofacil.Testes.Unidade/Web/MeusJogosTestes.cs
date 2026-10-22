@@ -47,6 +47,11 @@ public class MeusJogosTestes : ComponenteTesteBase
     private readonly IJogoRepositorio repositorioJogos = Substitute.For<IJogoRepositorio>();
 
     /// <summary>
+    /// Provedor das listas suspensas, renderizado ao abrir o cadastro.
+    /// </summary>
+    private IRenderedComponent<MudPopoverProvider> popovers = null!;
+
+    /// <summary>
     /// Registra o serviço de jogos sobre repositórios que usam as listas <see cref="jogos"/> e
     /// <see cref="concursos"/>, e o preço da aposta.
     /// </summary>
@@ -155,6 +160,29 @@ public class MeusJogosTestes : ComponenteTesteBase
     }
 
     /// <summary>
+    /// Com uma aposta de 16 dezenas, custo e investido somam as apostas de 15 que cada jogo vale, e a linha mostra a
+    /// quantidade de dezenas.
+    /// </summary>
+    [Fact]
+    public void ApostaMultiplaNoCustoENosIndicadores()
+    {
+        this.concursos.Add(ConcursoFabrica.Criar(numero: 3808));
+        this.Gravar(new Jogo(3810, Enumerable.Range(1, 15), DateTime.Now));
+        this.Gravar(new Jogo(3810, Enumerable.Range(2, 15), DateTime.Now));
+        this.Gravar(new Jogo(3810, Enumerable.Range(1, 16), DateTime.Now));
+
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+
+        IElement grupo = pagina.Find(".grupo[data-concurso='3810']");
+        Assert.Equal(["Aguardando sorteio", "3 jogos", "Custo R$ 63,00"], Chips(grupo.QuerySelector(".cabecalho-grupo")!));
+        IReadOnlyList<IElement> linhas = pagina.FindAll(".grupo[data-concurso='3810'] .linha-jogo");
+        Assert.Empty(linhas[0].QuerySelectorAll(".quantidade-dezenas"));
+        Assert.Equal("16 dezenas", Texto(linhas[2].QuerySelector(".quantidade-dezenas")!));
+        Assert.Equal(16, linhas[2].QuerySelectorAll(".bola").Length);
+        AssertIndicadores(pagina, "3", "1 concurso", "R$ 63,00", "18 apostas de 15 dezenas", "0", "R$ 0,00");
+    }
+
+    /// <summary>
     /// Os filtros escondem grupos sem mudar os indicadores.
     /// </summary>
     [Fact]
@@ -175,7 +203,8 @@ public class MeusJogosTestes : ComponenteTesteBase
     }
 
     /// <summary>
-    /// O cadastro sugere o próximo concurso, conta as dezenas, só salva com 15 e recarrega a lista.
+    /// O cadastro sugere o próximo concurso e 15 dezenas, conta as dezenas com o custo, só salva com 15 e recarrega
+    /// a lista.
     /// </summary>
     [Fact]
     public void CadastraUmJogo()
@@ -188,15 +217,16 @@ public class MeusJogosTestes : ComponenteTesteBase
         pagina.Find(".botao-novo").Click();
 
         dialogos.WaitForAssertion(() => Assert.Equal("3809", dialogos.Find(".campo-concurso input").GetAttribute("value")));
-        Assert.Equal("0 de 15 dezenas", Texto(dialogos.Find(".contagem")));
+        Assert.Equal("15", dialogos.Find(".campo-dezenas-por-jogo input").GetAttribute("value"));
+        Assert.Equal("0 de 15 dezenas · R$ 3,50", Texto(dialogos.Find(".contagem")));
         Assert.True(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
 
         MarcarDezenas(dialogos, Enumerable.Range(1, 14));
-        Assert.Equal("14 de 15 dezenas", Texto(dialogos.Find(".contagem")));
+        Assert.Equal("14 de 15 dezenas · R$ 3,50", Texto(dialogos.Find(".contagem")));
         Assert.True(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
 
         MarcarDezenas(dialogos, [15]);
-        Assert.Equal("15 de 15 dezenas", Texto(dialogos.Find(".contagem")));
+        Assert.Equal("15 de 15 dezenas · R$ 3,50", Texto(dialogos.Find(".contagem")));
         Assert.False(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
         Assert.True(Dezena(dialogos, 16).HasAttribute("disabled"));
 
@@ -207,6 +237,77 @@ public class MeusJogosTestes : ComponenteTesteBase
             ["3810", "3809", "3808"],
             pagina.FindAll(".grupo").Select(grupo => grupo.GetAttribute("data-concurso"))));
         Assert.Empty(dialogos.FindAll(".campo-concurso"));
+    }
+
+    /// <summary>
+    /// Com 17 dezenas por jogo, a contagem mostra o custo da aposta e o volante permite marcar até 17.
+    /// </summary>
+    [Fact]
+    public void CadastroDeApostaDeDezesseteDezenas()
+    {
+        this.MontarCenarioPadrao();
+        IRenderedComponent<MudDialogProvider> dialogos = this.AbrirCadastro();
+
+        this.EscolherDezenasPorJogo(dialogos, 17);
+        MarcarDezenas(dialogos, Enumerable.Range(1, 12));
+
+        Assert.Equal("12 de 17 dezenas · R$ 476,00", Texto(dialogos.Find(".contagem")));
+        Assert.True(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
+
+        MarcarDezenas(dialogos, Enumerable.Range(13, 5));
+        Assert.Equal("17 de 17 dezenas · R$ 476,00", Texto(dialogos.Find(".contagem")));
+        Assert.False(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
+        Assert.True(Dezena(dialogos, 18).HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Reduzir a quantidade mantém as marcações, bloqueia novas e só libera o Salvar ao chegar à nova quantidade.
+    /// </summary>
+    [Fact]
+    public void ReduzirAQuantidadeMantemAsMarcacoes()
+    {
+        this.MontarCenarioPadrao();
+        IRenderedComponent<MudDialogProvider> dialogos = this.AbrirCadastro();
+        this.EscolherDezenasPorJogo(dialogos, 17);
+        MarcarDezenas(dialogos, Enumerable.Range(1, 17));
+
+        this.EscolherDezenasPorJogo(dialogos, 15);
+
+        Assert.Equal("17 de 15 dezenas · R$ 3,50", Texto(dialogos.Find(".contagem")));
+        Assert.Equal(17, dialogos.FindAll(".volante .marcada").Count);
+        Assert.True(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
+        Assert.True(Dezena(dialogos, 18).HasAttribute("disabled"));
+
+        MarcarDezenas(dialogos, [16, 17]);
+        Assert.Equal("15 de 15 dezenas · R$ 3,50", Texto(dialogos.Find(".contagem")));
+        Assert.False(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Aposta de 20 dezenas é salva direto, sem pedido de confirmação, e aparece com a quantidade de dezenas.
+    /// </summary>
+    [Fact]
+    public void SalvaApostaDeVinteDezenasSemConfirmacao()
+    {
+        this.MontarCenarioPadrao();
+        this.popovers = this.Render<MudPopoverProvider>();
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+        pagina.Find(".botao-novo").Click();
+        dialogos.WaitForAssertion(() => Assert.NotEmpty(dialogos.FindAll(".campo-concurso")));
+
+        this.EscolherDezenasPorJogo(dialogos, 20);
+        MarcarDezenas(dialogos, Enumerable.Range(1, 20));
+        Assert.Equal("20 de 20 dezenas · R$ 54.264,00", Texto(dialogos.Find(".contagem")));
+        dialogos.Find(".botao-salvar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains("Jogo salvo para o concurso 3809.", MensagensExibidas(mensagens)));
+        Assert.Empty(dialogos.FindAll(".mud-dialog"));
+        Assert.Equal(20, this.jogos.Single(jogo => jogo.NumeroConcurso == 3809).Dezenas.Count);
+        pagina.WaitForAssertion(() => Assert.Contains(
+            "20 dezenas",
+            Texto(pagina.Find(".grupo[data-concurso='3809'] .linha-jogo"))));
     }
 
     /// <summary>
@@ -293,11 +394,38 @@ public class MeusJogosTestes : ComponenteTesteBase
 
         dialogos.WaitForAssertion(() => Assert.Contains("Jogo 01 · concurso 3808", dialogos.Find(".mud-dialog-title").TextContent));
         Assert.Equal(
-            ["17/10/2026", "11 de 15", "11 acertos", "R$ 7,00", "15/01/2027"],
+            ["17/10/2026", "15 dezenas", "11 de 15", "11 acertos", "R$ 7,00", "15/01/2027"],
             dialogos.FindAll(".detalhes dd").Select(Texto));
         Assert.Equal(11, dialogos.FindAll(".volante .acerto").Count);
         Assert.Equal(4, dialogos.FindAll(".volante .erro").Count);
         Assert.Equal(4, dialogos.FindAll(".volante .nao-marcada").Count);
+        Assert.Empty(dialogos.FindAll(".premios-faixa"));
+    }
+
+    /// <summary>
+    /// A conferência de uma aposta de 16 dezenas com 13 acertos mostra o tamanho da aposta, o prêmio total e os
+    /// prêmios por faixa.
+    /// </summary>
+    [Fact]
+    public void AbreAConferenciaDeUmaApostaMultipla()
+    {
+        this.concursos.Add(ConcursoFabrica.Criar(numero: 3808));
+        this.Gravar(new Jogo(3808, [.. ConcursoFabrica.DezenasPadrao.Take(13), 3, 6, 8], DateTime.Now));
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+
+        pagina.Find(".grupo[data-concurso='3808'] .linha-jogo").Click();
+
+        dialogos.WaitForAssertion(() => Assert.Contains("Jogo 01 · concurso 3808", dialogos.Find(".mud-dialog-title").TextContent));
+        Assert.Equal(
+            ["17/10/2026", "16 dezenas · 16 apostas", "13 de 15", "13 acertos", "R$ 287,00", "15/01/2027"],
+            dialogos.FindAll(".detalhes dd").Select(Texto));
+        Assert.Equal(
+            ["3 × 13 acertos · R$ 35,00", "13 × 12 acertos · R$ 14,00"],
+            dialogos.FindAll(".premios-faixa li").Select(Texto));
+        Assert.Equal(13, dialogos.FindAll(".volante .acerto").Count);
+        Assert.Equal(3, dialogos.FindAll(".volante .erro").Count);
+        Assert.Equal(2, dialogos.FindAll(".volante .nao-marcada").Count);
     }
 
     /// <summary>
@@ -464,6 +592,25 @@ public class MeusJogosTestes : ComponenteTesteBase
     }
 
     /// <summary>
+    /// Escolhe a quantidade de dezenas por jogo no cadastro, abrindo a lista e clicando na opção, e confere que o
+    /// campo passa a exibir a quantidade escolhida.
+    /// </summary>
+    /// <param name="dialogos">Provedor de diálogos renderizado.</param>
+    /// <param name="quantidade">Quantidade de dezenas.</param>
+    private void EscolherDezenasPorJogo(IRenderedComponent<MudDialogProvider> dialogos, int quantidade)
+    {
+        dialogos.Find(".campo-dezenas-por-jogo").MouseDown();
+        this.popovers.WaitForAssertion(() => Assert.NotEmpty(this.popovers.FindAll(".mud-popover-open .mud-list-item")));
+        this.popovers.FindAll(".mud-popover-open .mud-list-item")
+            .Single(opcao => Texto(opcao) == quantidade.ToString())
+            .Click();
+
+        dialogos.WaitForAssertion(() => Assert.Equal(
+            quantidade.ToString(),
+            Texto(dialogos.Find(".campo-dezenas-por-jogo div[role='combobox']"))));
+    }
+
+    /// <summary>
     /// Monta o cenário: concurso 3808 gravado, com dois jogos (11 e 10 acertos), e três jogos aguardando o 3810.
     /// </summary>
     private void MontarCenarioPadrao()
@@ -484,6 +631,21 @@ public class MeusJogosTestes : ComponenteTesteBase
     {
         typeof(Jogo).GetProperty(nameof(Jogo.Id))!.SetValue(jogo, this.jogos.Count == 0 ? 1 : this.jogos.Max(item => item.Id) + 1);
         this.jogos.Add(jogo);
+    }
+
+    /// <summary>
+    /// Renderiza a página e abre o diálogo de cadastro.
+    /// </summary>
+    /// <returns>Provedor de diálogos com o cadastro aberto.</returns>
+    private IRenderedComponent<MudDialogProvider> AbrirCadastro()
+    {
+        this.popovers = this.Render<MudPopoverProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+        pagina.Find(".botao-novo").Click();
+        dialogos.WaitForAssertion(() => Assert.NotEmpty(dialogos.FindAll(".campo-concurso")));
+
+        return dialogos;
     }
 
     /// <summary>

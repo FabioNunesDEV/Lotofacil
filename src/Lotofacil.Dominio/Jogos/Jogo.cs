@@ -13,7 +13,7 @@ public sealed class Jogo
     /// Cria um jogo válido; lança <see cref="ArgumentException"/> se alguma regra não for atendida.
     /// </summary>
     /// <param name="numeroConcurso">Número do concurso a que o jogo se destina, maior que zero.</param>
-    /// <param name="dezenas">As 15 dezenas do jogo, em qualquer ordem.</param>
+    /// <param name="dezenas">As 15 a 20 dezenas do jogo, em qualquer ordem.</param>
     /// <param name="cadastradoEm">Momento do cadastro.</param>
     public Jogo(int numeroConcurso, IEnumerable<int> dezenas, DateTime cadastradoEm)
     {
@@ -23,10 +23,11 @@ public sealed class Jogo
         }
 
         List<int> dezenasOrdenadas = dezenas.Order().ToList();
-        if (dezenasOrdenadas.Count != RegrasLotofacil.DezenasPorJogo)
+        if (dezenasOrdenadas.Count < RegrasLotofacil.MinimoDezenasPorJogo
+            || dezenasOrdenadas.Count > RegrasLotofacil.MaximoDezenasPorJogo)
         {
             throw new ArgumentException(
-                $"O jogo deve ter 15 dezenas; foram informadas {dezenasOrdenadas.Count}.",
+                $"O jogo deve ter de 15 a 20 dezenas; foram informadas {dezenasOrdenadas.Count}.",
                 nameof(dezenas));
         }
 
@@ -64,12 +65,27 @@ public sealed class Jogo
     public int NumeroConcurso { get; private set; }
 
     /// <summary>
-    /// As 15 dezenas do jogo, em ordem crescente.
+    /// As 15 a 20 dezenas do jogo, em ordem crescente.
     /// </summary>
     public IReadOnlyList<int> Dezenas { get; private set; }
+
+    /// <summary>
+    /// Quantidade de apostas de 15 dezenas que o jogo vale: C(dezenas, 15).
+    /// </summary>
+    public int QuantidadeApostas => CalcularQuantidadeApostas(this.Dezenas.Count);
 
     /// <summary>
     /// Momento do cadastro, que define a ordem dos jogos no concurso.
     /// </summary>
     public DateTime CadastradoEm { get; private set; }
+
+    /// <summary>
+    /// Calcula quantas apostas de 15 dezenas vale um jogo com a quantidade de dezenas informada.
+    /// </summary>
+    /// <param name="quantidadeDezenas">Quantidade de dezenas do jogo.</param>
+    /// <returns>C(quantidadeDezenas, 15).</returns>
+    public static int CalcularQuantidadeApostas(int quantidadeDezenas)
+    {
+        return Combinatoria.Combinacoes(quantidadeDezenas, RegrasLotofacil.DezenasSorteadas);
+    }
 }

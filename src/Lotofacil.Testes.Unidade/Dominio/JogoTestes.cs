@@ -32,17 +32,35 @@ public class JogoTestes
     }
 
     /// <summary>
-    /// Jogo com quantidade de dezenas diferente de 15 é rejeitado.
+    /// Jogo com menos de 15 ou mais de 20 dezenas é rejeitado.
     /// </summary>
     /// <param name="quantidade">Quantidade de dezenas.</param>
     [Theory]
     [InlineData(14)]
-    [InlineData(16)]
-    public void RejeitaQuantidadeDiferenteDeQuinze(int quantidade)
+    [InlineData(21)]
+    public void RejeitaQuantidadeForaDoIntervalo(int quantidade)
     {
         var erro = Assert.Throws<ArgumentException>(() => new Jogo(3809, Enumerable.Range(1, quantidade), Cadastro));
 
-        Assert.StartsWith($"O jogo deve ter 15 dezenas; foram informadas {quantidade}.", erro.Message);
+        Assert.StartsWith($"O jogo deve ter de 15 a 20 dezenas; foram informadas {quantidade}.", erro.Message);
+    }
+
+    /// <summary>
+    /// Jogos de 15 a 20 dezenas são aceitos e valem C(dezenas, 15) apostas de 15 dezenas.
+    /// </summary>
+    /// <param name="quantidade">Quantidade de dezenas.</param>
+    /// <param name="apostas">Apostas de 15 dezenas equivalentes.</param>
+    [Theory]
+    [InlineData(15, 1)]
+    [InlineData(16, 16)]
+    [InlineData(17, 136)]
+    [InlineData(20, 15_504)]
+    public void AceitaApostaMultipla(int quantidade, int apostas)
+    {
+        var jogo = new Jogo(3809, Enumerable.Range(1, quantidade), Cadastro);
+
+        Assert.Equal(quantidade, jogo.Dezenas.Count);
+        Assert.Equal(apostas, jogo.QuantidadeApostas);
     }
 
     /// <summary>

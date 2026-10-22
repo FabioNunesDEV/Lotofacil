@@ -51,6 +51,12 @@
     font-weight: 500;
 }
 
+.premios-faixa ul {
+    margin: 4px 0 0;
+    padding-left: 20px;
+    font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 600px) {
     .conferencia {
         grid-template-columns: 1fr;

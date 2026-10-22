@@ -27,22 +27,26 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
   (`servicebus3.caixa.gov.br/portaldeloterias/api/lotofacil/{concurso}`). Não é documentada e o
   host já mudou (era `servicebus2`): manter a URL base em configuração, tratar falhas, buscar de
   forma incremental e com pausa entre requisições.
-- Referências detalhadas sobre regras, dados e estatísticas ficam em `docs/`.
+- Referências detalhadas sobre regras, dados e estatísticas ficam em `docs/`; o roteiro das próximas fatias fica em
+  `docs/roteiro.md`.
 
 ## Pendências de negócio (não implementar sem definição do usuário)
-- Estratégia de geração de jogos (o usuário enviará material específico).
-- Apostas de 16 a 20 dezenas (hoje só 15; ver abaixo).
-- Dezenas fixas na geração: regras de validação, dezenas excluídas.
-- Janela da análise para a geração de jogos (para as estatísticas, já definida abaixo).
+- Geração de jogos: as estratégias são as descritas nos arquivos de `docs/` (o usuário não tem outro material);
+  falta confirmar as regras de cada uma, as dezenas fixas/excluídas e a janela da análise (ver `docs/roteiro.md`).
 - Teimosinha e Bolão.
 
 ## Decisões de negócio já definidas
 - Janela das estatísticas: todo o histórico (padrão) ou os últimos 10, 20, 50 ou 100 concursos, sem intervalo
   personalizado. A janela afeta a frequência; o atraso é sempre calculado sobre todo o histórico.
-- Jogos: somente apostas de 15 dezenas; cadastro manual num volante (a geração vai salvar pelo mesmo serviço).
+- Jogos: apostas de 15 a 20 dezenas; cadastro manual num volante, escolhendo antes "Dezenas por jogo" (a geração vai
+  salvar pelo mesmo serviço). Uma aposta de n dezenas vale C(n, 15) apostas de 15: custo = C(n, 15) × preço da aposta
+  mínima, sem confirmação extra para apostas caras.
+- Conferência da aposta múltipla: com a acertos, C(a, k) × C(n − a, 15 − k) prêmios de k acertos (k de 11 a 15),
+  cada um pelo rateio gravado do concurso.
 - Jogos só para concursos futuros (número maior que o último concurso gravado); com a base vazia, o cadastro pede
   a importação do histórico.
-- Jogo com as mesmas dezenas no mesmo concurso é rejeitado com aviso (também por índice único no banco).
+- Jogo com as mesmas dezenas no mesmo concurso é rejeitado com aviso (também por índice único no banco); um jogo
+  contido em outro (15 dezenas dentro de um de 16, por exemplo) não é duplicado.
 - Conferência calculada ao exibir, pelo rateio gravado do próprio concurso; prêmio prescreve 90 dias após o sorteio.
 
 ## Stack

@@ -37,7 +37,7 @@ public class JogosServico
     /// Cadastra um jogo para um concurso futuro, recusando base vazia, concurso já sorteado e jogo duplicado.
     /// </summary>
     /// <param name="numeroConcurso">Número do concurso.</param>
-    /// <param name="dezenas">As 15 dezenas do jogo.</param>
+    /// <param name="dezenas">As 15 a 20 dezenas do jogo.</param>
     /// <param name="cancelamento">Sinal de cancelamento.</param>
     /// <returns>Se o jogo foi gravado e a mensagem para o usuário.</returns>
     public async Task<ResultadoCadastro> CadastrarAsync(
