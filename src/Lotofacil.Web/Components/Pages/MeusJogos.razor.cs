@@ -102,6 +102,11 @@ public partial class MeusJogos
     private int TotalJogos => this.grupos.Sum(grupo => grupo.Jogos.Count);
 
     /// <summary>
+    /// Soma das apostas de 15 dezenas que todos os jogos valem, usada no valor investido.
+    /// </summary>
+    private int TotalApostas => this.grupos.Sum(grupo => grupo.QuantidadeApostas);
+
+    /// <summary>
     /// Quantidade de concursos com jogos.
     /// </summary>
     private int TotalConcursos => this.grupos.Count;
@@ -147,7 +152,7 @@ public partial class MeusJogos
     {
         if (!grupo.Conferido)
         {
-            return $"Custo {FormatacaoJogo.Reais(grupo.Jogos.Count * this.Opcoes.PrecoApostaMinima)}";
+            return $"Custo {FormatacaoJogo.Reais(grupo.QuantidadeApostas * this.Opcoes.PrecoApostaMinima)}";
         }
 
         return grupo.PremioTotal > 0 ? $"Prêmio {FormatacaoJogo.Reais(grupo.PremioTotal)}" : "Sem prêmio";

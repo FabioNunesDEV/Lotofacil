@@ -138,4 +138,38 @@ public sealed class JogoRepositorioTestes : IAsyncLifetime
         await Assert.ThrowsAsync<DbUpdateException>(
             () => this.repositorio.AdicionarAsync(new Jogo(3809, De01a15.Reverse(), DateTime.Now), TestContext.Current.CancellationToken));
     }
+
+    /// <summary>
+    /// Aposta de 20 dezenas é gravada e lida com todas as dezenas.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task GravaApostaDeVinteDezenas()
+    {
+        int[] vinteDezenas = Enumerable.Range(3, 20).ToArray();
+        await this.repositorio.AdicionarAsync(new Jogo(3809, vinteDezenas, DateTime.Now), TestContext.Current.CancellationToken);
+
+        IReadOnlyList<Jogo> jogos = await this.repositorio.ListarAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(vinteDezenas, jogos.Single().Dezenas);
+        Assert.Equal(15_504, jogos.Single().QuantidadeApostas);
+    }
+
+    /// <summary>
+    /// Jogo de 15 dezenas contido num de 16 do mesmo concurso não é duplicado; o de 16 repetido é.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ApostaMultiplaSoEDuplicadaComAsMesmasDezenas()
+    {
+        int[] dezesseis = Enumerable.Range(1, 16).ToArray();
+        await this.repositorio.AdicionarAsync(new Jogo(3809, dezesseis, DateTime.Now), TestContext.Current.CancellationToken);
+
+        Assert.False(await this.repositorio.ExisteAsync(3809, De01a15, TestContext.Current.CancellationToken));
+        Assert.True(await this.repositorio.ExisteAsync(3809, dezesseis.Reverse(), TestContext.Current.CancellationToken));
+
+        await this.repositorio.AdicionarAsync(new Jogo(3809, De01a15, DateTime.Now), TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<DbUpdateException>(
+            () => this.repositorio.AdicionarAsync(new Jogo(3809, dezesseis, DateTime.Now), TestContext.Current.CancellationToken));
+    }
 }

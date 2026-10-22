@@ -4,13 +4,14 @@
 
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio;
+using Lotofacil.Dominio.Jogos;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Lotofacil.Web.Components.Jogos;
 
 /// <summary>
-/// Diálogo de cadastro de um jogo: concurso e 15 dezenas marcadas no volante.
+/// Diálogo de cadastro de um jogo: concurso, quantidade de dezenas e as dezenas marcadas no volante.
 /// </summary>
 public partial class CadastroJogo
 {
@@ -23,6 +24,11 @@ public partial class CadastroJogo
     /// Concurso informado.
     /// </summary>
     private int? numeroConcurso;
+
+    /// <summary>
+    /// Quantidade de dezenas escolhida para o jogo.
+    /// </summary>
+    private int dezenasPorJogo = RegrasLotofacil.MinimoDezenasPorJogo;
 
     /// <summary>
     /// Concurso sugerido ao abrir, ou <c>null</c> com a base vazia.
@@ -49,9 +55,20 @@ public partial class CadastroJogo
     private ISnackbar Mensagens { get; set; } = null!;
 
     /// <summary>
+    /// Preço da aposta, usado no custo exibido.
+    /// </summary>
+    [Inject]
+    private OpcoesApostas Opcoes { get; set; } = null!;
+
+    /// <summary>
     /// Indica se o jogo está completo para ser salvo.
     /// </summary>
-    private bool PodeSalvar => this.numeroConcurso is not null && this.marcadas.Count == RegrasLotofacil.DezenasPorJogo;
+    private bool PodeSalvar => this.numeroConcurso is not null && this.marcadas.Count == this.dezenasPorJogo;
+
+    /// <summary>
+    /// Custo da aposta com a quantidade de dezenas escolhida.
+    /// </summary>
+    private decimal Custo => Jogo.CalcularQuantidadeApostas(this.dezenasPorJogo) * this.Opcoes.PrecoApostaMinima;
 
     /// <summary>
     /// Preenche o concurso sugerido.

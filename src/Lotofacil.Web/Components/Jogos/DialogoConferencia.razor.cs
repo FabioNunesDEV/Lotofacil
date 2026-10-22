@@ -42,6 +42,12 @@ public partial class DialogoConferencia
     private ConferenciaJogo Conferencia => this.Jogo.Conferencia!;
 
     /// <summary>
+    /// Indica se a janela lista os prêmios por faixa: só para apostas de 16 a 20 dezenas premiadas.
+    /// </summary>
+    private bool MostrarPremiosPorFaixa =>
+        this.Conferencia.Premiado && this.Jogo.Jogo.Dezenas.Count > RegrasLotofacil.MinimoDezenasPorJogo;
+
+    /// <summary>
     /// Data em que o prêmio prescreve.
     /// </summary>
     private DateOnly Prescricao => this.Concurso.Data.AddDays(RegrasLotofacil.DiasPrescricao);

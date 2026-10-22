@@ -47,6 +47,24 @@ public class JogosServicoTestes
     }
 
     /// <summary>
+    /// Aposta de 20 dezenas é gravada como qualquer outro jogo.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task CadastraApostaDeVinteDezenas()
+    {
+        int[] vinteDezenas = Enumerable.Range(1, 20).ToArray();
+        this.concursos.ObterUltimoNumeroAsync(Arg.Any<CancellationToken>()).Returns(3808);
+
+        ResultadoCadastro resultado = await this.CriarServico().CadastrarAsync(3809, vinteDezenas, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ResultadoCadastro(true, "Jogo salvo para o concurso 3809."), resultado);
+        await this.jogos.Received(1).AdicionarAsync(
+            Arg.Is<Jogo>(jogo => jogo.Dezenas.SequenceEqual(vinteDezenas)),
+            Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
     /// Com a base vazia, o cadastro pede a importação do histórico.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>
@@ -100,6 +118,26 @@ public class JogosServicoTestes
     }
 
     /// <summary>
+    /// A busca de duplicado usa as dezenas do jogo inteiro: 16 dezenas iguais são recusadas.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task RecusaApostaMultiplaDuplicada()
+    {
+        int[] dezesseis = [16, .. DezenasJogo];
+        this.concursos.ObterUltimoNumeroAsync(Arg.Any<CancellationToken>()).Returns(3808);
+        this.jogos.ExisteAsync(
+            3809,
+            Arg.Is<IEnumerable<int>>(dezenas => dezenas.SequenceEqual(Enumerable.Range(1, 16))),
+            Arg.Any<CancellationToken>()).Returns(true);
+
+        ResultadoCadastro resultado = await this.CriarServico().CadastrarAsync(3809, dezesseis, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ResultadoCadastro(false, "Este jogo já está cadastrado para o concurso 3809."), resultado);
+        await this.jogos.DidNotReceiveWithAnyArgs().AdicionarAsync(default!, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
     /// O concurso sugerido é o seguinte ao último gravado; com a base vazia, não há sugestão.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>
@@ -146,6 +184,24 @@ public class JogosServicoTestes
         Assert.Equal(11, grupo3808.Jogos[1].Conferencia?.Acertos);
         Assert.Equal(1_712_408.63m + 7m, grupo3808.PremioTotal);
         Assert.True(grupo3808.Premiado);
+    }
+
+    /// <summary>
+    /// A quantidade de apostas do grupo soma as apostas de 15 dezenas de cada jogo: 1 + 1 + 16.
+    /// </summary>
+    [Fact]
+    public void QuantidadeApostasDoGrupo()
+    {
+        List<JogoConferido> jogos =
+        [
+            new(new Jogo(3810, DezenasJogo, DateTime.Now), 1, null),
+            new(new Jogo(3810, Enumerable.Range(2, 15), DateTime.Now), 2, null),
+            new(new Jogo(3810, Enumerable.Range(1, 16), DateTime.Now), 3, null),
+        ];
+
+        var grupo = new GrupoJogos(3810, null, jogos);
+
+        Assert.Equal(18, grupo.QuantidadeApostas);
     }
 
     /// <summary>

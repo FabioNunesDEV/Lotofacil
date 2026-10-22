@@ -9,18 +9,34 @@
                     <span><span class="marca nao-marcada"></span> Saiu e não marcou</span>
                 </div>
             </div>
-            <dl class="detalhes">
-                <dt>Sorteio</dt>
-                <dd>@FormatacaoConcurso.Data(this.Concurso.Data)</dd>
-                <dt>Acertos</dt>
-                <dd>@this.Conferencia.Acertos de @RegrasLotofacil.DezenasSorteadas</dd>
-                <dt>Faixa</dt>
-                <dd>@(this.Conferencia.Premiado ? FormatacaoJogo.Acertos(this.Conferencia.Acertos) : "Não premiado")</dd>
-                <dt>Prêmio</dt>
-                <dd>@FormatacaoJogo.Premio(this.Conferencia.Premio)</dd>
-                <dt>Prescreve em</dt>
-                <dd>@FormatacaoConcurso.Data(this.Prescricao)</dd>
-            </dl>
+            <div>
+                <dl class="detalhes">
+                    <dt>Sorteio</dt>
+                    <dd>@FormatacaoConcurso.Data(this.Concurso.Data)</dd>
+                    <dt>Aposta</dt>
+                    <dd>@FormatacaoJogo.Aposta(this.Jogo.Jogo.Dezenas.Count, this.Jogo.Jogo.QuantidadeApostas)</dd>
+                    <dt>Acertos</dt>
+                    <dd>@this.Conferencia.Acertos de @RegrasLotofacil.DezenasSorteadas</dd>
+                    <dt>Faixa</dt>
+                    <dd>@(this.Conferencia.Premiado ? FormatacaoJogo.Acertos(this.Conferencia.Acertos) : "Não premiado")</dd>
+                    <dt>Prêmio</dt>
+                    <dd>@FormatacaoJogo.Premio(this.Conferencia.Premio)</dd>
+                    <dt>Prescreve em</dt>
+                    <dd>@FormatacaoConcurso.Data(this.Prescricao)</dd>
+                </dl>
+                @if (this.MostrarPremiosPorFaixa)
+                {
+                    <div class="premios-faixa mt-4">
+                        <MudText Typo="Typo.subtitle2">Prêmios por faixa</MudText>
+                        <ul>
+                            @foreach (PremioFaixa premio in this.Conferencia.Premios)
+                            {
+                                <li>@FormatacaoJogo.PremiosDaFaixa(premio)</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
         </div>
     </DialogContent>
     <DialogActions>

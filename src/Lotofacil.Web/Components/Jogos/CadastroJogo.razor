@@ -1,10 +1,20 @@
 <MudDialog>
     <DialogContent>
-        <MudNumericField T="int?" @bind-Value="this.numeroConcurso" Label="Concurso" Variant="Variant.Outlined"
-                         Margin="Margin.Dense" Min="1" HideSpinButtons="true" Class="campo-concurso mb-4" />
-        <Volante Marcadas="this.marcadas" MarcadasChanged="this.TrocarMarcadas" />
+        <div class="d-flex gap-4 mb-4">
+            <MudNumericField T="int?" @bind-Value="this.numeroConcurso" Label="Concurso" Variant="Variant.Outlined"
+                             Margin="Margin.Dense" Min="1" HideSpinButtons="true" Class="campo-concurso" />
+            <MudSelect T="int" @bind-Value="this.dezenasPorJogo" Label="Dezenas por jogo" Variant="Variant.Outlined"
+                       Margin="Margin.Dense" Class="campo-dezenas-por-jogo">
+                @for (int quantidade = RegrasLotofacil.MinimoDezenasPorJogo; quantidade <= RegrasLotofacil.MaximoDezenasPorJogo; quantidade++)
+                {
+                    int opcao = quantidade;
+                    <MudSelectItem T="int" Value="opcao">@opcao</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+        <Volante Marcadas="this.marcadas" MarcadasChanged="this.TrocarMarcadas" Limite="this.dezenasPorJogo" />
         <MudText Typo="Typo.body2" Class="mud-text-secondary mt-3 contagem">
-            @this.marcadas.Count de @RegrasLotofacil.DezenasPorJogo dezenas
+            @FormatacaoJogo.Contagem(this.marcadas.Count, this.dezenasPorJogo, this.Custo)
         </MudText>
     </DialogContent>
     <DialogActions>

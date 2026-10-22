@@ -2,6 +2,8 @@
 // Copyright (c) Fábio Nunes. Todos os direitos reservados.
 // </copyright>
 
+using Lotofacil.Dominio.Jogos;
+
 namespace Lotofacil.Web.Components.Jogos;
 
 /// <summary>
@@ -42,6 +44,49 @@ public static class FormatacaoJogo
     public static string QuantidadeApostas(int quantidade)
     {
         return quantidade == 1 ? "1 aposta de 15 dezenas" : $"{quantidade:N0} apostas de 15 dezenas";
+    }
+
+    /// <summary>
+    /// Formata a quantidade de dezenas de um jogo.
+    /// </summary>
+    /// <param name="quantidade">Quantidade de dezenas.</param>
+    /// <returns>Texto como "16 dezenas".</returns>
+    public static string QuantidadeDezenas(int quantidade)
+    {
+        return $"{quantidade} dezenas";
+    }
+
+    /// <summary>
+    /// Formata a contagem do volante no cadastro, com o custo da aposta.
+    /// </summary>
+    /// <param name="marcadas">Quantidade de dezenas marcadas.</param>
+    /// <param name="dezenasPorJogo">Quantidade de dezenas escolhida para o jogo.</param>
+    /// <param name="custo">Custo da aposta.</param>
+    /// <returns>Texto como "12 de 17 dezenas · R$ 476,00".</returns>
+    public static string Contagem(int marcadas, int dezenasPorJogo, decimal custo)
+    {
+        return $"{marcadas} de {dezenasPorJogo} dezenas · {Reais(custo)}";
+    }
+
+    /// <summary>
+    /// Formata o tamanho da aposta: só as dezenas para 15, ou as dezenas e as apostas equivalentes para 16 a 20.
+    /// </summary>
+    /// <param name="dezenas">Quantidade de dezenas do jogo.</param>
+    /// <param name="apostas">Quantidade de apostas de 15 dezenas que o jogo vale.</param>
+    /// <returns>Texto como "15 dezenas" ou "16 dezenas · 16 apostas".</returns>
+    public static string Aposta(int dezenas, int apostas)
+    {
+        return apostas == 1 ? QuantidadeDezenas(dezenas) : $"{QuantidadeDezenas(dezenas)} · {apostas:N0} apostas";
+    }
+
+    /// <summary>
+    /// Formata os prêmios de uma faixa.
+    /// </summary>
+    /// <param name="premio">Prêmios da faixa.</param>
+    /// <returns>Texto como "3 × 13 acertos · R$ 35,00".</returns>
+    public static string PremiosDaFaixa(PremioFaixa premio)
+    {
+        return $"{premio.Quantidade:N0} × {Acertos(premio.Faixa)} · {Reais(premio.ValorPremio)}";
     }
 
     /// <summary>
