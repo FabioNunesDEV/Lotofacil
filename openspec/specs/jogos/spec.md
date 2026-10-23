@@ -9,7 +9,7 @@ acertos e o prêmio de cada jogo pelo rateio gravado do próprio concurso.
 
 ### Requirement: Acesso à página Meus jogos
 A aplicação SHALL oferecer a página "Meus jogos" na rota `/meus-jogos`, acessível por um item "Meus jogos" no menu
-lateral, logo abaixo de "Estatísticas". Sem nenhum jogo cadastrado, a página MUST exibir "Nenhum jogo cadastrado.
+lateral, logo abaixo de "Gerar jogos". Sem nenhum jogo cadastrado, a página MUST exibir "Nenhum jogo cadastrado.
 Use “Novo jogo” para cadastrar o primeiro." no lugar da lista.
 
 #### Scenario: Abrir pelo menu

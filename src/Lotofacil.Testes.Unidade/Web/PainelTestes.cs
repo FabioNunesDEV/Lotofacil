@@ -93,7 +93,7 @@ public class PainelTestes : ComponenteTesteBase
     }
 
     /// <summary>
-    /// O cabeçalho tem título, subtítulo e os dois atalhos; "Novo jogo" leva a Meus jogos com o cadastro aberto.
+    /// O cabeçalho tem título, subtítulo e os atalhos "Gerar jogos" e "Novo jogo" (Meus jogos com o cadastro aberto).
     /// </summary>
     [Fact]
     public void CabecalhoComAtalhos()
@@ -106,7 +106,9 @@ public class PainelTestes : ComponenteTesteBase
         IElement novoJogo = pagina.Find(".botao-novo");
         Assert.Equal("Novo jogo", Texto(novoJogo));
         Assert.Equal("meus-jogos?novo=true", novoJogo.GetAttribute("href"));
-        Assert.Empty(pagina.FindAll(".botao-gerar"));
+        IElement gerarJogos = pagina.Find(".botao-gerar");
+        Assert.Equal("Gerar jogos", Texto(gerarJogos));
+        Assert.Equal("gerar-jogos", gerarJogos.GetAttribute("href"));
     }
 
     /// <summary>

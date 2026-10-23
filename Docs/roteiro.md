@@ -2,7 +2,7 @@
 
 - **Atualizado em:** 22/10/2026
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
-  4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel`
+  4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -30,7 +30,7 @@ Preencheu a página Painel (`/`), que só tinha o título, com o resumo do prot�
 **Decidido:** atalho só para "Novo jogo" (abre Meus jogos com o cadastro aberto); "Prêmios a receber" soma os
 prêmios ainda no prazo de 90 dias. O atalho "Gerar jogos" entra na fatia 8.
 
-## Fatia 8 — `geracao-de-jogos`
+## Fatia 8 — `geracao-de-jogos` (concluída)
 
 Nova página "Gerar jogos" (`/gerar-jogos`, no menu entre Estatísticas e Meus jogos), seguindo o protótipo.
 
@@ -43,7 +43,7 @@ Nova página "Gerar jogos" (`/gerar-jogos`, no menu entre Estatísticas e Meus j
 - Aviso fixo na página de que a estratégia não aumenta a chance de acerto.
 - Atalho "Gerar jogos" no cabeçalho do Painel, ao lado de "Novo jogo".
 
-Estratégias propostas (dos arquivos de `docs/`):
+Estratégias (dos arquivos de `docs/`):
 
 | Estratégia | Critério para escolher as dezenas livres |
 |---|---|
@@ -53,16 +53,9 @@ Estratégias propostas (dos arquivos de `docs/`):
 | Mais atrasadas | Peso maior para as há mais tempo sem sair |
 | Equilibrada | Metade das livres pelas quentes, metade pelas atrasadas |
 
-**A confirmar:**
-- Sorteio **ponderado** pelo critério (proposta: gera jogos variados) ou escolha **fixa** das primeiras do ranking
-  (gera jogos quase iguais).
-- Janela da análise: as mesmas das Estatísticas (Todos, 10, 20, 50, 100); proposta: padrão "Todos". O atraso usa
-  sempre todo o histórico.
-- Quantidade de jogos por geração: proposta de 1 a 100.
-- Fixas: no máximo dezenas por jogo − 1 (proposta); fixas + livres precisam alcançar as dezenas por jogo, senão a
-  geração é recusada com aviso.
-- Jogos repetidos na mesma geração são evitados; se não houver combinações suficientes, gerar as possíveis e avisar.
-- Jogos já cadastrados para o concurso: ao salvar, os duplicados são recusados e os demais gravados, com o resumo.
+**Decidido:** sorteio ponderado (peso = 1 + quantidade de dezenas com valor pior no critério); janela igual às
+Estatísticas, padrão "Todos"; 1 a 100 jogos, padrão 10; fixas podem chegar às dezenas por jogo; repetidos evitados,
+com aviso quando faltam combinações; duplicados recusados ao salvar e os demais gravados, com o resumo.
 
 ## Fatia 9 — `estatisticas-por-perfil`
 
