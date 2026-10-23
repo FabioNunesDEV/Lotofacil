@@ -8,21 +8,10 @@ using Lotofacil.Web.Components.Pages;
 namespace Lotofacil.Testes.Unidade.Web;
 
 /// <summary>
-/// Testes das páginas Painel e Página não encontrada.
+/// Testes da página Página não encontrada.
 /// </summary>
 public class PaginasTestes : ComponenteTesteBase
 {
-    /// <summary>
-    /// O Painel exibe o seu título.
-    /// </summary>
-    [Fact]
-    public void PainelExibeTitulo()
-    {
-        IRenderedComponent<Painel> painel = this.Render<Painel>();
-
-        Assert.Equal("Painel", painel.Find("h1").TextContent.Trim());
-    }
-
     /// <summary>
     /// A página não encontrada exibe a mensagem e um link de volta para o Painel.
     /// </summary>

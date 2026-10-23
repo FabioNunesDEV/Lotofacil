@@ -27,6 +27,16 @@ public static class FormatacaoConcurso
     }
 
     /// <summary>
+    /// Formata a data com o dia da semana, como "sábado, 17/10/2026".
+    /// </summary>
+    /// <param name="data">Data a formatar.</param>
+    /// <returns>Dia da semana e data.</returns>
+    public static string DataComDiaSemana(DateOnly data)
+    {
+        return data.ToString("dddd, dd/MM/yyyy");
+    }
+
+    /// <summary>
     /// Formata o prêmio de uma faixa.
     /// </summary>
     /// <param name="rateio">Rateio da faixa.</param>

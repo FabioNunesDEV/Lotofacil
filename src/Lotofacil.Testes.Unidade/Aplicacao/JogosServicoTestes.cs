@@ -227,6 +227,46 @@ public class JogosServicoTestes
     }
 
     /// <summary>
+    /// O prazo para receber vai até a data da prescrição, inclusive.
+    /// </summary>
+    /// <param name="ano">Ano de hoje.</param>
+    /// <param name="mes">Mês de hoje.</param>
+    /// <param name="dia">Dia de hoje.</param>
+    /// <param name="esperado">Se o grupo está dentro do prazo.</param>
+    [Theory]
+    [InlineData(2026, 10, 19, true)]
+    [InlineData(2027, 1, 17, true)]
+    [InlineData(2027, 1, 18, false)]
+    public void DentroDoPrazoAteAPrescricao(int ano, int mes, int dia, bool esperado)
+    {
+        Concurso concurso = new(
+            3808,
+            new DateOnly(2026, 10, 19),
+            ConcursoFabrica.DezenasPadrao,
+            null,
+            ConcursoFabrica.CriarRateios(),
+            0m,
+            0m,
+            0m,
+            0m);
+
+        var grupo = new GrupoJogos(3808, concurso, []);
+
+        Assert.Equal(esperado, grupo.DentroDoPrazo(new DateOnly(ano, mes, dia)));
+    }
+
+    /// <summary>
+    /// Grupo de concurso ainda não sorteado não está dentro do prazo.
+    /// </summary>
+    [Fact]
+    public void GrupoAguardandoNaoEstaDentroDoPrazo()
+    {
+        var grupo = new GrupoJogos(3810, null, []);
+
+        Assert.False(grupo.DentroDoPrazo(new DateOnly(2026, 10, 22)));
+    }
+
+    /// <summary>
     /// Excluir repassa o identificador ao repositório.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>

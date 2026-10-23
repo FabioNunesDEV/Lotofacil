@@ -1,8 +1,8 @@
 # Roteiro das próximas fatias
 
-- **Atualizado em:** 21/10/2026
+- **Atualizado em:** 22/10/2026
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
-  4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas`
+  4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -15,19 +15,20 @@ As estratégias de geração vêm dos arquivos desta pasta (`lotofacil-analise-a
 > As estratégias organizam os jogos segundo critérios escolhidos pelo usuário. O único efeito real é evitar
 > combinações populares, que reduz a divisão do prêmio, não a chance de ganhar.
 
-## Fatia 7 — `painel`
+## Fatia 7 — `painel` (concluída)
 
-Preenche a página Painel (`/`), hoje vazia, com o resumo do protótipo. Não depende de definição de negócio.
+Preencheu a página Painel (`/`), que só tinha o título, com o resumo do protótipo. Não depende de definição de negócio.
 
 - Botão "Atualizar resultados" (mesmo serviço da página Resultados).
 - Indicadores: concursos na base (e data do último sorteio gravado), próximo concurso com a estimativa de prêmio
-  gravada no último concurso, jogos aguardando sorteio, total em prêmios.
+  gravada no último concurso, jogos aguardando sorteio, prêmios a receber (dentro do prazo).
 - Último resultado: dezenas, ordem do sorteio (quando houver) e rateio por faixa.
 - Seus jogos no último concurso, conferidos (ou aviso de que não há jogos nele).
 - Top 5 dezenas mais sorteadas e mais atrasadas (todo o histórico).
 - Base vazia: mensagem pedindo a importação do histórico.
 
-**A confirmar:** nada essencial; só se o Painel deve ter atalhos para "Novo jogo" e "Gerar jogos".
+**Decidido:** atalho só para "Novo jogo" (abre Meus jogos com o cadastro aberto); "Prêmios a receber" soma os
+prêmios ainda no prazo de 90 dias. O atalho "Gerar jogos" entra na fatia 8.
 
 ## Fatia 8 — `geracao-de-jogos`
 
@@ -40,6 +41,7 @@ Nova página "Gerar jogos" (`/gerar-jogos`, no menu entre Estatísticas e Meus j
 - Lista dos jogos gerados com o perfil de cada um (pares/ímpares, soma, repetidas do último concurso), remover um
   jogo, "Gerar novamente" e "Salvar jogos" (pelo `JogosServico`, com as mesmas regras do cadastro manual).
 - Aviso fixo na página de que a estratégia não aumenta a chance de acerto.
+- Atalho "Gerar jogos" no cabeçalho do Painel, ao lado de "Novo jogo".
 
 Estratégias propostas (dos arquivos de `docs/`):
 

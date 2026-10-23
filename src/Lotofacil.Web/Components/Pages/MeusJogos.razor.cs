@@ -62,10 +62,22 @@ public partial class MeusJogos
     }
 
     /// <summary>
+    /// Pedido de abrir o cadastro ao carregar, vindo do atalho "Novo jogo" do Painel (<c>?novo=true</c>).
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "novo")]
+    public bool? Novo { get; set; }
+
+    /// <summary>
     /// Serviço de jogos.
     /// </summary>
     [Inject]
     private JogosServico Servico { get; set; } = null!;
+
+    /// <summary>
+    /// Navegação, usada para tirar o pedido de cadastro do endereço.
+    /// </summary>
+    [Inject]
+    private NavigationManager Navegacao { get; set; } = null!;
 
     /// <summary>
     /// Preço da aposta, usado no custo e no valor investido.
@@ -129,6 +141,24 @@ public partial class MeusJogos
     {
         await this.CarregarAsync();
         this.carregado = true;
+    }
+
+    /// <summary>
+    /// Abre o cadastro quando a página foi aberta pelo atalho do Painel.
+    /// </summary>
+    /// <param name="firstRender">Indica a primeira renderização.</param>
+    /// <returns>Tarefa do cadastro.</returns>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Só depois de renderizada, para não segurar a carga da página enquanto o diálogo está aberto.
+        if (firstRender && this.Novo == true)
+        {
+            this.Navegacao.NavigateTo("meus-jogos", replace: true);
+            await this.NovoJogoAsync();
+
+            // Fora de um evento da página, a recarga da lista não renderiza sozinha.
+            this.StateHasChanged();
+        }
     }
 
     /// <summary>
