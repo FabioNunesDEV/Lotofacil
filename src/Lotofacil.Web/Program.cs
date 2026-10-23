@@ -5,6 +5,7 @@
 using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Painel;
 using Lotofacil.Infraestrutura;
 using Lotofacil.Infraestrutura.Caixa;
 using Lotofacil.Web;
@@ -34,6 +35,7 @@ builder.Services.AddSingleton<ImportacaoHistoricoServico>();
 builder.Services.AddSingleton<AtualizacaoConcursosServico>();
 builder.Services.AddSingleton<EstatisticasServico>();
 builder.Services.AddSingleton<JogosServico>();
+builder.Services.AddSingleton<PainelServico>();
 builder.Services.AddSingleton(new OpcoesApostas(builder.Configuration.GetValue("Lotofacil:PrecoApostaMinima", 3.50m)));
 
 var app = builder.Build();

@@ -39,4 +39,14 @@ public sealed record GrupoJogos(int NumeroConcurso, Concurso? Concurso, IReadOnl
     /// Data em que os prêmios do concurso prescrevem, ou <c>null</c> enquanto não foi sorteado.
     /// </summary>
     public DateOnly? Prescricao => this.Concurso?.Data.AddDays(RegrasLotofacil.DiasPrescricao);
+
+    /// <summary>
+    /// Indica se o concurso já foi sorteado e os prêmios ainda podem ser recebidos.
+    /// </summary>
+    /// <param name="hoje">Data de referência.</param>
+    /// <returns><c>true</c> até a data da prescrição, inclusive.</returns>
+    public bool DentroDoPrazo(DateOnly hoje)
+    {
+        return this.Prescricao is DateOnly prescricao && hoje <= prescricao;
+    }
 }

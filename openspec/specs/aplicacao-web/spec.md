@@ -33,7 +33,8 @@ título "Lotofácil" e um menu lateral de navegação. O menu MUST listar apenas
 - **THEN** o menu lateral é recolhido, e acioná-lo de novo volta a exibi-lo
 
 ### Requirement: Página inicial
-A rota raiz (`/`) SHALL exibir a página "Painel", que nesta versão contém apenas o seu título.
+A rota raiz (`/`) SHALL exibir a página "Painel", com o título "Painel" e o resumo da base local e dos jogos
+definido na capacidade `painel`.
 
 #### Scenario: Abrir a raiz
 - **WHEN** o usuário navega para `/`

@@ -10,6 +10,7 @@ using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Jogos;
 using Lotofacil.Web;
 using Lotofacil.Web.Components.Pages;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using NSubstitute;
@@ -281,6 +282,59 @@ public class MeusJogosTestes : ComponenteTesteBase
         MarcarDezenas(dialogos, [16, 17]);
         Assert.Equal("15 de 15 dezenas · R$ 3,50", Texto(dialogos.Find(".contagem")));
         Assert.False(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Aberta pelo atalho do Painel, a página abre o cadastro e tira o pedido do endereço.
+    /// </summary>
+    [Fact]
+    public void AtalhoDoPainelAbreOCadastro()
+    {
+        this.MontarCenarioPadrao();
+        NavigationManager navegacao = this.Services.GetRequiredService<NavigationManager>();
+        navegacao.NavigateTo("meus-jogos?novo=true");
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+
+        this.RenderizarPagina();
+
+        dialogos.WaitForAssertion(() => Assert.Equal("3809", dialogos.Find(".campo-concurso input").GetAttribute("value")));
+        Assert.Equal($"{navegacao.BaseUri}meus-jogos", navegacao.Uri);
+    }
+
+    /// <summary>
+    /// Sem o parâmetro, a página não abre o cadastro.
+    /// </summary>
+    [Fact]
+    public void SemOParametroNaoAbreOCadastro()
+    {
+        this.MontarCenarioPadrao();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+
+        this.RenderizarPagina();
+
+        Assert.Empty(dialogos.FindAll(".campo-concurso"));
+    }
+
+    /// <summary>
+    /// O jogo salvo pelo cadastro aberto pelo atalho aparece na lista.
+    /// </summary>
+    [Fact]
+    public void SalvaPeloAtalhoDoPainel()
+    {
+        this.MontarCenarioPadrao();
+        this.Services.GetRequiredService<NavigationManager>().NavigateTo("meus-jogos?novo=true");
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+        dialogos.WaitForAssertion(() => Assert.NotEmpty(dialogos.FindAll(".campo-concurso")));
+
+        MarcarDezenas(dialogos, Enumerable.Range(1, 15));
+        dialogos.Find(".botao-salvar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains("Jogo salvo para o concurso 3809.", MensagensExibidas(mensagens)));
+        pagina.WaitForAssertion(() => Assert.Equal(
+            ["3810", "3809", "3808"],
+            pagina.FindAll(".grupo").Select(grupo => grupo.GetAttribute("data-concurso"))));
     }
 
     /// <summary>
@@ -558,15 +612,19 @@ public class MeusJogosTestes : ComponenteTesteBase
     }
 
     /// <summary>
-    /// Clica nas dezenas do volante do diálogo.
+    /// Clica nas dezenas do volante do diálogo, esperando cada clique ser aplicado antes do seguinte.
     /// </summary>
     /// <param name="dialogos">Provedor de diálogos renderizado.</param>
-    /// <param name="dezenas">Dezenas a marcar.</param>
+    /// <param name="dezenas">Dezenas a marcar ou desmarcar.</param>
     private static void MarcarDezenas(IRenderedComponent<MudDialogProvider> dialogos, IEnumerable<int> dezenas)
     {
         foreach (int dezena in dezenas)
         {
+            string? antes = Dezena(dialogos, dezena).GetAttribute("aria-pressed");
             Dezena(dialogos, dezena).Click();
+
+            // Com a máquina carregada, o próximo clique pode chegar antes de o volante receber a marcação anterior.
+            dialogos.WaitForAssertion(() => Assert.NotEqual(antes, Dezena(dialogos, dezena).GetAttribute("aria-pressed")));
         }
     }
 

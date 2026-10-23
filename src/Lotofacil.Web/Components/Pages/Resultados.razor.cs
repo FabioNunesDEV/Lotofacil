@@ -5,6 +5,7 @@
 using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Dominio;
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Web.Components.Concursos;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -25,16 +26,6 @@ public partial class Resultados
     /// Início da mensagem de falha da importação.
     /// </summary>
     private const string PrefixoFalhaImportacao = "A importação falhou e nada foi gravado.";
-
-    /// <summary>
-    /// Início da mensagem de falha da atualização.
-    /// </summary>
-    private const string PrefixoFalhaAtualizacao = "A atualização foi interrompida.";
-
-    /// <summary>
-    /// Motivo exibido quando a falha não foi prevista; o detalhe vai para o log.
-    /// </summary>
-    private const string MotivoErroInesperado = "Erro inesperado; os detalhes foram registrados no log.";
 
     /// <summary>
     /// Quantidades de concursos por página oferecidas ao usuário.
@@ -188,7 +179,7 @@ public partial class Resultados
         catch (Exception erro) when (erro is not OperationCanceledException)
         {
             this.Log.LogError(erro, "Falha inesperada na importação do histórico.");
-            this.MostrarFalha($"{PrefixoFalhaImportacao} {MotivoErroInesperado}");
+            this.MostrarFalha($"{PrefixoFalhaImportacao} {AvisosAtualizacao.MotivoErroInesperado}");
         }
         finally
         {
@@ -202,7 +193,7 @@ public partial class Resultados
     /// <returns>Tarefa da atualização.</returns>
     private async Task AtualizarResultadosAsync()
     {
-        this.andamento = "Consultando o último concurso da Caixa…";
+        this.andamento = AvisosAtualizacao.Consultando;
         try
         {
             var progresso = new Progress<AndamentoAtualizacao>(this.MostrarAndamento);
@@ -217,7 +208,7 @@ public partial class Resultados
         catch (Exception erro) when (erro is not OperationCanceledException)
         {
             this.Log.LogError(erro, "Falha inesperada na atualização dos resultados.");
-            this.MostrarFalha($"{PrefixoFalhaAtualizacao} {MotivoErroInesperado}");
+            this.MostrarFalha(AvisosAtualizacao.FalhaInesperada);
         }
         finally
         {
@@ -239,7 +230,7 @@ public partial class Resultados
                 return;
             }
 
-            this.andamento = $"Buscando o concurso {atual.Numero} ({atual.Posicao} de {atual.Total})…";
+            this.andamento = AvisosAtualizacao.Andamento(atual);
             this.StateHasChanged();
         });
     }
@@ -250,39 +241,19 @@ public partial class Resultados
     /// <param name="resultado">Desfecho da atualização.</param>
     private void InformarAtualizacao(ResultadoAtualizacao resultado)
     {
-        int gravados = resultado.ConcursosGravados;
-        int ultimo = resultado.UltimoNumeroNaBase;
-
-        if (resultado.BaseVazia)
-        {
-            this.Mensagens.Add(
-                "A base local está vazia. Use “Importar histórico” antes de atualizar os resultados.",
-                Severity.Warning);
-        }
-        else if (resultado.Falha is FonteResultadosException falha)
+        AvisoAtualizacao aviso = AvisosAtualizacao.Desfecho(resultado);
+        if (resultado.Falha is FonteResultadosException falha)
         {
             this.Log.LogError(falha, "Atualização dos resultados interrompida: {Mensagem}", falha.Message);
-            string mensagem = $"{PrefixoFalhaAtualizacao} {falha.Message}";
-            if (gravados > 0)
-            {
-                mensagem += $" Concursos gravados antes da falha: {gravados:N0} (até o {ultimo}).";
-            }
+        }
 
-            this.MostrarFalha(mensagem);
-        }
-        else if (gravados == 0)
+        if (aviso.Severidade == Severity.Error)
         {
-            this.Mensagens.Add($"A base local já está atualizada: último concurso {ultimo}.", Severity.Info);
-        }
-        else if (gravados == 1)
-        {
-            this.Mensagens.Add($"Atualização concluída: 1 concurso novo gravado ({ultimo}).", Severity.Success);
+            this.MostrarFalha(aviso.Texto);
         }
         else
         {
-            this.Mensagens.Add(
-                $"Atualização concluída: {gravados:N0} concursos novos gravados ({resultado.PrimeiroGravado} a {ultimo}).",
-                Severity.Success);
+            this.Mensagens.Add(aviso.Texto, aviso.Severidade);
         }
     }
 
