@@ -49,14 +49,31 @@ public class MainLayoutTestes : ComponenteTesteBase
         IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
 
         var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
-        Assert.Equal(["Painel", "Resultados", "Estatísticas", "Meus jogos"], itens.Select(item => item.TextContent.Trim()));
+        Assert.Equal(["Painel", "Resultados", "Estatísticas", "Gerar jogos", "Meus jogos"], itens.Select(item => item.TextContent.Trim()));
         Assert.Equal("resultados", itens[1].GetAttribute("href"));
         Assert.Contains("active", itens[1].ClassList);
         Assert.DoesNotContain("active", itens[0].ClassList);
     }
 
     /// <summary>
-    /// O item Meus jogos vem logo abaixo de Estatísticas e fica selecionado na rota /meus-jogos.
+    /// O item Gerar jogos vem logo abaixo de Estatísticas e fica selecionado na rota /gerar-jogos.
+    /// </summary>
+    [Fact]
+    public void ExibeItemGerarJogosSelecionadoNaRotaGerarJogos()
+    {
+        this.Services.GetRequiredService<NavigationManager>().NavigateTo("gerar-jogos");
+
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
+        Assert.Equal("Gerar jogos", itens[3].TextContent.Trim());
+        Assert.Equal("gerar-jogos", itens[3].GetAttribute("href"));
+        Assert.Contains("active", itens[3].ClassList);
+        Assert.DoesNotContain("active", itens[2].ClassList);
+    }
+
+    /// <summary>
+    /// O item Meus jogos vem logo abaixo de Gerar jogos e fica selecionado na rota /meus-jogos.
     /// </summary>
     [Fact]
     public void ExibeItemMeusJogosSelecionadoNaRotaMeusJogos()
@@ -66,10 +83,10 @@ public class MainLayoutTestes : ComponenteTesteBase
         IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
 
         var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
-        Assert.Equal("Meus jogos", itens[3].TextContent.Trim());
-        Assert.Equal("meus-jogos", itens[3].GetAttribute("href"));
-        Assert.Contains("active", itens[3].ClassList);
-        Assert.DoesNotContain("active", itens[2].ClassList);
+        Assert.Equal("Meus jogos", itens[4].TextContent.Trim());
+        Assert.Equal("meus-jogos", itens[4].GetAttribute("href"));
+        Assert.Contains("active", itens[4].ClassList);
+        Assert.DoesNotContain("active", itens[3].ClassList);
     }
 
     /// <summary>

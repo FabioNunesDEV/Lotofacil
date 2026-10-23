@@ -31,8 +31,6 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
   `docs/roteiro.md`.
 
 ## Pendências de negócio (não implementar sem definição do usuário)
-- Geração de jogos: as estratégias são as descritas nos arquivos de `docs/` (o usuário não tem outro material);
-  falta confirmar as regras de cada uma, as dezenas fixas/excluídas e a janela da análise (ver `docs/roteiro.md`).
 - Teimosinha e Bolão.
 
 ## Decisões de negócio já definidas
@@ -48,6 +46,12 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
 - Jogo com as mesmas dezenas no mesmo concurso é rejeitado com aviso (também por índice único no banco); um jogo
   contido em outro (15 dezenas dentro de um de 16, por exemplo) não é duplicado.
 - Conferência calculada ao exibir, pelo rateio gravado do próprio concurso; prêmio prescreve 90 dias após o sorteio.
+- Geração de jogos: estratégias dos arquivos de `docs/` (Aleatória, Mais sorteadas, Menos sorteadas, Mais atrasadas,
+  Equilibrada), sempre por sorteio ponderado das dezenas livres; peso = 1 + quantidade de dezenas com valor pior no
+  critério (empates com o mesmo peso). Equilibrada: metade (arredondada para cima) pelas mais sorteadas, o resto
+  pelas mais atrasadas. Janela igual à das estatísticas; 1 a 100 jogos (padrão 10), de 15 a 20 dezenas; fixas podem
+  chegar às dezenas por jogo. Jogos repetidos na mesma geração são evitados (com poucas combinações, gera as
+  possíveis e avisa). Ao salvar, valem as regras do cadastro manual: duplicados recusados e os demais gravados.
 
 ## Stack
 - .NET 10, C#, Blazor Server com MudBlazor. Roda apenas em `localhost`.

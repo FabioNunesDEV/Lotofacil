@@ -45,17 +45,10 @@ public class JogosServico
         IReadOnlyCollection<int> dezenas,
         CancellationToken cancelamento = default)
     {
-        int? ultimoGravado = await this.concursos.ObterUltimoNumeroAsync(cancelamento);
-        if (ultimoGravado is null)
+        string? recusa = await this.VerificarConcursoAsync(numeroConcurso, cancelamento);
+        if (recusa is not null)
         {
-            return new ResultadoCadastro(false, "Importe o histórico na página Resultados antes de cadastrar jogos.");
-        }
-
-        if (numeroConcurso <= ultimoGravado)
-        {
-            return new ResultadoCadastro(
-                false,
-                $"Só é possível cadastrar jogos para concursos depois do {ultimoGravado}.");
+            return new ResultadoCadastro(false, recusa);
         }
 
         var jogo = new Jogo(numeroConcurso, dezenas, DateTime.Now);
@@ -66,6 +59,44 @@ public class JogosServico
 
         await this.jogos.AdicionarAsync(jogo, cancelamento);
         return new ResultadoCadastro(true, $"Jogo salvo para o concurso {numeroConcurso}.");
+    }
+
+    /// <summary>
+    /// Cadastra vários jogos para um concurso futuro: recusa tudo com base vazia ou concurso já sorteado, recusa os
+    /// duplicados e grava os demais.
+    /// </summary>
+    /// <param name="numeroConcurso">Número do concurso.</param>
+    /// <param name="jogos">Dezenas de cada jogo (15 a 20 por jogo).</param>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Quantos jogos foram gravados e quantos eram duplicados, ou o motivo da recusa.</returns>
+    public async Task<ResultadoCadastroVarios> CadastrarVariosAsync(
+        int numeroConcurso,
+        IReadOnlyList<IReadOnlyCollection<int>> jogos,
+        CancellationToken cancelamento = default)
+    {
+        string? recusa = await this.VerificarConcursoAsync(numeroConcurso, cancelamento);
+        if (recusa is not null)
+        {
+            return new ResultadoCadastroVarios(0, 0, recusa);
+        }
+
+        DateTime agora = DateTime.Now;
+        int gravados = 0;
+        int duplicados = 0;
+        foreach (IReadOnlyCollection<int> dezenas in jogos)
+        {
+            var jogo = new Jogo(numeroConcurso, dezenas, agora);
+            if (await this.jogos.ExisteAsync(numeroConcurso, jogo.Dezenas, cancelamento))
+            {
+                duplicados++;
+                continue;
+            }
+
+            await this.jogos.AdicionarAsync(jogo, cancelamento);
+            gravados++;
+        }
+
+        return new ResultadoCadastroVarios(gravados, duplicados, null);
     }
 
     /// <summary>
@@ -115,5 +146,24 @@ public class JogosServico
     public Task ExcluirAsync(int id, CancellationToken cancelamento = default)
     {
         return this.jogos.ExcluirAsync(id, cancelamento);
+    }
+
+    /// <summary>
+    /// Confere se é possível cadastrar jogos para o concurso: base com concursos e concurso ainda não sorteado.
+    /// </summary>
+    /// <param name="numeroConcurso">Número do concurso.</param>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>O motivo da recusa, ou <c>null</c> quando o concurso aceita jogos.</returns>
+    private async Task<string?> VerificarConcursoAsync(int numeroConcurso, CancellationToken cancelamento)
+    {
+        int? ultimoGravado = await this.concursos.ObterUltimoNumeroAsync(cancelamento);
+        if (ultimoGravado is null)
+        {
+            return "Importe o histórico na página Resultados antes de cadastrar jogos.";
+        }
+
+        return numeroConcurso <= ultimoGravado
+            ? $"Só é possível cadastrar jogos para concursos depois do {ultimoGravado}."
+            : null;
     }
 }

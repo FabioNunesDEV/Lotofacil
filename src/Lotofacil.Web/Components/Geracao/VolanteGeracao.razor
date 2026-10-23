@@ -1,0 +1,8 @@
+<div class="volante">
+    @for (int dezena = RegrasLotofacil.DezenaMinima; dezena <= RegrasLotofacil.DezenaMaxima; dezena++)
+    {
+        int atual = dezena;
+        <button type="button" class="@this.Classe(atual)" aria-label="@this.Rotulo(atual)"
+                @onclick="() => this.AlternarAsync(atual)">@atual.ToString("00")</button>
+    }
+</div>

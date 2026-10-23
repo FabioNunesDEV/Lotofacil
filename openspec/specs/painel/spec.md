@@ -9,12 +9,17 @@ destaques das dezenas e jogos do último concurso, com atalhos para atualizar os
 
 ### Requirement: Cabeçalho e atalhos do Painel
 A página Painel SHALL mostrar o título "Painel", o subtítulo "Resumo da base local e dos seus jogos" e os botões
-"Atualizar resultados" e "Novo jogo". "Novo jogo" MUST levar à página Meus jogos com o cadastro de jogo já aberto.
-O Painel MUST NOT ter o atalho "Gerar jogos" nesta versão.
+"Atualizar resultados", "Gerar jogos" e "Novo jogo". "Gerar jogos" MUST levar à página Gerar jogos. "Novo jogo"
+MUST levar à página Meus jogos com o cadastro de jogo já aberto.
 
 #### Scenario: Abrir o Painel
 - **WHEN** o usuário abre a rota `/`
-- **THEN** a página mostra o título "Painel", o subtítulo e os botões "Atualizar resultados" e "Novo jogo"
+- **THEN** a página mostra o título "Painel", o subtítulo e os botões "Atualizar resultados", "Gerar jogos" e "Novo
+  jogo"
+
+#### Scenario: Atalho Gerar jogos
+- **WHEN** o usuário aciona "Gerar jogos" no Painel
+- **THEN** a página Gerar jogos é exibida
 
 #### Scenario: Atalho Novo jogo
 - **WHEN** o usuário aciona "Novo jogo" no Painel

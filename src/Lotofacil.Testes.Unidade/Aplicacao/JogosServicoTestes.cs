@@ -267,6 +267,83 @@ public class JogosServicoTestes
     }
 
     /// <summary>
+    /// Vários jogos sem duplicados são todos gravados.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task CadastraVariosJogos()
+    {
+        this.concursos.ObterUltimoNumeroAsync(Arg.Any<CancellationToken>()).Returns(3810);
+        List<IReadOnlyCollection<int>> lista = [DezenasJogo, [.. Enumerable.Range(2, 15)], [.. Enumerable.Range(1, 16)]];
+
+        ResultadoCadastroVarios resultado = await this.CriarServico().CadastrarVariosAsync(3811, lista, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ResultadoCadastroVarios(3, 0, null), resultado);
+        await this.jogos.Received(3).AdicionarAsync(Arg.Is<Jogo>(jogo => jogo.NumeroConcurso == 3811), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// Os jogos já cadastrados para o concurso são recusados e os demais gravados.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task CadastraVariosRecusandoDuplicados()
+    {
+        this.concursos.ObterUltimoNumeroAsync(Arg.Any<CancellationToken>()).Returns(3810);
+        this.jogos.ExisteAsync(3811, Arg.Is<IEnumerable<int>>(dezenas => dezenas.SequenceEqual(DezenasJogo)), Arg.Any<CancellationToken>())
+            .Returns(true);
+        List<IReadOnlyCollection<int>> lista = [DezenasJogo, [.. Enumerable.Range(2, 15)]];
+
+        ResultadoCadastroVarios resultado = await this.CriarServico().CadastrarVariosAsync(3811, lista, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ResultadoCadastroVarios(1, 1, null), resultado);
+        await this.jogos.Received(1).AdicionarAsync(
+            Arg.Is<Jogo>(jogo => jogo.Dezenas.SequenceEqual(Enumerable.Range(2, 15))),
+            Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// Todos duplicados: nada é gravado.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task CadastraVariosTodosDuplicados()
+    {
+        this.concursos.ObterUltimoNumeroAsync(Arg.Any<CancellationToken>()).Returns(3810);
+        this.jogos.ExisteAsync(3811, Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>()).Returns(true);
+
+        ResultadoCadastroVarios resultado = await this.CriarServico().CadastrarVariosAsync(
+            3811,
+            [DezenasJogo, [.. Enumerable.Range(2, 15)]],
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ResultadoCadastroVarios(0, 2, null), resultado);
+        await this.jogos.DidNotReceiveWithAnyArgs().AdicionarAsync(null!, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Base vazia e concurso já sorteado recusam todos os jogos, com as mensagens do cadastro.
+    /// </summary>
+    /// <param name="ultimoGravado">Último concurso gravado, ou nulo com a base vazia.</param>
+    /// <param name="mensagem">Motivo esperado.</param>
+    /// <returns>Tarefa do teste.</returns>
+    [Theory]
+    [InlineData(null, "Importe o histórico na página Resultados antes de cadastrar jogos.")]
+    [InlineData(3811, "Só é possível cadastrar jogos para concursos depois do 3811.")]
+    public async Task CadastraVariosRecusaConcurso(int? ultimoGravado, string mensagem)
+    {
+        this.concursos.ObterUltimoNumeroAsync(Arg.Any<CancellationToken>()).Returns(ultimoGravado);
+
+        ResultadoCadastroVarios resultado = await this.CriarServico().CadastrarVariosAsync(
+            3811,
+            [DezenasJogo],
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ResultadoCadastroVarios(0, 0, mensagem), resultado);
+        await this.jogos.DidNotReceiveWithAnyArgs().AdicionarAsync(null!, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
     /// Excluir repassa o identificador ao repositório.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>
