@@ -3,7 +3,8 @@
 - **Atualizado em:** 24/10/2026
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
   4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos` ·
-  9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao` · 11 `aviso-jogos-premiados`
+  9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao` · 11 `aviso-jogos-premiados` ·
+  12 `exportar-jogos`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -104,16 +105,20 @@ conferidos e o resultado é avisado logo após o desfecho.
 **Decidido:** só os jogos dos concursos gravados pela atualização (também quando ela é interrompida depois de gravar);
 nada novo no banco; conferência pelas regras e pelo rateio já usados em Meus jogos.
 
+## Fatia 12 — `exportar-jogos` (concluída)
+
+Em Meus jogos, cada concurso ganhou o botão "Exportar", que abre o diálogo "Exportar · concurso <n>" com o texto dos
+jogos e os botões "Copiar" (área de transferência), "Baixar .txt" (`concurso-<n>.txt`, UTF-8) e "Fechar".
+
+- Texto: "Lotofácil · concurso <n>", "<quantidade> · <custo>", linha em branco e um jogo por linha
+  ("01) 01 02 04 …", com " (16 dezenas)" nas apostas múltiplas).
+
+**Decidido:** sem conferência no texto, nem em concursos sorteados; só em Meus jogos; linhas com quebra do Windows;
+cópia e download sem pacote nem arquivo `.js` (interop do navegador e link com data URL).
+
 ## Próximas fatias (ordem de esforço, do menor para o maior)
 
 Ordem combinada com o usuário em 24/10/2026. As decisões **a confirmar** são perguntadas no início de cada fatia.
-
-### Fatia 12 — exportar jogos de um concurso
-
-Texto com os jogos de um concurso para conferir ou levar à lotérica, a partir de Meus jogos.
-
-**A confirmar:** formato (copiar texto ou baixar arquivo), o que entra (dezenas, custo, conferência) e de onde se
-aciona.
 
 ### Fatia 13 — página Configurações
 

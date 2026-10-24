@@ -435,6 +435,29 @@ public class MeusJogosTestes : ComponenteTesteBase
     }
 
     /// <summary>
+    /// Cada grupo tem o botão "Exportar", que abre o diálogo com o texto dos jogos daquele concurso.
+    /// </summary>
+    [Fact]
+    public void ExportaOsJogosDoConcurso()
+    {
+        this.MontarCenarioPadrao();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+
+        Assert.Equal(2, pagina.FindAll(".grupo .botao-exportar").Count);
+        pagina.Find(".grupo[data-concurso='3810'] .botao-exportar").Click();
+
+        dialogos.WaitForAssertion(() => Assert.Equal("Exportar · concurso 3810", Texto(dialogos.Find(".mud-dialog-title"))));
+        Assert.Equal(
+            "Lotofácil · concurso 3810\n3 jogos · R$ 10,50\n\n"
+                + "01) 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15\n"
+                + "02) 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16\n"
+                + "03) 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17",
+            dialogos.Find(".texto-exportacao textarea").GetAttribute("value")!.Replace(' ', ' '));
+        Assert.Equal("concurso-3810.txt", dialogos.Find("a.botao-baixar").GetAttribute("download"));
+    }
+
+    /// <summary>
     /// Clicar num jogo conferido abre a conferência com o volante e os detalhes.
     /// </summary>
     [Fact]

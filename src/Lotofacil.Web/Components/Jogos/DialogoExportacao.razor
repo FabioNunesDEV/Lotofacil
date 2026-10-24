@@ -1,0 +1,20 @@
+<MudDialog>
+    <DialogContent>
+        <div class="exportacao">
+            <MudTextField T="string" Value="this.Texto" ReadOnly="true" Lines="10" Sizing="InputSizing.Auto" MaxLines="20"
+                          Variant="Variant.Outlined" Class="texto-exportacao" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="this.Fechar" Class="botao-fechar">Fechar</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+                   Href="@FormatacaoExportacao.EnderecoDownload(this.Texto)" download="@this.NomeArquivo"
+                   Class="botao-baixar">
+            Baixar .txt
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy"
+                   OnClick="this.CopiarAsync" Class="botao-copiar">
+            Copiar
+        </MudButton>
+    </DialogActions>
+</MudDialog>

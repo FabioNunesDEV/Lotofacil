@@ -189,6 +189,22 @@ public partial class MeusJogos
     }
 
     /// <summary>
+    /// Abre o diálogo de exportação com o texto dos jogos do concurso.
+    /// </summary>
+    /// <param name="grupo">Grupo do concurso.</param>
+    /// <returns>Tarefa da abertura.</returns>
+    private async Task AbrirExportacaoAsync(GrupoJogos grupo)
+    {
+        var parametros = new DialogParameters<DialogoExportacao>
+        {
+            { dialogo => dialogo.Texto, FormatacaoExportacao.Texto(grupo, this.Opcoes.PrecoApostaMinima) },
+            { dialogo => dialogo.NomeArquivo, FormatacaoExportacao.NomeArquivo(grupo.NumeroConcurso) },
+        };
+        var opcoes = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        await this.Dialogos.ShowAsync<DialogoExportacao>($"Exportar · concurso {grupo.NumeroConcurso}", parametros, opcoes);
+    }
+
+    /// <summary>
     /// Troca o filtro da lista.
     /// </summary>
     /// <param name="novoFiltro">Filtro escolhido.</param>
