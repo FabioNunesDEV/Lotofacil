@@ -48,4 +48,15 @@ internal sealed class ConcursosCaixaFonte : IFonteConcursos
 
         return LeitorConcursoJson.LerConcurso(resposta, numero);
     }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<int>?> ObterOrdemSorteioAsync(int numero, CancellationToken cancelamento = default)
+    {
+        byte[] resposta = await this.cliente.ObterAsync(
+            $"{CaminhoLotofacil}{numero}",
+            $"buscar a ordem do concurso {numero}",
+            cancelamento);
+
+        return LeitorConcursoJson.LerOrdemSorteio(resposta, numero);
+    }
 }

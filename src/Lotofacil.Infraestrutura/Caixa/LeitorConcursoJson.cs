@@ -11,7 +11,8 @@ using Newtonsoft.Json;
 namespace Lotofacil.Infraestrutura.Caixa;
 
 /// <summary>
-/// Converte as respostas JSON da API da Caixa em número do último concurso ou em concurso validado.
+/// Converte as respostas JSON da API da Caixa em número do último concurso, em concurso validado ou só na ordem do
+/// sorteio.
 /// </summary>
 internal static class LeitorConcursoJson
 {
@@ -100,6 +101,37 @@ internal static class LeitorConcursoJson
         {
             throw new FonteResultadosException($"Concurso {numeroPedido}: {MensagemValidacao.SemParametro(erro)}", erro);
         }
+    }
+
+    /// <summary>
+    /// Lê só a ordem do sorteio do concurso pedido, sem exigir os demais campos; lança
+    /// <see cref="FonteResultadosException"/> se a resposta for de outro concurso ou estiver fora do formato.
+    /// </summary>
+    /// <param name="conteudo">Corpo da resposta.</param>
+    /// <param name="numeroPedido">Número do concurso que foi pedido.</param>
+    /// <returns>As dezenas na ordem do sorteio, ou <c>null</c> se a resposta não trouxer a ordem.</returns>
+    public static IReadOnlyList<int>? LerOrdemSorteio(byte[] conteudo, int numeroPedido)
+    {
+        string descricao = $"o concurso {numeroPedido}";
+        ConcursoCaixaJson dados = Desserializar(conteudo, descricao);
+        if (dados.Numero is null)
+        {
+            throw FormatoInesperado(descricao);
+        }
+
+        if (dados.Numero != numeroPedido)
+        {
+            throw new FonteResultadosException(
+                $"A Caixa devolveu o concurso {dados.Numero} ao buscar o concurso {numeroPedido}.");
+        }
+
+        List<string> textosOrdem = dados.DezenasOrdemSorteio ?? [];
+        if (textosOrdem.Count == 0)
+        {
+            return null;
+        }
+
+        return LerDezenas(textosOrdem) ?? throw FormatoInesperado(descricao);
     }
 
     /// <summary>

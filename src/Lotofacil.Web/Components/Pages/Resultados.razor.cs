@@ -14,9 +14,10 @@ using MudBlazor;
 namespace Lotofacil.Web.Components.Pages;
 
 /// <summary>
-/// Lista os concursos gravados, com paginação, busca por número e detalhe do rateio.
+/// Lista os concursos gravados, com paginação, busca por número e detalhe do rateio, e dispara a importação, a
+/// atualização e o preenchimento da ordem do sorteio.
 /// </summary>
-public partial class Resultados
+public partial class Resultados : IDisposable
 {
     /// <summary>
     /// Mensagem exibida quando a base não tem concursos.
@@ -55,9 +56,25 @@ public partial class Resultados
     private string mensagemSemRegistros = MensagemBaseVazia;
 
     /// <summary>
-    /// Texto do andamento da importação ou da atualização, ou <c>null</c> quando nenhuma está em andamento.
+    /// Texto do andamento da importação, da atualização ou do preenchimento da ordem, ou <c>null</c> quando nenhum
+    /// está em andamento.
     /// </summary>
     private string? andamento;
+
+    /// <summary>
+    /// Quantidade de concursos sem a ordem do sorteio.
+    /// </summary>
+    private int semOrdem;
+
+    /// <summary>
+    /// Cancelamento do preenchimento da ordem em andamento, ou <c>null</c> quando ele não está rodando.
+    /// </summary>
+    private CancellationTokenSource? preenchimento;
+
+    /// <summary>
+    /// Indica que o usuário saiu da página; o preenchimento interrompido não mexe mais na tela.
+    /// </summary>
+    private bool descartada;
 
     /// <summary>
     /// Serviço de consulta dos concursos.
@@ -76,6 +93,12 @@ public partial class Resultados
     /// </summary>
     [Inject]
     private AtualizacaoConcursosServico Atualizacao { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço de preenchimento da ordem do sorteio pela API da Caixa.
+    /// </summary>
+    [Inject]
+    private OrdemSorteioServico Ordem { get; set; } = null!;
 
     /// <summary>
     /// Serviço dos jogos, que confere os jogos dos concursos novos.
@@ -102,9 +125,27 @@ public partial class Resultados
     private ILogger<Resultados> Log { get; set; } = null!;
 
     /// <summary>
-    /// Indica que a importação ou a atualização está em andamento; os dois botões ficam desabilitados.
+    /// Indica que a importação, a atualização ou o preenchimento está em andamento; os três botões ficam desabilitados.
     /// </summary>
     private bool Ocupada => this.andamento is not null;
+
+    /// <summary>
+    /// Interrompe o preenchimento da ordem ao sair da página.
+    /// </summary>
+    public void Dispose()
+    {
+        this.descartada = true;
+        this.preenchimento?.Cancel();
+    }
+
+    /// <summary>
+    /// Conta os concursos sem a ordem do sorteio, que habilitam o preenchimento.
+    /// </summary>
+    /// <returns>Tarefa da contagem.</returns>
+    protected override async Task OnInitializedAsync()
+    {
+        await this.ContarSemOrdemAsync();
+    }
 
     /// <summary>
     /// Devolve o rateio da faixa de 15 acertos.
@@ -198,6 +239,7 @@ public partial class Resultados
         finally
         {
             this.andamento = null;
+            await this.ContarSemOrdemAsync();
         }
     }
 
@@ -210,7 +252,7 @@ public partial class Resultados
         this.andamento = AvisosAtualizacao.Consultando;
         try
         {
-            var progresso = new Progress<AndamentoAtualizacao>(this.MostrarAndamento);
+            var progresso = new Progress<AndamentoAtualizacao>(atual => this.MostrarAndamento(AvisosAtualizacao.Andamento(atual)));
             ResultadoAtualizacao resultado = await this.Atualizacao.AtualizarAsync(progresso);
             this.InformarAtualizacao(resultado);
 
@@ -228,7 +270,95 @@ public partial class Resultados
         finally
         {
             this.andamento = null;
+            await this.ContarSemOrdemAsync();
         }
+    }
+
+    /// <summary>
+    /// Busca na Caixa a ordem do sorteio dos concursos sem ela, mostrando o andamento, e informa o desfecho.
+    /// </summary>
+    /// <returns>Tarefa do preenchimento.</returns>
+    private async Task PreencherOrdemAsync()
+    {
+        using var cancelamento = new CancellationTokenSource();
+        this.preenchimento = cancelamento;
+        this.andamento = AvisosOrdemSorteio.Preparando;
+        try
+        {
+            var progresso = new Progress<AndamentoOrdemSorteio>(
+                atual => this.MostrarAndamento(AvisosOrdemSorteio.Andamento(atual, DateTime.Now)));
+            ResultadoPreenchimentoOrdem resultado = await this.Ordem.PreencherAsync(progresso, cancelamento.Token);
+            await this.InformarPreenchimentoAsync(resultado);
+        }
+        catch (OperationCanceledException) when (cancelamento.IsCancellationRequested)
+        {
+            // Interrompido antes de começar a busca: nada foi gravado e não há o que informar.
+        }
+        catch (Exception erro) when (erro is not OperationCanceledException)
+        {
+            this.Log.LogError(erro, "Falha inesperada no preenchimento da ordem do sorteio.");
+            if (!this.descartada)
+            {
+                this.MostrarFalha(AvisosOrdemSorteio.FalhaInesperada);
+            }
+        }
+        finally
+        {
+            this.preenchimento = null;
+            this.andamento = null;
+            await this.ContarSemOrdemAsync();
+        }
+    }
+
+    /// <summary>
+    /// Registra no log as falhas do preenchimento, mostra o desfecho e recarrega a lista se alguma ordem foi gravada.
+    /// </summary>
+    /// <param name="resultado">Desfecho do preenchimento.</param>
+    /// <returns>Tarefa da recarga.</returns>
+    private async Task InformarPreenchimentoAsync(ResultadoPreenchimentoOrdem resultado)
+    {
+        foreach (FalhaOrdemSorteio falha in resultado.Falhas)
+        {
+            this.Log.LogError(falha.Causa, "Ordem do sorteio não preenchida: {Mensagem}", falha.Mensagem);
+        }
+
+        // Depois de sair da página, a tabela já foi descartada e não há onde mostrar o desfecho.
+        if (this.descartada)
+        {
+            return;
+        }
+
+        AvisoAtualizacao aviso = AvisosOrdemSorteio.Desfecho(resultado);
+        if (aviso.Severidade == Severity.Error)
+        {
+            this.MostrarFalha(aviso.Texto);
+        }
+        else
+        {
+            this.Mensagens.Add(aviso.Texto, aviso.Severidade);
+        }
+
+        if (resultado.Preenchidos > 0)
+        {
+            await this.BuscarAsync(null);
+        }
+    }
+
+    /// <summary>
+    /// Pede a interrupção do preenchimento da ordem; ele para antes de buscar o próximo concurso.
+    /// </summary>
+    private void Interromper()
+    {
+        this.preenchimento?.Cancel();
+    }
+
+    /// <summary>
+    /// Atualiza a quantidade de concursos sem a ordem do sorteio.
+    /// </summary>
+    /// <returns>Tarefa da contagem.</returns>
+    private async Task ContarSemOrdemAsync()
+    {
+        this.semOrdem = await this.Ordem.ContarSemOrdemAsync();
     }
 
     /// <summary>
@@ -250,18 +380,18 @@ public partial class Resultados
     /// <summary>
     /// Mostra qual concurso está sendo buscado.
     /// </summary>
-    /// <param name="atual">Concurso sendo buscado e sua posição.</param>
-    private void MostrarAndamento(AndamentoAtualizacao atual)
+    /// <param name="texto">Texto do andamento.</param>
+    private void MostrarAndamento(string texto)
     {
         _ = this.InvokeAsync(() =>
         {
-            // O aviso chega de forma assíncrona; a atualização pode já ter terminado.
-            if (this.andamento is null)
+            // O aviso chega de forma assíncrona; a operação pode já ter terminado.
+            if (this.andamento is null || this.descartada)
             {
                 return;
             }
 
-            this.andamento = AvisosAtualizacao.Andamento(atual);
+            this.andamento = texto;
             this.StateHasChanged();
         });
     }

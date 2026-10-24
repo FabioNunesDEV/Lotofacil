@@ -61,4 +61,28 @@ public interface IConcursoRepositorio
     /// <param name="cancelamento">Sinal de cancelamento.</param>
     /// <returns>Total de concursos na base.</returns>
     Task<int> ContarAsync(CancellationToken cancelamento = default);
+
+    /// <summary>
+    /// Lista os números dos concursos gravados sem a ordem do sorteio.
+    /// </summary>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Números em ordem crescente.</returns>
+    Task<IReadOnlyList<int>> ListarNumerosSemOrdemAsync(CancellationToken cancelamento = default);
+
+    /// <summary>
+    /// Conta os concursos gravados sem a ordem do sorteio.
+    /// </summary>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Quantidade de concursos sem ordem.</returns>
+    Task<int> ContarSemOrdemAsync(CancellationToken cancelamento = default);
+
+    /// <summary>
+    /// Grava a ordem do sorteio de um concurso, sem mudar os demais dados; lança <see cref="ArgumentException"/> se a
+    /// ordem não tiver as dezenas sorteadas.
+    /// </summary>
+    /// <param name="numero">Número do concurso gravado.</param>
+    /// <param name="ordem">As dezenas na ordem do sorteio.</param>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Tarefa da gravação.</returns>
+    Task GravarOrdemSorteioAsync(int numero, IReadOnlyList<int> ordem, CancellationToken cancelamento = default);
 }

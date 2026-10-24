@@ -81,6 +81,36 @@ public class ConcursosCaixaFonteTestes
     }
 
     /// <summary>
+    /// A ordem do sorteio é pedida no mesmo caminho do concurso.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task BuscaAOrdemDoSorteio()
+    {
+        RespostaFalsaHandler handler = RespostaFalsaHandler.Responder(HttpStatusCode.OK, RespostaConcursoCaixa.ComNumero(1500));
+
+        IReadOnlyList<int>? ordem = await CriarFonte(handler).ObterOrdemSorteioAsync(1500, TestContext.Current.CancellationToken);
+
+        Assert.Equal([13, 10, 22, 19, 12, 1, 7, 14, 4, 24, 21, 15, 18, 20, 17], ordem);
+        Assert.Equal("https://exemplo.local/portaldeloterias/api/lotofacil/1500", handler.UltimoEndereco?.OriginalString);
+    }
+
+    /// <summary>
+    /// Código de erro na busca da ordem tem a operação própria na mensagem.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ErroAoBuscarAOrdem()
+    {
+        RespostaFalsaHandler handler = RespostaFalsaHandler.Responder(HttpStatusCode.ServiceUnavailable);
+
+        var erro = await Assert.ThrowsAsync<FonteResultadosException>(
+            () => CriarFonte(handler).ObterOrdemSorteioAsync(1500, TestContext.Current.CancellationToken));
+
+        Assert.Equal("A Caixa respondeu com o código 503 ao buscar a ordem do concurso 1500.", erro.Message);
+    }
+
+    /// <summary>
     /// Cria a fonte com o handler falso.
     /// </summary>
     /// <param name="handler">Handler que substitui a rede.</param>

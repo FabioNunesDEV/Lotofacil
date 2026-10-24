@@ -89,6 +89,23 @@ public class ClienteCaixaTestes
             () => cliente.ObterAsync("api/lotofacil/3810", Operacao, TestContext.Current.CancellationToken));
 
         Assert.Equal("A Caixa respondeu com o código 503 ao buscar o concurso 3810.", erro.Message);
+        Assert.False(erro.LimiteConsultas);
+    }
+
+    /// <summary>
+    /// O código 429 marca o limite de consultas, com a mesma mensagem dos demais códigos.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task CodigoDeLimiteDeConsultas()
+    {
+        ClienteCaixa cliente = CriarCliente(RespostaFalsaHandler.Responder(HttpStatusCode.TooManyRequests));
+
+        var erro = await Assert.ThrowsAsync<FonteResultadosException>(
+            () => cliente.ObterAsync("api/lotofacil/3810", Operacao, TestContext.Current.CancellationToken));
+
+        Assert.Equal("A Caixa respondeu com o código 429 ao buscar o concurso 3810.", erro.Message);
+        Assert.True(erro.LimiteConsultas);
     }
 
     /// <summary>

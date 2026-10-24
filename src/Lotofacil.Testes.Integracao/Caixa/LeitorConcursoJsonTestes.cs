@@ -90,6 +90,87 @@ public class LeitorConcursoJsonTestes
     }
 
     /// <summary>
+    /// A ordem do concurso 1 é lida de uma resposta só com número, dezenas e ordem, sem rateio nem valores.
+    /// </summary>
+    [Fact]
+    public void LeSoAOrdemDoSorteio()
+    {
+        var resposta = new JObject
+        {
+            ["numero"] = 1,
+            ["listaDezenas"] = new JArray("02", "03", "05", "06", "09", "10", "11", "13", "14", "16", "18", "20", "23", "24", "25"),
+            ["dezenasSorteadasOrdemSorteio"] = new JArray("18", "20", "25", "23", "10", "11", "24", "14", "06", "02", "13", "09", "05", "16", "03"),
+        };
+
+        IReadOnlyList<int>? ordem = LeitorConcursoJson.LerOrdemSorteio(RespostaConcursoCaixa.EmBytes(resposta), 1);
+
+        Assert.Equal([18, 20, 25, 23, 10, 11, 24, 14, 6, 2, 13, 9, 5, 16, 3], ordem);
+    }
+
+    /// <summary>
+    /// Sem a ordem na resposta, a leitura só da ordem devolve <c>null</c>.
+    /// </summary>
+    /// <param name="ausente">Se o campo é removido em vez de esvaziado.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void OrdemVaziaOuAusenteNaLeituraDaOrdem(bool ausente)
+    {
+        JObject resposta = RespostaConcursoCaixa.LerAmostra();
+        if (ausente)
+        {
+            resposta.Remove("dezenasSorteadasOrdemSorteio");
+        }
+        else
+        {
+            resposta["dezenasSorteadasOrdemSorteio"] = new JArray();
+        }
+
+        Assert.Null(LeitorConcursoJson.LerOrdemSorteio(RespostaConcursoCaixa.EmBytes(resposta), 3808));
+    }
+
+    /// <summary>
+    /// Na leitura só da ordem, resposta de outro concurso é rejeitada.
+    /// </summary>
+    [Fact]
+    public void LeituraDaOrdemComNumeroDiferente()
+    {
+        var erro = Assert.Throws<FonteResultadosException>(
+            () => LeitorConcursoJson.LerOrdemSorteio(RespostaConcursoCaixa.ComNumero(3808), 3809));
+
+        Assert.Equal("A Caixa devolveu o concurso 3808 ao buscar o concurso 3809.", erro.Message);
+    }
+
+    /// <summary>
+    /// Na leitura só da ordem, resposta sem número, com dezena que não é número ou que não é JSON está fora do formato.
+    /// </summary>
+    /// <param name="caso">Variação da resposta.</param>
+    [Theory]
+    [InlineData("sem número")]
+    [InlineData("dezena inválida")]
+    [InlineData("não é JSON")]
+    public void LeituraDaOrdemForaDoFormato(string caso)
+    {
+        JObject resposta = RespostaConcursoCaixa.LerAmostra();
+        if (caso == "sem número")
+        {
+            resposta.Remove("numero");
+        }
+        else
+        {
+            resposta["dezenasSorteadasOrdemSorteio"]![0] = "xx";
+        }
+
+        byte[] conteudo = caso == "não é JSON"
+            ? Encoding.UTF8.GetBytes("<html>indisponível</html>")
+            : RespostaConcursoCaixa.EmBytes(resposta);
+
+        var erro = Assert.Throws<FonteResultadosException>(() => LeitorConcursoJson.LerOrdemSorteio(conteudo, 3808));
+
+        Assert.Equal(FormatoInesperado3808, erro.Message);
+    }
+
+    /// <summary>
     /// Faixa com descrição que não corresponde à posição indica formato inesperado.
     /// </summary>
     [Fact]

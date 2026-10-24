@@ -34,6 +34,11 @@ public class ResultadosTestes : ComponenteTesteBase
     private static readonly int[] NoveAcertos = [.. ConcursoFabrica.DezenasPadrao.Take(9), 3, 6, 8, 9, 12, 15];
 
     /// <summary>
+    /// Ordem do sorteio válida para as dezenas padrão dos concursos de teste.
+    /// </summary>
+    private static readonly int[] OrdemPadrao = [.. ConcursoFabrica.DezenasPadrao.Reverse()];
+
+    /// <summary>
     /// Jogos cadastrados na base falsa.
     /// </summary>
     private readonly List<Jogo> jogos = [];
@@ -90,6 +95,23 @@ public class ResultadosTestes : ComponenteTesteBase
                 this.concursos.AddRange(chamada.ArgAt<IReadOnlyCollection<Concurso>>(0));
                 return Task.CompletedTask;
             });
+        this.repositorio.ListarNumerosSemOrdemAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => this.concursos
+                .Where(concurso => concurso.OrdemSorteio is null)
+                .Select(concurso => concurso.Numero)
+                .Order()
+                .ToList());
+        this.repositorio.ContarSemOrdemAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => this.concursos.Count(concurso => concurso.OrdemSorteio is null));
+        this.repositorio.GravarOrdemSorteioAsync(Arg.Any<int>(), Arg.Any<IReadOnlyList<int>>(), Arg.Any<CancellationToken>())
+            .Returns(chamada =>
+            {
+                Concurso concurso = this.concursos.Single(item => item.Numero == chamada.ArgAt<int>(0));
+                concurso.DefinirOrdemSorteio(chamada.ArgAt<IReadOnlyList<int>>(1));
+                return Task.CompletedTask;
+            });
+        this.fonteConcursos.ObterOrdemSorteioAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(OrdemPadrao);
 
         IJogoRepositorio repositorioJogos = Substitute.For<IJogoRepositorio>();
         repositorioJogos.ListarAsync(Arg.Any<CancellationToken>()).Returns(_ => this.jogos.ToList());
@@ -98,6 +120,7 @@ public class ResultadosTestes : ComponenteTesteBase
         this.Services.AddSingleton(new JogosServico(repositorioJogos, this.repositorio));
         this.Services.AddSingleton(new ImportacaoHistoricoServico(this.fonte, this.repositorio));
         this.Services.AddSingleton(new AtualizacaoConcursosServico(this.fonteConcursos, this.repositorio));
+        this.Services.AddSingleton(new OrdemSorteioServico(this.fonteConcursos, this.repositorio));
         this.Services.AddSingleton<ILogger<Resultados>>(this.log);
     }
 
@@ -633,6 +656,175 @@ public class ResultadosTestes : ComponenteTesteBase
             "A atualização foi interrompida. Erro inesperado; os detalhes foram registrados no log.",
             MensagensExibidas(mensagens)));
         Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
+    }
+
+    /// <summary>
+    /// O botão da ordem fica habilitado só com concursos sem ordem.
+    /// </summary>
+    /// <param name="semOrdem">Se algum concurso fica sem ordem.</param>
+    /// <param name="habilitado">Estado esperado do botão.</param>
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public void BotaoDaOrdemSoComConcursosSemOrdem(bool semOrdem, bool habilitado)
+    {
+        this.concursos.Add(ConcursoFabrica.Criar(numero: 3809, ordemSorteio: OrdemPadrao));
+        if (semOrdem)
+        {
+            this.concursos.Add(ConcursoFabrica.Criar(numero: 1));
+        }
+
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.WaitForAssertion(() => Assert.Equal(!habilitado, pagina.Find(".botao-ordem").HasAttribute("disabled")));
+    }
+
+    /// <summary>
+    /// Com a base vazia, o botão da ordem fica desabilitado.
+    /// </summary>
+    [Fact]
+    public void BotaoDaOrdemDesabilitadoComBaseVazia()
+    {
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        Assert.True(pagina.Find(".botao-ordem").HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// O preenchimento grava a ordem dos concursos sem ela, mostra o resumo e desabilita o botão.
+    /// </summary>
+    [Fact]
+    public void PreencheAOrdemEMostraOResumo()
+    {
+        this.AdicionarConcursos(3);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+        pagina.Find(".botao-ordem").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Ordem do sorteio preenchida em 3 concursos.",
+            MensagensExibidas(mensagens)));
+        Assert.All(this.concursos, concurso => Assert.Equal(OrdemPadrao, concurso.OrdemSorteio));
+        pagina.WaitForAssertion(() => Assert.True(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+        Assert.Empty(pagina.FindAll(".andamento"));
+    }
+
+    /// <summary>
+    /// Durante o preenchimento, o andamento mostra o concurso e "Interromper", os três botões ficam desabilitados, e
+    /// interromper mantém o que foi gravado.
+    /// </summary>
+    [Fact]
+    public void AndamentoEInterrupcaoDoPreenchimento()
+    {
+        this.AdicionarConcursos(3);
+        this.fonteConcursos.ObterOrdemSorteioAsync(2, Arg.Any<CancellationToken>())
+            .Returns(chamada => EsperarCancelamentoAsync(chamada.ArgAt<CancellationToken>(1)));
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+
+        pagina.Find(".botao-ordem").Click();
+
+        pagina.WaitForAssertion(() => Assert.Equal(
+            "Buscando a ordem do sorteio do concurso 2 (2 de 3)…",
+            Texto(pagina.Find(".texto-andamento"))));
+        Assert.True(pagina.Find(".botao-ordem").HasAttribute("disabled"));
+        Assert.True(pagina.Find(".botao-atualizar").HasAttribute("disabled"));
+        Assert.True(pagina.Find(".botao-importar").HasAttribute("disabled"));
+
+        pagina.Find(".botao-interromper").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Preenchimento interrompido: ordem preenchida em 1 concurso; 2 concursos continuam sem ordem.",
+            MensagensExibidas(mensagens)));
+        Assert.Equal(OrdemPadrao, this.concursos[0].OrdemSorteio);
+        Assert.Null(this.concursos[1].OrdemSorteio);
+        pagina.WaitForAssertion(() => Assert.Empty(pagina.FindAll(".andamento")));
+        Assert.False(pagina.Find(".botao-ordem").HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Um concurso que falha é pulado, registrado no log e contado no resumo; o botão continua habilitado.
+    /// </summary>
+    [Fact]
+    public void PreenchimentoComFalha()
+    {
+        this.AdicionarConcursos(3);
+        var falha = new FonteResultadosException("A Caixa respondeu com o código 503 ao buscar a ordem do concurso 2.");
+        this.fonteConcursos.ObterOrdemSorteioAsync(2, Arg.Any<CancellationToken>()).ThrowsAsync(falha);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+
+        pagina.Find(".botao-ordem").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Ordem do sorteio preenchida em 2 concursos; 1 concurso ficou sem ordem e pode ser buscado de novo.",
+            MensagensExibidas(mensagens)));
+        Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
+        Assert.Equal(OrdemPadrao, this.concursos[2].OrdemSorteio);
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+    }
+
+    /// <summary>
+    /// Na pausa pedida pela Caixa, o andamento mostra a nova tentativa, e "Interromper" para sem esperar a pausa.
+    /// </summary>
+    [Fact]
+    public void AndamentoDuranteAPausaDaCaixa()
+    {
+        this.AdicionarConcursos(3);
+        this.fonteConcursos.ObterOrdemSorteioAsync(2, Arg.Any<CancellationToken>()).ThrowsAsync(
+            new FonteResultadosException("A Caixa respondeu com o código 429 ao buscar a ordem do concurso 2.", true));
+        this.Services.AddSingleton(new OrdemSorteioServico(this.fonteConcursos, this.repositorio, [TimeSpan.FromHours(1)]));
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+
+        pagina.Find(".botao-ordem").Click();
+
+        pagina.WaitForAssertion(() => Assert.Matches(
+            @"^A Caixa pediu uma pausa\. Nova tentativa do concurso 2 às \d{2}:\d{2} \(2 de 3\)…$",
+            Texto(pagina.Find(".texto-andamento"))));
+
+        pagina.Find(".botao-interromper").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Preenchimento interrompido: ordem preenchida em 1 concurso; 2 concursos continuam sem ordem.",
+            MensagensExibidas(mensagens)));
+    }
+
+    /// <summary>
+    /// Durante a atualização dos resultados, o botão da ordem também fica desabilitado.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoBloqueiaOBotaoDaOrdem()
+    {
+        this.AdicionarConcursos(3808);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3809);
+        var busca = new TaskCompletionSource<Concurso>();
+        this.fonteConcursos.ObterConcursoAsync(3809, Arg.Any<CancellationToken>()).Returns(busca.Task);
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+        pagina.WaitForAssertion(() => Assert.False(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+
+        pagina.Find(".botao-atualizar").Click();
+
+        pagina.WaitForAssertion(() => Assert.True(pagina.Find(".botao-ordem").HasAttribute("disabled")));
+        busca.SetResult(ConcursoFabrica.Criar(numero: 3809));
+        pagina.WaitForAssertion(() => Assert.Empty(pagina.FindAll(".andamento")));
+    }
+
+    /// <summary>
+    /// Simula uma busca que só termina quando é cancelada.
+    /// </summary>
+    /// <param name="cancelamento">Sinal de cancelamento da busca.</param>
+    /// <returns>Tarefa que termina cancelada.</returns>
+    private static async Task<IReadOnlyList<int>?> EsperarCancelamentoAsync(CancellationToken cancelamento)
+    {
+        await Task.Delay(Timeout.Infinite, cancelamento);
+
+        return null;
     }
 
     /// <summary>

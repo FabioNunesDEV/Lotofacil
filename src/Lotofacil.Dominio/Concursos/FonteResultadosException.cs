@@ -27,4 +27,20 @@ public sealed class FonteResultadosException : Exception
         : base(mensagem, causa)
     {
     }
+
+    /// <summary>
+    /// Cria a exceção com a mensagem para o usuário, indicando se a fonte recusou por excesso de consultas.
+    /// </summary>
+    /// <param name="mensagem">Descrição da falha para o usuário.</param>
+    /// <param name="limiteConsultas">Se a fonte pediu uma pausa por excesso de consultas.</param>
+    public FonteResultadosException(string mensagem, bool limiteConsultas)
+        : base(mensagem)
+    {
+        this.LimiteConsultas = limiteConsultas;
+    }
+
+    /// <summary>
+    /// Indica que a fonte recusou por excesso de consultas e aceita de novo depois de uma pausa.
+    /// </summary>
+    public bool LimiteConsultas { get; }
 }
