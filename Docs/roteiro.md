@@ -1,8 +1,9 @@
 # Roteiro das próximas fatias
 
-- **Atualizado em:** 22/10/2026
+- **Atualizado em:** 23/10/2026
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
-  4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos`
+  4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos` ·
+  9 `estatisticas-por-perfil`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -57,18 +58,21 @@ Estratégias (dos arquivos de `docs/`):
 Estatísticas, padrão "Todos"; 1 a 100 jogos, padrão 10; fixas podem chegar às dezenas por jogo; repetidos evitados,
 com aviso quando faltam combinações; duplicados recusados ao salvar e os demais gravados, com o resumo.
 
-## Fatia 9 — `estatisticas-por-perfil`
+## Fatia 9 — `estatisticas-por-perfil` (concluída)
 
-Aba "Por perfil" da página Estatísticas, que ficou de fora da fatia 4.
+A página Estatísticas ganhou as abas "Por dezena" (conteúdo anterior) e "Por perfil do concurso"; a janela e o aviso
+ficam fora das abas e valem para as duas.
 
-- Distribuições por concurso: pares/ímpares, primos, múltiplos de 3, Fibonacci, soma (faixas), repetidas do
-  concurso anterior, moldura/miolo do volante.
-- Observado × teórico (distribuição hipergeométrica), mostrando que os percentuais históricos acompanham a
-  quantidade de combinações de cada perfil.
-- Respeita a janela das Estatísticas.
+- Um cartão por perfil: pares/ímpares, primos, múltiplos de 3, Fibonacci, soma, repetidas do concurso anterior e
+  moldura/miolo do volante.
+- Cada linha mostra observado (na janela) × teórico (distribuição hipergeométrica; soma pela contagem das 3.268.760
+  combinações), com barra e marca do teórico, e o atraso da faixa sobre todo o histórico.
+- Conferido com o histórico real: observado igual a um cálculo independente sobre o XLSX e próximo do Lotodicas.
 
-**A confirmar:** quais perfis entram (proposta: todos os acima) e as faixas de soma (proposta: faixas de 15, como em
-`lotofacil-analise-lotodicas-estatisticas.md`).
+**Decidido:** os 7 perfis acima; soma em faixas de 15 (120–134 … 255–270); uma linha por quantidade, com as pontas de
+chance teórica abaixo de 1% somadas à vizinha mais próxima com pelo menos 1% ("≤ 4 pares", "≥ 10 pares",
+"≤ 164", "≥ 225"); atraso por faixa ("último" quando saiu no último concurso, "—" se nunca saiu); repetidas
+comparam com o concurso gravado imediatamente antes, sem contar o primeiro da base.
 
 ## Fatia 10 — `filtros-de-perfil-na-geracao`
 

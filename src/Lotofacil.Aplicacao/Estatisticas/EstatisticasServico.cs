@@ -4,11 +4,12 @@
 
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Estatisticas;
+using Lotofacil.Dominio.Estatisticas.Perfis;
 
 namespace Lotofacil.Aplicacao.Estatisticas;
 
 /// <summary>
-/// Calcula as estatísticas por dezena a partir dos concursos gravados.
+/// Calcula as estatísticas por dezena e por perfil do concurso a partir dos concursos gravados.
 /// </summary>
 public class EstatisticasServico
 {
@@ -39,13 +40,39 @@ public class EstatisticasServico
     /// <returns>As estatísticas, ou <c>null</c> com a base vazia.</returns>
     public async Task<EstatisticasDezenas?> CalcularAsync(int? ultimosConcursos, CancellationToken cancelamento = default)
     {
-        if (ultimosConcursos is int quantidade)
-        {
-            ArgumentOutOfRangeException.ThrowIfLessThan(quantidade, 1, nameof(ultimosConcursos));
-        }
+        ValidarJanela(ultimosConcursos);
 
         IReadOnlyList<ResultadoSorteio> historico = await this.repositorio.ListarResultadosAsync(cancelamento);
 
         return historico.Count == 0 ? null : EstatisticasDezenas.Calcular(historico, ultimosConcursos);
+    }
+
+    /// <summary>
+    /// Calcula os perfis dos concursos na janela pedida.
+    /// </summary>
+    /// <param name="ultimosConcursos">Quantidade de concursos mais recentes, ou <c>null</c> para todo o histórico.</param>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Os 7 perfis, ou <c>null</c> com a base vazia.</returns>
+    public async Task<IReadOnlyList<DistribuicaoPerfil>?> CalcularPerfisAsync(
+        int? ultimosConcursos,
+        CancellationToken cancelamento = default)
+    {
+        ValidarJanela(ultimosConcursos);
+
+        IReadOnlyList<ResultadoSorteio> historico = await this.repositorio.ListarResultadosAsync(cancelamento);
+
+        return historico.Count == 0 ? null : EstatisticasPerfis.Calcular(historico, ultimosConcursos);
+    }
+
+    /// <summary>
+    /// Rejeita uma janela menor que 1 concurso.
+    /// </summary>
+    /// <param name="ultimosConcursos">Quantidade de concursos mais recentes, ou <c>null</c> para todo o histórico.</param>
+    private static void ValidarJanela(int? ultimosConcursos)
+    {
+        if (ultimosConcursos is int quantidade)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(quantidade, 1, nameof(ultimosConcursos));
+        }
     }
 }
