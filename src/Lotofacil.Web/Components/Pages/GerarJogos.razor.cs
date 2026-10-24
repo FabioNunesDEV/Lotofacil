@@ -5,10 +5,12 @@
 using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Geracao;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio;
 using Lotofacil.Dominio.Geracao;
 using Lotofacil.Dominio.Jogos;
 using Lotofacil.Web.Components.Geracao;
+using Lotofacil.Web.Components.Teimosinhas;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -91,10 +93,26 @@ public partial class GerarJogos
     private List<JogoGerado> gerados = [];
 
     /// <summary>
+    /// Indica se os jogos serão salvos numa Teimosinha.
+    /// </summary>
+    private bool teimosinha;
+
+    /// <summary>
+    /// Nome da Teimosinha digitado.
+    /// </summary>
+    private string? nomeTeimosinha;
+
+    /// <summary>
     /// Serviço de geração.
     /// </summary>
     [Inject]
     private GeracaoJogosServico Servico { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço das Teimosinhas, usado quando os jogos são salvos numa Teimosinha.
+    /// </summary>
+    [Inject]
+    private TeimosinhaServico Teimosinhas { get; set; } = null!;
 
     /// <summary>
     /// Configurações, com o preço da aposta usado nos custos.
@@ -225,11 +243,23 @@ public partial class GerarJogos
         try
         {
             List<IReadOnlyCollection<int>> jogos = this.gerados.Select(jogo => (IReadOnlyCollection<int>)jogo.Dezenas).ToList();
-            ResultadoCadastroVarios resultado = await this.Servico.SalvarAsync(concurso, jogos);
+            ResultadoCadastroVarios resultado;
+            string? nome = null;
+            if (this.teimosinha)
+            {
+                ResultadoSalvarTeimosinha salvo =
+                    await this.Teimosinhas.SalvarAsync(this.nomeTeimosinha ?? string.Empty, concurso, jogos);
+                resultado = new ResultadoCadastroVarios(salvo.Gravados, salvo.Duplicados, salvo.Recusa);
+                nome = salvo.Nome;
+            }
+            else
+            {
+                resultado = await this.Servico.SalvarAsync(concurso, jogos);
+            }
 
             bool gravou = resultado.Gravados > 0;
             this.Mensagens.Add(
-                FormatacaoGeracao.Salvamento(resultado, concurso),
+                FormatacaoGeracao.Salvamento(resultado, concurso, nome),
                 gravou ? Severity.Success : Severity.Warning);
             if (gravou)
             {

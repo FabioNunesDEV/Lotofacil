@@ -5,6 +5,7 @@
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Dominio.Teimosinhas;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lotofacil.Infraestrutura.BancoDados;
@@ -37,6 +38,11 @@ public class LotofacilContexto : DbContext
     /// Configuração das apostas, em linha única.
     /// </summary>
     public DbSet<ConfiguracaoApostas> ConfiguracoesApostas => this.Set<ConfiguracaoApostas>();
+
+    /// <summary>
+    /// Teimosinhas, ativas e removidas.
+    /// </summary>
+    public DbSet<Teimosinha> Teimosinhas => this.Set<Teimosinha>();
 
     /// <summary>
     /// Aplica os mapeamentos das entidades.

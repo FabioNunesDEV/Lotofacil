@@ -9,9 +9,11 @@ using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Aplicacao.Painel;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Estatisticas;
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Dominio.Teimosinhas;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -45,6 +47,11 @@ public class PainelTestes : ComponenteTesteBase
     /// Jogos gravados na base falsa.
     /// </summary>
     private readonly List<Jogo> jogos = [];
+
+    /// <summary>
+    /// Teimosinhas gravadas em memória.
+    /// </summary>
+    private readonly TeimosinhaRepositorioFalso teimosinhas = new();
 
     /// <summary>
     /// Repositório falso dos concursos.
@@ -84,11 +91,22 @@ public class PainelTestes : ComponenteTesteBase
 
         IJogoRepositorio repositorioJogos = Substitute.For<IJogoRepositorio>();
         repositorioJogos.ListarAsync(Arg.Any<CancellationToken>()).Returns(_ => this.jogos.ToList());
+        repositorioJogos.ExisteAsync(Arg.Any<int>(), Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+            .Returns(chamada => this.jogos.Any(jogo =>
+                jogo.NumeroConcurso == chamada.ArgAt<int>(0)
+                && jogo.Dezenas.SequenceEqual(chamada.ArgAt<IEnumerable<int>>(1).Order())));
+        repositorioJogos.AdicionarAsync(Arg.Any<Jogo>(), Arg.Any<CancellationToken>())
+            .Returns(chamada =>
+            {
+                this.jogos.Add(chamada.ArgAt<Jogo>(0));
+                return Task.CompletedTask;
+            });
 
         var estatisticas = new EstatisticasServico(this.repositorio);
         var servicoJogos = new JogosServico(repositorioJogos, this.repositorio);
         this.Services.AddSingleton(new PainelServico(this.repositorio, estatisticas, servicoJogos));
         this.Services.AddSingleton(servicoJogos);
+        this.Services.AddSingleton(new TeimosinhaServico(this.teimosinhas, repositorioJogos, servicoJogos));
         this.Services.AddSingleton(new AtualizacaoConcursosServico(this.fonteConcursos, this.repositorio));
         this.Services.AddSingleton<ILogger<Painel>>(this.log);
     }
@@ -364,6 +382,30 @@ public class PainelTestes : ComponenteTesteBase
             Texto(pagina.Find(".titulo-ultimo"))));
         AssertIndicador(pagina, ".proximo-concurso", "3810", "Estimativa R$ 1.800.000,00");
         AssertIndicador(pagina, ".concursos-na-base", "3.809", "Último sorteio em 17/10/2026");
+    }
+
+    /// <summary>
+    /// Atualização pelo Painel cria os jogos da Teimosinha para o próximo concurso e avisa.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task AtualizacaoCriaJogosDaTeimosinha()
+    {
+        this.AdicionarConcursos(3808);
+        var teimosinha = new Teimosinha("Fixas", 3809);
+        teimosinha.Acrescentar(NoveAcertos, 3809);
+        teimosinha.Acrescentar(Enumerable.Range(11, 15), 3809);
+        await this.teimosinhas.SalvarAsync(teimosinha, Xunit.TestContext.Current.CancellationToken);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3809);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<Painel> pagina = this.RenderizarComConteudo();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Teimosinhas: 2 jogos criados para o concurso 3810.",
+            MensagensExibidas(mensagens)));
+        Assert.Equal(2, this.jogos.Count(jogo => jogo.NumeroConcurso == 3810 && jogo.TeimosinhaId == teimosinha.Id));
     }
 
     /// <summary>

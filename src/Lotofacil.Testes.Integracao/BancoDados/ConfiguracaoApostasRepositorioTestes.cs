@@ -119,8 +119,14 @@ public sealed class ConfiguracaoApostasRepositorioTestes : IAsyncLifetime
     {
         await this.MigrarAsync(MigrationAnterior);
         var jogos = new JogoRepositorio(this.Fabrica);
-        var jogo = new Jogo(3810, Enumerable.Range(1, 15), new DateTime(2026, 10, 24, 10, 0, 0));
-        await jogos.AdicionarAsync(jogo, TestContext.Current.CancellationToken);
+        await using (LotofacilContexto contexto = await this.Fabrica.CreateDbContextAsync(TestContext.Current.CancellationToken))
+        {
+            // O modelo atual tem colunas que a base antiga ainda não tem, então o jogo é gravado por SQL.
+            await contexto.Database.ExecuteSqlRawAsync(
+                "INSERT INTO Jogo (NumeroConcurso, Dezenas, CadastradoEm) VALUES (3810, '[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]', '2026-10-24 10:00:00')",
+                TestContext.Current.CancellationToken);
+        }
+
         var concursos = new ConcursoRepositorio(this.Fabrica);
         Rateio[] rateios = [new(15, 1, 10m), new(14, 1, 10m), new(13, 1, 35m), new(12, 1, 14m), new(11, 1, 7m)];
         int[] dezenas = [1, 2, 4, 5, 7, 10, 11, 13, 14, 18, 20, 21, 22, 24, 25];

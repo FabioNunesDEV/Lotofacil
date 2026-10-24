@@ -4,10 +4,12 @@
 
 using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Web.Components.Concursos;
 using Lotofacil.Web.Components.Jogos;
+using Lotofacil.Web.Components.Teimosinhas;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -99,6 +101,12 @@ public partial class Resultados : IDisposable
     /// </summary>
     [Inject]
     private OrdemSorteioServico Ordem { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço das Teimosinhas, que cria os jogos delas depois da atualização e da importação.
+    /// </summary>
+    [Inject]
+    private TeimosinhaServico Teimosinhas { get; set; } = null!;
 
     /// <summary>
     /// Serviço dos jogos, que confere os jogos dos concursos novos.
@@ -223,6 +231,7 @@ public partial class Resultados : IDisposable
                     $"Importação concluída: {resultado.ConcursosNoArquivo:N0} concursos no arquivo, "
                         + $"{resultado.ConcursosGravados:N0} gravados na base local.",
                     Severity.Success);
+                await this.Teimosinhas.CriarJogosAsync();
                 await this.BuscarAsync(null);
             }
         }
@@ -258,6 +267,8 @@ public partial class Resultados : IDisposable
 
             if (resultado.ConcursosGravados > 0)
             {
+                // Os jogos das Teimosinhas vêm antes do aviso, para os criados em concursos já sorteados entrarem nele.
+                await AvisoTeimosinhas.CriarJogosAsync(this.Teimosinhas, this.Mensagens);
                 await this.BuscarAsync(null);
                 await this.AvisarJogosPremiadosAsync(resultado);
             }

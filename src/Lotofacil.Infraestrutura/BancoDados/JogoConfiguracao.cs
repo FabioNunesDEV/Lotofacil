@@ -3,6 +3,7 @@
 // </copyright>
 
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Dominio.Teimosinhas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -25,5 +26,11 @@ internal sealed class JogoConfiguracao : IEntityTypeConfiguration<Jogo>
 
         // As dezenas são gravadas em ordem crescente, então o mesmo jogo gera sempre o mesmo texto.
         builder.HasIndex(jogo => new { jogo.NumeroConcurso, jogo.Dezenas }).IsUnique();
+
+        // A Teimosinha nunca é apagada, só fica inativa; a restrição protege o nome nos jogos já criados.
+        builder.HasOne<Teimosinha>()
+            .WithMany()
+            .HasForeignKey(jogo => jogo.TeimosinhaId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

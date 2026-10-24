@@ -32,7 +32,7 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
   `docs/roteiro.md`.
 
 ## Pendências de negócio (não implementar sem definição do usuário)
-- Teimosinha e Bolão.
+- Nenhuma no momento. Bolão foi descartado pelo usuário: não implementar.
 
 ## Decisões de negócio já definidas
 - Janela das estatísticas: todo o histórico (padrão) ou os últimos 10, 20, 50 ou 100 concursos, sem intervalo
@@ -62,6 +62,12 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
 - Configurações: só o preço da aposta mínima é editável (R$ 0,01 a R$ 100,00, até dois decimais), gravado na base em
   linha única. Preço único, sem vigência: vale na hora para todos os custos, inclusive dos jogos já cadastrados.
   Prêmios fixos e dados da fonte da Caixa (URL, pausa) não são editáveis pela interface.
+- Teimosinha: grupo com nome (1 a 40 caracteres, único entre as ativas sem diferenciar maiúsculas) de um ou mais
+  jogos, válido para todo concurso até o usuário remover (não é a Teimosinha da Caixa, de número fixo de concursos).
+  Marcada ao salvar no cadastro manual ou em Gerar jogos; cada jogo tem o próprio concurso de início. Os jogos viram
+  jogos comuns em Meus jogos, criados ao salvar e, a cada atualização/importação e na inicialização, até o próximo
+  concurso, preenchendo concursos pulados mesmo já sorteados (única exceção à regra de concurso futuro), antes do
+  aviso de jogos premiados. Remover desativa (não apaga) e mantém os jogos já criados, com a marca do nome.
 
 ## Stack
 - .NET 10, C#, Blazor Server com MudBlazor. Roda apenas em `localhost`.

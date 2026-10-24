@@ -9,7 +9,7 @@ e ver quanto custam as apostas de 15 a 20 dezenas com esse preço.
 
 ### Requirement: Acesso à página Configurações
 A aplicação SHALL oferecer a página "Configurações" na rota `/configuracoes`, acessível por um item "Configurações"
-no menu lateral, o último da lista, logo abaixo de "Meus jogos". A página MUST ter o título "Configurações" e o
+no menu lateral, o último da lista, logo abaixo de "Teimosinhas". A página MUST ter o título "Configurações" e o
 subtítulo "Valores usados nos cálculos".
 
 #### Scenario: Abrir pelo menu

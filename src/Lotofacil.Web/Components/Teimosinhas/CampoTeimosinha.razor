@@ -1,0 +1,16 @@
+<div class="campo-teimosinha">
+    <MudSwitch T="bool" Value="this.Ligada" ValueChanged="this.TrocarLigadaAsync" Color="Color.Primary"
+               Label="@FormatacaoTeimosinha.RotuloSwitch" Class="switch-teimosinha" />
+    @if (this.Ligada)
+    {
+        <MudTextField T="string" Value="this.Nome" ValueChanged="this.TrocarNomeAsync" Immediate="true"
+                      Label="Nome da Teimosinha" Variant="Variant.Outlined" Margin="Margin.Dense"
+                      MaxLength="Teimosinha.TamanhoMaximoNome" UserAttributes="this.atributosNome" Class="nome-teimosinha" />
+        <datalist id="@this.idSugestoes">
+            @foreach (string nome in this.sugestoes)
+            {
+                <option value="@nome"></option>
+            }
+        </datalist>
+    }
+</div>

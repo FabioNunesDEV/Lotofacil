@@ -187,8 +187,9 @@ public static class FormatacaoGeracao
     /// </summary>
     /// <param name="resultado">Gravados, duplicados ou o motivo da recusa.</param>
     /// <param name="concurso">Número do concurso.</param>
+    /// <param name="teimosinha">Nome da Teimosinha que recebeu os jogos, ou <c>null</c>.</param>
     /// <returns>Texto da mensagem.</returns>
-    public static string Salvamento(ResultadoCadastroVarios resultado, int concurso)
+    public static string Salvamento(ResultadoCadastroVarios resultado, int concurso, string? teimosinha = null)
     {
         if (resultado.Recusa is string recusa)
         {
@@ -201,11 +202,12 @@ public static class FormatacaoGeracao
         }
 
         string salvos = resultado.Gravados == 1 ? "1 jogo salvo" : $"{resultado.Gravados:N0} jogos salvos";
+        string destino = teimosinha is null ? $"para o concurso {concurso}" : $"para o concurso {concurso} na Teimosinha {teimosinha}";
         return resultado.Duplicados switch
         {
-            0 => $"{salvos} para o concurso {concurso}.",
-            1 => $"{salvos} para o concurso {concurso}; 1 já estava cadastrado.",
-            _ => $"{salvos} para o concurso {concurso}; {resultado.Duplicados:N0} já estavam cadastrados.",
+            0 => $"{salvos} {destino}.",
+            1 => $"{salvos} {destino}; 1 já estava cadastrado.",
+            _ => $"{salvos} {destino}; {resultado.Duplicados:N0} já estavam cadastrados.",
         };
     }
 }

@@ -160,7 +160,7 @@ public class JogosServico
     /// <param name="numeroConcurso">Número do concurso.</param>
     /// <param name="cancelamento">Sinal de cancelamento.</param>
     /// <returns>O motivo da recusa, ou <c>null</c> quando o concurso aceita jogos.</returns>
-    private async Task<string?> VerificarConcursoAsync(int numeroConcurso, CancellationToken cancelamento)
+    public async Task<string?> VerificarConcursoAsync(int numeroConcurso, CancellationToken cancelamento = default)
     {
         int? ultimoGravado = await this.concursos.ObterUltimoNumeroAsync(cancelamento);
         if (ultimoGravado is null)
