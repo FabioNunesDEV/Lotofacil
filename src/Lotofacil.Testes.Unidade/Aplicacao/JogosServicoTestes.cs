@@ -187,6 +187,59 @@ public class JogosServicoTestes
     }
 
     /// <summary>
+    /// Só entram os concursos do intervalo, em ordem crescente, com os números dos jogos de Meus jogos e as contas
+    /// do aviso; os grupos premiados ficam só com os jogos premiados.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ConfereOsConcursosDoIntervalo()
+    {
+        int[] dezAcertos = [.. ConcursoFabrica.DezenasPadrao.Take(10), 3, 6, 8, 9, 12];
+        int[] onzeAcertos = [.. ConcursoFabrica.DezenasPadrao.Take(11), 3, 6, 8, 9];
+        var antigo = new Jogo(3808, ConcursoFabrica.DezenasPadrao, DateTime.Now);
+        var semPremio = new Jogo(3809, dezAcertos, DateTime.Now);
+        var comOnze = new Jogo(3809, onzeAcertos, DateTime.Now);
+        var comQuinze = new Jogo(3810, ConcursoFabrica.DezenasPadrao, DateTime.Now);
+        var aguardando = new Jogo(3811, DezenasJogo, DateTime.Now);
+        this.jogos.ListarAsync(Arg.Any<CancellationToken>()).Returns([antigo, comQuinze, semPremio, aguardando, comOnze]);
+        this.concursos.ObterAsync(3809, Arg.Any<CancellationToken>()).Returns(ConcursoFabrica.Criar(numero: 3809));
+        this.concursos.ObterAsync(3810, Arg.Any<CancellationToken>()).Returns(ConcursoFabrica.Criar(numero: 3810));
+
+        ConferenciaConcursos conferencia = await this.CriarServico().ConferirConcursosAsync(3809, 3810, TestContext.Current.CancellationToken);
+
+        Assert.Equal([3809, 3810], conferencia.Grupos.Select(grupo => grupo.NumeroConcurso));
+        Assert.Equal([semPremio, comOnze], conferencia.Grupos[0].Jogos.Select(jogo => jogo.Jogo));
+        Assert.Equal(3, conferencia.JogosConferidos);
+        Assert.Equal(2, conferencia.JogosPremiados);
+        Assert.Equal(1_712_408.63m + 7m, conferencia.PremioTotal);
+
+        IReadOnlyList<GrupoJogos> premiados = conferencia.GruposPremiados;
+        Assert.Equal([3809, 3810], premiados.Select(grupo => grupo.NumeroConcurso));
+        JogoConferido onze = Assert.Single(premiados[0].Jogos);
+        Assert.Equal(2, onze.Numero);
+        Assert.Equal(11, onze.Conferencia?.Acertos);
+        await this.concursos.DidNotReceive().ObterAsync(3808, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// Sem jogos no intervalo, a conferência vem vazia e zerada.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ConferenciaSemJogosNoIntervalo()
+    {
+        this.jogos.ListarAsync(Arg.Any<CancellationToken>()).Returns([new Jogo(3808, DezenasJogo, DateTime.Now)]);
+
+        ConferenciaConcursos conferencia = await this.CriarServico().ConferirConcursosAsync(3809, 3809, TestContext.Current.CancellationToken);
+
+        Assert.Empty(conferencia.Grupos);
+        Assert.Equal(0, conferencia.JogosConferidos);
+        Assert.Equal(0, conferencia.JogosPremiados);
+        Assert.Equal(0m, conferencia.PremioTotal);
+        Assert.Empty(conferencia.GruposPremiados);
+    }
+
+    /// <summary>
     /// A quantidade de apostas do grupo soma as apostas de 15 dezenas de cada jogo: 1 + 1 + 16.
     /// </summary>
     [Fact]

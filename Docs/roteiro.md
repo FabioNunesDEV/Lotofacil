@@ -3,7 +3,7 @@
 - **Atualizado em:** 24/10/2026
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
   4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos` ·
-  9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao`
+  9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao` · 11 `aviso-jogos-premiados`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -90,10 +90,48 @@ maior sequência padrão 9, que corta só as sequências de 10 ou mais (~1% das 
 critério "dezenas até 31 (datas)", que não se aplica (a Lotofácil vai até 25), e linhas/colunas completas do volante,
 que aparecem em 48,8% das combinações (não são padrão raro). Sequência de 5 ou mais aparece em 57% das combinações.
 
-## Depois (sem ordem definida)
+## Fatia 11 — `aviso-jogos-premiados` (concluída)
 
-- Teimosinha (mesmo jogo por 2 a 24 concursos) e Bolão — continuam pendentes de definição.
-- Preencher a ordem do sorteio dos concursos antigos.
-- Página Configurações (preço da aposta, tabela de preços).
-- Exportar os jogos de um concurso (texto para conferir na lotérica).
-- Aviso de jogos premiados após atualizar os resultados.
+Depois de "Atualizar resultados" (páginas Resultados e Painel), os jogos dos concursos gravados nessa atualização são
+conferidos e o resultado é avisado logo após o desfecho.
+
+- Algum premiado: diálogo "Jogos premiados" com o resumo ("3 de 6 jogos conferidos foram premiados."), cada concurso
+  com data e prazo ("Receber até …" ou "Prazo encerrado em …"), os jogos premiados (número no concurso, dezenas a
+  mais, acertos e prêmio), o total e os botões "Ver em Meus jogos" e "Fechar".
+- Jogos sem prêmio: aviso "Seus <n> jogos dos concursos novos foram conferidos; nenhum foi premiado.".
+- Sem jogos nos concursos novos: só o desfecho da atualização.
+
+**Decidido:** só os jogos dos concursos gravados pela atualização (também quando ela é interrompida depois de gravar);
+nada novo no banco; conferência pelas regras e pelo rateio já usados em Meus jogos.
+
+## Próximas fatias (ordem de esforço, do menor para o maior)
+
+Ordem combinada com o usuário em 24/10/2026. As decisões **a confirmar** são perguntadas no início de cada fatia.
+
+### Fatia 12 — exportar jogos de um concurso
+
+Texto com os jogos de um concurso para conferir ou levar à lotérica, a partir de Meus jogos.
+
+**A confirmar:** formato (copiar texto ou baixar arquivo), o que entra (dezenas, custo, conferência) e de onde se
+aciona.
+
+### Fatia 13 — página Configurações
+
+Preço da aposta mínima (hoje no `appsettings.json`) editável pela interface e gravado na base.
+
+**A confirmar:** quais valores entram além do preço (valores fixos das faixas 11 a 13 para estimativas, pausa entre
+requisições, URL da Caixa) e se a tabela de preços de 16 a 20 dezenas é só exibida.
+
+### Fatia 14 — ordem do sorteio dos concursos antigos
+
+Preencher a ordem do sorteio dos concursos importados pelo XLSX buscando cada um na API da Caixa, de forma
+incremental, com pausa entre as requisições e retomada depois de interrupção.
+
+**A confirmar:** onde fica o botão, se busca tudo de uma vez ou em lotes e o que fazer com concursos que a API não
+devolver.
+
+### Fatia 15 — Teimosinha e Bolão
+
+Continuam pendentes de definição de negócio (ver `CLAUDE.md`).
+
+**A confirmar:** regras de cada modalidade, como cadastrar, conferir e mostrar.

@@ -6,7 +6,9 @@ using System.Globalization;
 using AngleSharp.Dom;
 using Bunit;
 using Lotofacil.Aplicacao.Concursos;
+using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Dominio.Jogos;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,6 +23,21 @@ namespace Lotofacil.Testes.Unidade.Web;
 /// </summary>
 public class ResultadosTestes : ComponenteTesteBase
 {
+    /// <summary>
+    /// Jogo com 13 acertos nas dezenas padrão dos concursos de teste.
+    /// </summary>
+    private static readonly int[] TrezeAcertos = [.. ConcursoFabrica.DezenasPadrao.Take(13), 3, 6];
+
+    /// <summary>
+    /// Jogo com 9 acertos nas dezenas padrão dos concursos de teste.
+    /// </summary>
+    private static readonly int[] NoveAcertos = [.. ConcursoFabrica.DezenasPadrao.Take(9), 3, 6, 8, 9, 12, 15];
+
+    /// <summary>
+    /// Jogos cadastrados na base falsa.
+    /// </summary>
+    private readonly List<Jogo> jogos = [];
+
     /// <summary>
     /// Concursos devolvidos pelo repositório falso.
     /// </summary>
@@ -74,7 +91,11 @@ public class ResultadosTestes : ComponenteTesteBase
                 return Task.CompletedTask;
             });
 
+        IJogoRepositorio repositorioJogos = Substitute.For<IJogoRepositorio>();
+        repositorioJogos.ListarAsync(Arg.Any<CancellationToken>()).Returns(_ => this.jogos.ToList());
+
         this.Services.AddSingleton(new ConsultaConcursosServico(this.repositorio));
+        this.Services.AddSingleton(new JogosServico(repositorioJogos, this.repositorio));
         this.Services.AddSingleton(new ImportacaoHistoricoServico(this.fonte, this.repositorio));
         this.Services.AddSingleton(new AtualizacaoConcursosServico(this.fonteConcursos, this.repositorio));
         this.Services.AddSingleton<ILogger<Resultados>>(this.log);
@@ -509,6 +530,87 @@ public class ResultadosTestes : ComponenteTesteBase
             MensagensExibidas(mensagens)));
         pagina.WaitForAssertion(() => Assert.Equal(3810, NumerosExibidos(pagina)[0]));
         Assert.Contains((LogLevel.Error, (Exception?)falha), this.log.Registros);
+    }
+
+    /// <summary>
+    /// Interrupção depois de gravar o 3809 e o 3810: os jogos desses concursos são conferidos e o premiado do 3809
+    /// aparece no diálogo; o jogo premiado do 3808, que já estava na base, e o do 3811 não entram.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoInterrompidaAvisaOsPremiados()
+    {
+        this.AdicionarConcursos(3808);
+        this.jogos.Add(new Jogo(3808, TrezeAcertos, DateTime.Now));
+        this.jogos.Add(new Jogo(3809, TrezeAcertos, DateTime.Now));
+        this.jogos.Add(new Jogo(3811, TrezeAcertos, DateTime.Now));
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3812);
+        var falha = new FonteResultadosException("A Caixa respondeu com o código 503 ao buscar o concurso 3811.");
+        this.fonteConcursos.ObterConcursoAsync(3811, Arg.Any<CancellationToken>()).ThrowsAsync(falha);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        dialogos.WaitForAssertion(() => Assert.NotEmpty(dialogos.FindAll(".resumo-premios")));
+        Assert.Contains(
+            "A atualização foi interrompida. A Caixa respondeu com o código 503 ao buscar o concurso 3811. "
+                + "Concursos gravados antes da falha: 2 (até o 3810).",
+            MensagensExibidas(mensagens));
+        Assert.Equal("1 de 1 jogo conferido foi premiado.", Texto(dialogos.Find(".resumo-premios")));
+        Assert.Equal(["Concurso 3809 · 17/10/2026"], dialogos.FindAll(".titulo-concurso").Select(Texto));
+        Assert.Equal("Jogo 01 · 13 acertos · R$ 35,00", Texto(dialogos.Find(".jogo-premiado")));
+    }
+
+    /// <summary>
+    /// Jogos dos concursos novos sem prêmio: aviso rápido, sem diálogo.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoComJogosSemPremio()
+    {
+        this.AdicionarConcursos(3808);
+        this.jogos.AddRange(
+        [
+            new Jogo(3809, NoveAcertos, DateTime.Now),
+            new Jogo(3809, [.. ConcursoFabrica.DezenasPadrao.Skip(6), 3, 6, 8, 9, 12, 15], DateTime.Now),
+            new Jogo(3810, NoveAcertos, DateTime.Now),
+            new Jogo(3810, [.. ConcursoFabrica.DezenasPadrao.Skip(6), 3, 6, 8, 9, 12, 15], DateTime.Now),
+        ]);
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3810);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Equal(
+            [
+                "Atualização concluída: 2 concursos novos gravados (3809 a 3810).",
+                "Seus 4 jogos dos concursos novos foram conferidos; nenhum foi premiado.",
+            ],
+            MensagensExibidas(mensagens)));
+        Assert.Empty(dialogos.FindAll(".mud-dialog"));
+    }
+
+    /// <summary>
+    /// Sem concurso gravado, nenhum jogo é conferido, mesmo havendo jogo premiado de concurso antigo.
+    /// </summary>
+    [Fact]
+    public void BaseAtualizadaNaoConfereJogos()
+    {
+        this.AdicionarConcursos(3808);
+        this.jogos.Add(new Jogo(3808, TrezeAcertos, DateTime.Now));
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3808);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Equal(
+            ["A base local já está atualizada: último concurso 3808."],
+            MensagensExibidas(mensagens)));
+        Assert.Empty(dialogos.FindAll(".mud-dialog"));
     }
 
     /// <summary>

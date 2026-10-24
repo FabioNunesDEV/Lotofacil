@@ -119,22 +119,28 @@ public class JogosServico
     public async Task<IReadOnlyList<GrupoJogos>> ListarAsync(CancellationToken cancelamento = default)
     {
         IReadOnlyList<Jogo> todos = await this.jogos.ListarAsync(cancelamento);
-        List<GrupoJogos> grupos = [];
-
-        foreach (IGrouping<int, Jogo> doConcurso in todos.GroupBy(jogo => jogo.NumeroConcurso).OrderByDescending(grupo => grupo.Key))
-        {
-            Concurso? concurso = await this.concursos.ObterAsync(doConcurso.Key, cancelamento);
-            List<JogoConferido> conferidos = doConcurso
-                .Select((jogo, indice) => new JogoConferido(
-                    jogo,
-                    indice + 1,
-                    concurso is null ? null : ConferenciaJogo.Conferir(jogo, concurso)))
-                .ToList();
-
-            grupos.Add(new GrupoJogos(doConcurso.Key, concurso, conferidos));
-        }
+        List<GrupoJogos> grupos = await this.AgruparAsync(todos, cancelamento);
+        grupos.Reverse();
 
         return grupos;
+    }
+
+    /// <summary>
+    /// Confere os jogos dos concursos de um intervalo, como os gravados por uma atualização.
+    /// </summary>
+    /// <param name="primeiro">Primeiro concurso do intervalo.</param>
+    /// <param name="ultimo">Último concurso do intervalo.</param>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Os jogos de cada concurso do intervalo, em ordem crescente de concurso.</returns>
+    public async Task<ConferenciaConcursos> ConferirConcursosAsync(
+        int primeiro,
+        int ultimo,
+        CancellationToken cancelamento = default)
+    {
+        IReadOnlyList<Jogo> todos = await this.jogos.ListarAsync(cancelamento);
+        List<Jogo> doIntervalo = todos.Where(jogo => jogo.NumeroConcurso >= primeiro && jogo.NumeroConcurso <= ultimo).ToList();
+
+        return new ConferenciaConcursos(await this.AgruparAsync(doIntervalo, cancelamento));
     }
 
     /// <summary>
@@ -165,5 +171,31 @@ public class JogosServico
         return numeroConcurso <= ultimoGravado
             ? $"Só é possível cadastrar jogos para concursos depois do {ultimoGravado}."
             : null;
+    }
+
+    /// <summary>
+    /// Agrupa os jogos por concurso, em ordem crescente de concurso, conferindo os de concursos sorteados.
+    /// </summary>
+    /// <param name="jogosAgrupar">Jogos a agrupar, na ordem de cadastro.</param>
+    /// <param name="cancelamento">Sinal de cancelamento.</param>
+    /// <returns>Grupos de jogos, com os jogos numerados na ordem de cadastro.</returns>
+    private async Task<List<GrupoJogos>> AgruparAsync(IEnumerable<Jogo> jogosAgrupar, CancellationToken cancelamento)
+    {
+        List<GrupoJogos> grupos = [];
+
+        foreach (IGrouping<int, Jogo> doConcurso in jogosAgrupar.GroupBy(jogo => jogo.NumeroConcurso).OrderBy(grupo => grupo.Key))
+        {
+            Concurso? concurso = await this.concursos.ObterAsync(doConcurso.Key, cancelamento);
+            List<JogoConferido> conferidos = doConcurso
+                .Select((jogo, indice) => new JogoConferido(
+                    jogo,
+                    indice + 1,
+                    concurso is null ? null : ConferenciaJogo.Conferir(jogo, concurso)))
+                .ToList();
+
+            grupos.Add(new GrupoJogos(doConcurso.Key, concurso, conferidos));
+        }
+
+        return grupos;
     }
 }

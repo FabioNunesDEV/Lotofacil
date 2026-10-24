@@ -88,6 +88,7 @@ public class PainelTestes : ComponenteTesteBase
         var estatisticas = new EstatisticasServico(this.repositorio);
         var servicoJogos = new JogosServico(repositorioJogos, this.repositorio);
         this.Services.AddSingleton(new PainelServico(this.repositorio, estatisticas, servicoJogos));
+        this.Services.AddSingleton(servicoJogos);
         this.Services.AddSingleton(new AtualizacaoConcursosServico(this.fonteConcursos, this.repositorio));
         this.Services.AddSingleton<ILogger<Painel>>(this.log);
     }
@@ -363,6 +364,31 @@ public class PainelTestes : ComponenteTesteBase
             Texto(pagina.Find(".titulo-ultimo"))));
         AssertIndicador(pagina, ".proximo-concurso", "3810", "Estimativa R$ 1.800.000,00");
         AssertIndicador(pagina, ".concursos-na-base", "3.809", "Último sorteio em 17/10/2026");
+    }
+
+    /// <summary>
+    /// Atualização pelo Painel com jogo premiado no concurso novo abre o diálogo "Jogos premiados"; o jogo premiado
+    /// do 3808, que já estava na base, não entra.
+    /// </summary>
+    [Fact]
+    public void AtualizacaoComJogoPremiadoAbreODialogo()
+    {
+        this.AdicionarConcursos(3808);
+        this.jogos.Add(new Jogo(3808, TrezeAcertos, DateTime.Now));
+        this.jogos.Add(new Jogo(3809, NoveAcertos, DateTime.Now));
+        this.jogos.Add(new Jogo(3809, TrezeAcertos, DateTime.Now));
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3809);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<Painel> pagina = this.RenderizarComConteudo();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        dialogos.WaitForAssertion(() => Assert.NotEmpty(dialogos.FindAll(".resumo-premios")));
+        Assert.Contains("Atualização concluída: 1 concurso novo gravado (3809).", MensagensExibidas(mensagens));
+        Assert.Equal("1 de 2 jogos conferidos foi premiado.", Texto(dialogos.Find(".resumo-premios")));
+        Assert.Equal("Jogo 02 · 13 acertos · R$ 35,00", Texto(dialogos.Find(".jogo-premiado")));
+        Assert.Equal("Total: 1 jogo · R$ 35,00", Texto(dialogos.Find(".total-premios")));
     }
 
     /// <summary>

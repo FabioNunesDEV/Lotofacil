@@ -1,0 +1,8 @@
+.jogos-premiados {
+    margin: 4px 0 0;
+    padding-left: 20px;
+}
+
+.jogo-premiado {
+    font-variant-numeric: tabular-nums;
+}

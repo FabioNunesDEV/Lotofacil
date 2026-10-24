@@ -3,9 +3,11 @@
 // </copyright>
 
 using Lotofacil.Aplicacao.Concursos;
+using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Web.Components.Concursos;
+using Lotofacil.Web.Components.Jogos;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -74,6 +76,18 @@ public partial class Resultados
     /// </summary>
     [Inject]
     private AtualizacaoConcursosServico Atualizacao { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço dos jogos, que confere os jogos dos concursos novos.
+    /// </summary>
+    [Inject]
+    private JogosServico Jogos { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço de diálogos, usado no aviso de jogos premiados.
+    /// </summary>
+    [Inject]
+    private IDialogService Dialogos { get; set; } = null!;
 
     /// <summary>
     /// Mensagens rápidas exibidas ao usuário.
@@ -203,6 +217,7 @@ public partial class Resultados
             if (resultado.ConcursosGravados > 0)
             {
                 await this.BuscarAsync(null);
+                await this.AvisarJogosPremiadosAsync(resultado);
             }
         }
         catch (Exception erro) when (erro is not OperationCanceledException)
@@ -214,6 +229,22 @@ public partial class Resultados
         {
             this.andamento = null;
         }
+    }
+
+    /// <summary>
+    /// Confere os jogos dos concursos gravados pela atualização e avisa os prêmios.
+    /// </summary>
+    /// <param name="resultado">Desfecho da atualização, com algum concurso gravado.</param>
+    /// <returns>Tarefa do aviso.</returns>
+    private async Task AvisarJogosPremiadosAsync(ResultadoAtualizacao resultado)
+    {
+        ConferenciaConcursos conferencia =
+            await this.Jogos.ConferirConcursosAsync(resultado.PrimeiroGravado, resultado.UltimoNumeroNaBase);
+        await AvisoJogosPremiados.MostrarAsync(
+            this.Dialogos,
+            this.Mensagens,
+            conferencia,
+            DateOnly.FromDateTime(DateTime.Today));
     }
 
     /// <summary>
