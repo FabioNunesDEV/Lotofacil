@@ -4,7 +4,7 @@
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
   4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos` ·
   9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao` · 11 `aviso-jogos-premiados` ·
-  12 `exportar-jogos` · 13 `pagina-configuracoes`
+  12 `exportar-jogos` · 13 `pagina-configuracoes` · 14 `ordem-sorteio-antigos`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -130,17 +130,25 @@ preço digitado.
 continuam no `appsettings.json`); preço único, sem vigência (jogos antigos também passam a usar o preço novo); tabela
 só exibida.
 
+## Fatia 14 — `ordem-sorteio-antigos` (concluída)
+
+Botão "Preencher ordem do sorteio" na página Resultados, habilitado só com concursos sem ordem (os 3.808 importados
+pelo XLSX). Um clique busca na API da Caixa, do menor para o maior e com a pausa de sempre, só a ordem de cada
+concurso sem ela, e grava cada uma assim que chega.
+
+- Andamento "Buscando a ordem do sorteio do concurso <n> (<posição> de <total>)…" com "Interromper"; sair da página
+  também interrompe. O próximo clique continua pelos que faltam.
+- Concurso que falhar (comunicação, resposta sem ordem, ordem com outras dezenas) é pulado. Depois de 5 falhas
+  seguidas, a busca é encerrada.
+- A Caixa limita as consultas: com a pausa de 500 ms, respondeu 429 depois de cerca de 40 concursos. No 429 a busca
+  espera 1, 2, 4 e 8 minutos e tenta de novo o mesmo concurso, mostrando a hora da nova tentativa.
+
+**Decidido:** botão em Resultados; tudo num clique com "Interromper"; falhas puladas com resumo no fim; espera com
+nova tentativa no limite de consultas (decidido depois de achado na verificação manual).
+
 ## Próximas fatias (ordem de esforço, do menor para o maior)
 
 Ordem combinada com o usuário em 24/10/2026. As decisões **a confirmar** são perguntadas no início de cada fatia.
-
-### Fatia 14 — ordem do sorteio dos concursos antigos
-
-Preencher a ordem do sorteio dos concursos importados pelo XLSX buscando cada um na API da Caixa, de forma
-incremental, com pausa entre as requisições e retomada depois de interrupção.
-
-**A confirmar:** onde fica o botão, se busca tudo de uma vez ou em lotes e o que fazer com concursos que a API não
-devolver.
 
 ### Fatia 15 — Teimosinha e Bolão
 

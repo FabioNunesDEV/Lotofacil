@@ -124,4 +124,36 @@ internal sealed class ConcursoRepositorio : IConcursoRepositorio
 
         return await contexto.Concursos.CountAsync(cancelamento);
     }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<int>> ListarNumerosSemOrdemAsync(CancellationToken cancelamento = default)
+    {
+        await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
+
+        return await contexto.Concursos
+            .Where(concurso => concurso.OrdemSorteio == null)
+            .OrderBy(concurso => concurso.Numero)
+            .Select(concurso => concurso.Numero)
+            .ToListAsync(cancelamento);
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> ContarSemOrdemAsync(CancellationToken cancelamento = default)
+    {
+        await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
+
+        return await contexto.Concursos.CountAsync(concurso => concurso.OrdemSorteio == null, cancelamento);
+    }
+
+    /// <inheritdoc/>
+    public async Task GravarOrdemSorteioAsync(int numero, IReadOnlyList<int> ordem, CancellationToken cancelamento = default)
+    {
+        await using LotofacilContexto contexto = await this.fabricaContexto.CreateDbContextAsync(cancelamento);
+
+        Concurso concurso = await contexto.Concursos.SingleOrDefaultAsync(item => item.Numero == numero, cancelamento)
+            ?? throw new InvalidOperationException($"O concurso {numero} não está na base local.");
+        concurso.DefinirOrdemSorteio(ordem);
+
+        await contexto.SaveChangesAsync(cancelamento);
+    }
 }

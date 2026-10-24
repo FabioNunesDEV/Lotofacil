@@ -139,6 +139,38 @@ public class ConcursoTestes
     }
 
     /// <summary>
+    /// Um concurso gravado sem ordem passa a ter a ordem definida, sem mudar as dezenas.
+    /// </summary>
+    [Fact]
+    public void DefineAOrdemDoSorteioDepoisDeCriado()
+    {
+        int[] ordem = [13, 2, 24, 7, 20, 11, 1, 25, 18, 5, 22, 14, 10, 21, 4];
+        Concurso concurso = ConcursoFabrica.Criar(ordemSorteio: null);
+
+        concurso.DefinirOrdemSorteio(ordem);
+
+        Assert.Equal(ordem, concurso.OrdemSorteio);
+        Assert.Equal(ConcursoFabrica.DezenasPadrao, concurso.Dezenas);
+    }
+
+    /// <summary>
+    /// Definir uma ordem com dezenas diferentes das sorteadas é rejeitado e o concurso continua sem ordem.
+    /// </summary>
+    /// <param name="ordem">Ordem do sorteio inválida.</param>
+    [Theory]
+    [InlineData(new[] { 3, 2, 24, 7, 20, 11, 1, 25, 18, 5, 22, 14, 10, 21, 4 })]
+    [InlineData(new[] { 13, 2, 24, 7, 20, 11, 1, 25, 18, 5, 22, 14, 10, 21 })]
+    public void RejeitaDefinirOrdemComDezenasDiferentes(int[] ordem)
+    {
+        Concurso concurso = ConcursoFabrica.Criar(ordemSorteio: null);
+
+        var erro = Assert.ThrowsAny<ArgumentException>(() => concurso.DefinirOrdemSorteio(ordem));
+
+        Assert.Contains("A ordem do sorteio não corresponde às dezenas sorteadas.", erro.Message);
+        Assert.Null(concurso.OrdemSorteio);
+    }
+
+    /// <summary>
     /// Rateio sem uma das faixas é rejeitado.
     /// </summary>
     [Fact]

@@ -16,6 +16,11 @@ namespace Lotofacil.Testes.Integracao.BancoDados;
 public sealed class ConcursoRepositorioTestes : IAsyncLifetime
 {
     /// <summary>
+    /// Ordem do sorteio válida para as dezenas de <see cref="CriarConcurso"/>.
+    /// </summary>
+    private static readonly int[] OrdemPadrao = [13, 2, 24, 7, 20, 11, 1, 25, 18, 5, 22, 14, 10, 21, 4];
+
+    /// <summary>
     /// Conexão mantida aberta durante o teste; o banco em memória deixa de existir quando ela fecha.
     /// </summary>
     private readonly SqliteConnection conexao = new("Data Source=:memory:");
@@ -261,6 +266,68 @@ public sealed class ConcursoRepositorioTestes : IAsyncLifetime
         int? ultimo = await this.repositorio.ObterUltimoNumeroAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(3808, ultimo);
+    }
+
+    /// <summary>
+    /// Só os concursos sem ordem são listados, em ordem crescente, e contados.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task ListaEContaOsConcursosSemOrdem()
+    {
+        await this.repositorio.AdicionarAsync(
+            [CriarConcurso(3809, OrdemPadrao), CriarConcurso(102), CriarConcurso(1), CriarConcurso(3808)],
+            TestContext.Current.CancellationToken);
+
+        IReadOnlyList<int> semOrdem = await this.repositorio.ListarNumerosSemOrdemAsync(TestContext.Current.CancellationToken);
+        int quantidade = await this.repositorio.ContarSemOrdemAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal([1, 102, 3808], semOrdem);
+        Assert.Equal(3, quantidade);
+    }
+
+    /// <summary>
+    /// Gravar a ordem muda só a ordem: dezenas, data, rateio e valores continuam os mesmos.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task GravaAOrdemSemMudarOsDemaisDados()
+    {
+        Concurso original = CriarConcurso(1500);
+        await this.repositorio.AdicionarAsync([original], TestContext.Current.CancellationToken);
+
+        await this.repositorio.GravarOrdemSorteioAsync(1500, OrdemPadrao, TestContext.Current.CancellationToken);
+
+        Concurso? gravado = await this.repositorio.ObterAsync(1500, TestContext.Current.CancellationToken);
+        Assert.NotNull(gravado);
+        Assert.Equal(OrdemPadrao, gravado.OrdemSorteio);
+        Assert.Equal(original.Dezenas, gravado.Dezenas);
+        Assert.Equal(original.Data, gravado.Data);
+        Assert.Equal(
+            original.Rateios.Select(rateio => (rateio.Faixa, rateio.Ganhadores, rateio.ValorPremio)),
+            gravado.Rateios.Select(rateio => (rateio.Faixa, rateio.Ganhadores, rateio.ValorPremio)));
+        Assert.Equal(original.Arrecadacao, gravado.Arrecadacao);
+        Assert.Equal(original.Acumulado15, gravado.Acumulado15);
+        Assert.Equal(original.EstimativaProximo, gravado.EstimativaProximo);
+        Assert.Equal(original.AcumuladoIndependencia, gravado.AcumuladoIndependencia);
+        Assert.Equal(0, await this.repositorio.ContarSemOrdemAsync(TestContext.Current.CancellationToken));
+    }
+
+    /// <summary>
+    /// Ordem com dezenas diferentes das gravadas é recusada e o concurso continua sem ordem.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task OrdemDivergenteNaoEGravada()
+    {
+        await this.repositorio.AdicionarAsync([CriarConcurso(10)], TestContext.Current.CancellationToken);
+        int[] divergente = [3, 2, 24, 7, 20, 11, 1, 25, 18, 5, 22, 14, 10, 21, 4];
+
+        await Assert.ThrowsAnyAsync<ArgumentException>(
+            () => this.repositorio.GravarOrdemSorteioAsync(10, divergente, TestContext.Current.CancellationToken));
+
+        Concurso? gravado = await this.repositorio.ObterAsync(10, TestContext.Current.CancellationToken);
+        Assert.Null(gravado?.OrdemSorteio);
     }
 
     /// <summary>

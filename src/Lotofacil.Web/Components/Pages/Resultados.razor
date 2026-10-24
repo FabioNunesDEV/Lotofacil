@@ -22,6 +22,10 @@
                    OnClick="this.ImportarHistoricoAsync" Disabled="this.Ocupada" Class="botao-importar">
             Importar histórico
         </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FormatListNumbered"
+                   OnClick="this.PreencherOrdemAsync" Disabled="this.Ocupada || this.semOrdem == 0" Class="botao-ordem">
+            Preencher ordem do sorteio
+        </MudButton>
     </div>
 </div>
 
@@ -29,7 +33,16 @@
 {
     <div class="andamento mb-4">
         <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-1" />
-        <MudText Typo="Typo.body2">@this.andamento</MudText>
+        <div class="d-flex flex-wrap align-center gap-2">
+            <MudText Typo="Typo.body2" Class="texto-andamento">@this.andamento</MudText>
+            @if (this.preenchimento is not null)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Stop" OnClick="this.Interromper" Class="botao-interromper">
+                    Interromper
+                </MudButton>
+            }
+        </div>
     </div>
 }
 

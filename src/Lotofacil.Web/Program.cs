@@ -36,6 +36,7 @@ builder.Services.AddInfraestrutura(caminhoBanco, opcoesFonte);
 builder.Services.AddSingleton<ConsultaConcursosServico>();
 builder.Services.AddSingleton<ImportacaoHistoricoServico>();
 builder.Services.AddSingleton<AtualizacaoConcursosServico>();
+builder.Services.AddSingleton<OrdemSorteioServico>();
 builder.Services.AddSingleton<EstatisticasServico>();
 builder.Services.AddSingleton<JogosServico>();
 builder.Services.AddSingleton<PainelServico>();

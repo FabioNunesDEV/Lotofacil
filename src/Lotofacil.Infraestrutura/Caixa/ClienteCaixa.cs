@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Diagnostics;
+using System.Net;
 using Lotofacil.Dominio.Concursos;
 
 namespace Lotofacil.Infraestrutura.Caixa;
@@ -102,7 +103,8 @@ internal sealed class ClienteCaixa
             if (!resposta.IsSuccessStatusCode)
             {
                 throw new FonteResultadosException(
-                    $"A Caixa respondeu com o código {(int)resposta.StatusCode} ao {operacao}.");
+                    $"A Caixa respondeu com o código {(int)resposta.StatusCode} ao {operacao}.",
+                    resposta.StatusCode == HttpStatusCode.TooManyRequests);
             }
 
             return await resposta.Content.ReadAsByteArrayAsync(cancelamento);

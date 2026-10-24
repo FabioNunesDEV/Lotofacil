@@ -46,9 +46,9 @@ public sealed class Concurso
         ValidarDezenas(dezenasOrdenadas);
 
         List<int>? ordem = ordemSorteio?.ToList();
-        if (ordem is not null && !ordem.Order().SequenceEqual(dezenasOrdenadas))
+        if (ordem is not null)
         {
-            throw new ArgumentException("A ordem do sorteio não corresponde às dezenas sorteadas.", nameof(ordemSorteio));
+            ValidarOrdem(ordem, dezenasOrdenadas, nameof(ordemSorteio));
         }
 
         List<Rateio> rateiosOrdenados = rateios.OrderBy(rateio => rateio.Faixa).ToList();
@@ -132,6 +132,33 @@ public sealed class Concurso
     {
         return this.rateios.Find(rateio => rateio.Faixa == faixa)
             ?? throw new ArgumentOutOfRangeException(nameof(faixa), $"Não há faixa de premiação com {faixa} acertos.");
+    }
+
+    /// <summary>
+    /// Define a ordem do sorteio de um concurso gravado sem ela; lança <see cref="ArgumentException"/> se a ordem não
+    /// tiver as mesmas dezenas sorteadas.
+    /// </summary>
+    /// <param name="ordem">As dezenas na ordem em que foram sorteadas.</param>
+    public void DefinirOrdemSorteio(IEnumerable<int> ordem)
+    {
+        List<int> ordemSorteio = ordem.ToList();
+        ValidarOrdem(ordemSorteio, this.Dezenas, nameof(ordem));
+
+        this.OrdemSorteio = ordemSorteio;
+    }
+
+    /// <summary>
+    /// Confere se a ordem do sorteio tem exatamente as dezenas sorteadas.
+    /// </summary>
+    /// <param name="ordem">Dezenas na ordem do sorteio.</param>
+    /// <param name="dezenasOrdenadas">Dezenas sorteadas, em ordem crescente.</param>
+    /// <param name="parametro">Nome do parâmetro, para a exceção.</param>
+    private static void ValidarOrdem(List<int> ordem, IReadOnlyList<int> dezenasOrdenadas, string parametro)
+    {
+        if (!ordem.Order().SequenceEqual(dezenasOrdenadas))
+        {
+            throw new ArgumentException("A ordem do sorteio não corresponde às dezenas sorteadas.", parametro);
+        }
     }
 
     /// <summary>
