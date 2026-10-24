@@ -27,6 +27,7 @@ internal static class ConcursoFabrica
     /// <param name="acumulado15">Acumulado da faixa de 15 acertos.</param>
     /// <param name="estimativaProximo">Estimativa do próximo concurso.</param>
     /// <param name="acumuladoIndependencia">Acumulado da Lotofácil da Independência.</param>
+    /// <param name="data">Data do sorteio; 17/10/2026 quando <c>null</c>.</param>
     /// <returns>Concurso criado.</returns>
     public static Concurso Criar(
         int numero = 3807,
@@ -36,11 +37,12 @@ internal static class ConcursoFabrica
         decimal arrecadacao = 24_873_112.50m,
         decimal acumulado15 = 0m,
         decimal estimativaProximo = 1_800_000m,
-        decimal acumuladoIndependencia = 120_500_300.25m)
+        decimal acumuladoIndependencia = 120_500_300.25m,
+        DateOnly? data = null)
     {
         return new Concurso(
             numero,
-            new DateOnly(2026, 10, 17),
+            data ?? new DateOnly(2026, 10, 17),
             dezenas ?? DezenasPadrao,
             ordemSorteio,
             rateios ?? CriarRateios(),

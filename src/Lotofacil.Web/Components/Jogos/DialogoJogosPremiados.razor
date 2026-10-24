@@ -1,0 +1,27 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1" Class="resumo-premios mb-3">@FormatacaoPremios.Resumo(this.Conferencia.JogosPremiados, this.Conferencia.JogosConferidos)</MudText>
+
+        @foreach (GrupoJogos grupo in this.Conferencia.GruposPremiados)
+        {
+            <div class="concurso-premiado mb-3" data-concurso="@grupo.NumeroConcurso">
+                <MudText Typo="Typo.subtitle2" Class="titulo-concurso">@FormatacaoPremios.Concurso(grupo)</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary prazo">@FormatacaoPremios.Prazo(grupo, this.Hoje)</MudText>
+                <ul class="jogos-premiados">
+                    @foreach (JogoConferido jogo in grupo.Jogos)
+                    {
+                        <li class="jogo-premiado">@FormatacaoPremios.Jogo(jogo)</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <MudText Typo="Typo.subtitle1" Class="total-premios">@FormatacaoPremios.Total(this.Conferencia.JogosPremiados, this.Conferencia.PremioTotal)</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="this.Fechar" Class="botao-fechar">Fechar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="this.VerMeusJogos" Class="botao-ver-jogos">
+            Ver em Meus jogos
+        </MudButton>
+    </DialogActions>
+</MudDialog>
