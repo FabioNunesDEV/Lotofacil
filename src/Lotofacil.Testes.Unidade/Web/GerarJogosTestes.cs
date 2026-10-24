@@ -397,6 +397,132 @@ public class GerarJogosTestes : ComponenteTesteBase
     }
 
     /// <summary>
+    /// Ao abrir, a seção de filtros está fechada e sem filtros ligados.
+    /// </summary>
+    [Fact]
+    public void FiltrosFechadosAoAbrir()
+    {
+        this.AdicionarConcursos();
+
+        IRenderedComponent<GerarJogos> pagina = this.RenderizarPagina();
+
+        Assert.Equal("Nenhum filtro ligado", Texto(pagina.Find(".resumo-filtros")));
+        Assert.DoesNotContain("mud-panel-expanded", pagina.Find(".filtros-perfil .mud-expand-panel").ClassList);
+
+        AbrirFiltros(pagina);
+        Assert.Contains("mud-panel-expanded", pagina.Find(".filtros-perfil .mud-expand-panel").ClassList);
+    }
+
+    /// <summary>
+    /// Com pares de 7 a 8 e soma de 180 a 209, todos os jogos gerados atendem aos dois filtros.
+    /// </summary>
+    [Fact]
+    public void GeraJogosQueAtendemAosFiltros()
+    {
+        this.AdicionarConcursos();
+        IRenderedComponent<GerarJogos> pagina = this.RenderizarPagina();
+
+        AbrirFiltros(pagina);
+        Preencher(pagina, "Pares", ".campo-minimo", "7");
+        Preencher(pagina, "Pares", ".campo-maximo", "8");
+        Preencher(pagina, "Soma", ".campo-minimo", "180");
+        Preencher(pagina, "Soma", ".campo-maximo", "209");
+        Assert.Equal("2 filtros ligados", Texto(pagina.Find(".resumo-filtros")));
+
+        pagina.Find(".botao-gerar").Click();
+
+        pagina.WaitForAssertion(() => Assert.Equal(10, pagina.FindAll(".linha-gerado").Count));
+        Assert.All(JogosExibidos(pagina), jogo =>
+        {
+            List<int> dezenas = jogo.Select(int.Parse).ToList();
+            Assert.InRange(dezenas.Count(dezena => dezena % 2 == 0), 7, 8);
+            Assert.InRange(dezenas.Sum(), 180, 209);
+        });
+    }
+
+    /// <summary>
+    /// Mínimo maior que o máximo recusa a geração com o nome do filtro.
+    /// </summary>
+    [Fact]
+    public void RecusaMinimoMaiorQueMaximo()
+    {
+        this.AdicionarConcursos();
+        IRenderedComponent<GerarJogos> pagina = this.RenderizarPagina();
+
+        AbrirFiltros(pagina);
+        Preencher(pagina, "Soma", ".campo-minimo", "210");
+        Preencher(pagina, "Soma", ".campo-maximo", "180");
+        pagina.Find(".botao-gerar").Click();
+
+        this.mensagens.WaitForAssertion(() => Assert.Contains(
+            "No filtro de soma, o mínimo (210) é maior que o máximo (180).",
+            this.MensagensExibidas()));
+        Assert.Empty(pagina.FindAll(".linha-gerado"));
+    }
+
+    /// <summary>
+    /// Mínimo de 13 pares em jogos de 15 dezenas: nenhum jogo atende.
+    /// </summary>
+    [Fact]
+    public void NenhumJogoAtendeAosFiltros()
+    {
+        this.AdicionarConcursos();
+        IRenderedComponent<GerarJogos> pagina = this.RenderizarPagina();
+
+        AbrirFiltros(pagina);
+        Preencher(pagina, "Pares", ".campo-minimo", "13");
+        pagina.Find(".botao-gerar").Click();
+
+        this.mensagens.WaitForAssertion(() => Assert.Contains(
+            "Nenhum jogo atendeu aos filtros. Afrouxe os limites ou revise as fixas e excluídas.",
+            this.MensagensExibidas()));
+        Assert.Empty(pagina.FindAll(".linha-gerado"));
+    }
+
+    /// <summary>
+    /// Ao voltar de 18 para 15 dezenas por jogo, um limite de 17 pares passa a 15.
+    /// </summary>
+    [Fact]
+    public void AjustaLimitesAoTrocarDezenasPorJogo()
+    {
+        this.AdicionarConcursos();
+        IRenderedComponent<GerarJogos> pagina = this.RenderizarPagina();
+
+        this.Escolher(pagina, ".campo-dezenas-por-jogo", "18");
+        AbrirFiltros(pagina);
+        Preencher(pagina, "Pares", ".campo-minimo", "17");
+        this.Escolher(pagina, ".campo-dezenas-por-jogo", "15");
+
+        pagina.WaitForAssertion(() => Assert.Equal(
+            "15",
+            pagina.Find(".linha-filtro[data-perfil='Pares'] .campo-minimo input").GetAttribute("value")));
+    }
+
+    /// <summary>
+    /// Abre a seção de filtros de perfil.
+    /// </summary>
+    /// <param name="pagina">Página renderizada.</param>
+    private static void AbrirFiltros(IRenderedComponent<GerarJogos> pagina)
+    {
+        pagina.Find(".filtros-perfil .mud-expand-panel-header").Click();
+        pagina.WaitForAssertion(() => Assert.NotEmpty(pagina.FindAll(".linha-filtro")));
+    }
+
+    /// <summary>
+    /// Preenche um limite de um perfil na seção de filtros.
+    /// </summary>
+    /// <param name="pagina">Página renderizada.</param>
+    /// <param name="perfil">Nome do perfil no enum (ex.: "Pares").</param>
+    /// <param name="campo">Classe do campo: ".campo-minimo" ou ".campo-maximo".</param>
+    /// <param name="valor">Valor digitado.</param>
+    private static void Preencher(IRenderedComponent<GerarJogos> pagina, string perfil, string campo, string valor)
+    {
+        string seletor = $".linha-filtro[data-perfil='{perfil}'] {campo} input";
+        pagina.Find(seletor).Change(valor);
+        pagina.WaitForAssertion(() => Assert.Equal(valor, pagina.Find(seletor).GetAttribute("value")));
+    }
+
+    /// <summary>
     /// Clica nas dezenas do volante, na ordem dada.
     /// </summary>
     /// <param name="pagina">Página renderizada.</param>

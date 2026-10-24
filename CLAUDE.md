@@ -52,6 +52,12 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
   pelas mais atrasadas. Janela igual à das estatísticas; 1 a 100 jogos (padrão 10), de 15 a 20 dezenas; fixas podem
   chegar às dezenas por jogo. Jogos repetidos na mesma geração são evitados (com poucas combinações, gera as
   possíveis e avisa). Ao salvar, valem as regras do cadastro manual: duplicados recusados e os demais gravados.
+- Filtros da geração (opcionais, desligados ao abrir): mínimo e máximo para os 7 perfis das estatísticas (pares,
+  primos, múltiplos de 3, Fibonacci, soma, repetidas do último concurso gravado, moldura), calculados sobre o jogo
+  inteiro também em apostas de 16 a 20 dezenas; "Evitar padrões populares" limita a maior sequência de dezenas
+  seguidas (9 ao ligar, que corta só as sequências de 10 ou mais, ~1% das combinações). Linhas/colunas completas e
+  datas não são padrões populares. Dica de chance teórica só para 15 dezenas. Jogos fora dos filtros são descartados
+  no sorteio; se faltarem jogos, a página avisa.
 
 ## Stack
 - .NET 10, C#, Blazor Server com MudBlazor. Roda apenas em `localhost`.

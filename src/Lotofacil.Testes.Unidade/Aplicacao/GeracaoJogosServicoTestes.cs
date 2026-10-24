@@ -6,6 +6,7 @@ using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Aplicacao.Geracao;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Dominio.Estatisticas.Perfis;
 using Lotofacil.Dominio.Geracao;
 using Lotofacil.Dominio.Jogos;
 using NSubstitute;
@@ -125,6 +126,28 @@ public class GeracaoJogosServicoTestes
     }
 
     /// <summary>
+    /// O filtro de repetidas usa o último concurso gravado (11 a 25): com as fixas 01 a 14, todo jogo tem 5
+    /// repetidas. O aleatório controlado só acha um jogo, e o resultado informa a quantidade pedida.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task FiltroDeRepetidasUsaOUltimoConcurso()
+    {
+        this.PrepararHistorico();
+        GeracaoJogosServico servico = this.CriarServico();
+
+        JogosGerados cinco = await servico.GerarAsync(ComRepetidas(5, 2), null, TestContext.Current.CancellationToken);
+        JogosGerados quatro = await servico.GerarAsync(ComRepetidas(4, 1), null, TestContext.Current.CancellationToken);
+
+        JogoGerado jogo = Assert.Single(cinco.Jogos);
+        Assert.Equal(Enumerable.Range(1, 15), jogo.Dezenas);
+        Assert.True(cinco.ComFiltros);
+        Assert.Equal(2, cinco.JogosPedidos);
+        Assert.Empty(quatro.Jogos);
+        Assert.Equal(ResultadoGeracao.MensagemNenhumJogo, quatro.Recusa);
+    }
+
+    /// <summary>
     /// Salvar grava pelo serviço de jogos.
     /// </summary>
     /// <returns>Tarefa do teste.</returns>
@@ -149,6 +172,19 @@ public class GeracaoJogosServicoTestes
     private static ParametrosGeracao Parametros()
     {
         return new ParametrosGeracao(1, 15, EstrategiaGeracao.MaisSorteadas, Fixas1a14, []);
+    }
+
+    /// <summary>
+    /// Jogos de 15 dezenas com as fixas 01 a 14 e exatamente a quantidade de repetidas pedida.
+    /// </summary>
+    /// <param name="repetidas">Repetidas exigidas.</param>
+    /// <param name="quantidade">Quantidade de jogos.</param>
+    /// <returns>Os parâmetros.</returns>
+    private static ParametrosGeracao ComRepetidas(int repetidas, int quantidade)
+    {
+        var filtros = new FiltrosGeracao([new LimitePerfil(TipoPerfil.Repetidas, repetidas, repetidas)], null);
+
+        return new ParametrosGeracao(quantidade, 15, EstrategiaGeracao.MaisSorteadas, Fixas1a14, [], filtros);
     }
 
     /// <summary>

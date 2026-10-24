@@ -1,9 +1,9 @@
 # Roteiro das próximas fatias
 
-- **Atualizado em:** 23/10/2026
+- **Atualizado em:** 24/10/2026
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
   4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos` ·
-  9 `estatisticas-por-perfil`
+  9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -74,15 +74,21 @@ chance teórica abaixo de 1% somadas à vizinha mais próxima com pelo menos 1% 
 "≤ 164", "≥ 225"); atraso por faixa ("último" quando saiu no último concurso, "—" se nunca saiu); repetidas
 comparam com o concurso gravado imediatamente antes, sem contar o primeiro da base.
 
-## Fatia 10 — `filtros-de-perfil-na-geracao`
+## Fatia 10 — `filtros-de-perfil-na-geracao` (concluída)
 
-Filtros opcionais no gerador, usando os perfis da fatia 9.
+A página Gerar jogos ganhou a seção recolhível "Filtros de perfil", desligada ao abrir.
 
-- Pares (mín–máx), soma (mín–máx), repetidas do último concurso (mín–máx), primos (mín–máx).
-- "Evitar padrões populares": sequências longas e jogos só com dezenas até 31 (datas). É o único critério com efeito
-  real, sobre a divisão do prêmio.
+- Mínimo e máximo (cada um opcional) para os 7 perfis da fatia 9: pares, primos, múltiplos de 3, Fibonacci, soma,
+  repetidas do último concurso gravado e moldura, com a dica de chance teórica quando o jogo tem 15 dezenas.
+- "Evitar padrões populares": campo "Maior sequência permitida" (9 ao ligar). É o único critério com efeito real,
+  sobre a divisão do prêmio.
+- Jogos fora dos filtros são descartados no sorteio e na enumeração de poucas combinações; avisos quando faltam
+  jogos e recusa quando nenhum atende ou o mínimo passa do máximo.
 
-**A confirmar:** a lista de filtros e o tamanho máximo de sequência considerado popular.
+**Decidido:** os 7 perfis; em apostas de 16 a 20 dezenas os filtros valem sobre o jogo inteiro (dica só para 15);
+maior sequência padrão 9, que corta só as sequências de 10 ou mais (~1% das combinações de 15). Ficaram de fora o
+critério "dezenas até 31 (datas)", que não se aplica (a Lotofácil vai até 25), e linhas/colunas completas do volante,
+que aparecem em 48,8% das combinações (não são padrão raro). Sequência de 5 ou mais aparece em 57% das combinações.
 
 ## Depois (sem ordem definida)
 

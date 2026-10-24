@@ -1,0 +1,23 @@
+.titulo-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.linha-filtro {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.rotulo-filtro {
+    font-size: 14px;
+}
+
+::deep .dica-filtro {
+    grid-column: 1 / -1;
+    margin-top: -4px;
+}

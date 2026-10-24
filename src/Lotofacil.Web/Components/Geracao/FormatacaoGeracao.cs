@@ -3,7 +3,9 @@
 // </copyright>
 
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Dominio.Estatisticas.Perfis;
 using Lotofacil.Dominio.Geracao;
+using Lotofacil.Web.Components.Estatisticas;
 using Lotofacil.Web.Components.Jogos;
 
 namespace Lotofacil.Web.Components.Geracao;
@@ -106,13 +108,78 @@ public static class FormatacaoGeracao
     /// <summary>
     /// Aviso de que há menos jogos diferentes possíveis que a quantidade pedida.
     /// </summary>
-    /// <param name="possiveis">Jogos diferentes possíveis.</param>
+    /// <param name="possiveis">Jogos diferentes possíveis (que atendem aos filtros).</param>
+    /// <param name="comFiltros">Indica que a geração tinha algum filtro ligado.</param>
     /// <returns>Texto do aviso.</returns>
-    public static string AvisoCombinacoes(int possiveis)
+    public static string AvisoCombinacoes(int possiveis, bool comFiltros)
     {
+        string condicao = comFiltros ? "com essas fixas, excluídas e filtros" : "com essas fixas e excluídas";
+
         return possiveis == 1
-            ? "Só existe 1 jogo diferente com essas fixas e excluídas; foi gerado 1."
-            : $"Só existem {possiveis} jogos diferentes com essas fixas e excluídas; foram gerados {possiveis}.";
+            ? $"Só existe 1 jogo diferente {condicao}; foi gerado 1."
+            : $"Só existem {possiveis} jogos diferentes {condicao}; foram gerados {possiveis}.";
+    }
+
+    /// <summary>
+    /// Aviso de que o sorteio com filtros achou menos jogos que o pedido.
+    /// </summary>
+    /// <param name="gerados">Jogos achados.</param>
+    /// <param name="pedidos">Jogos pedidos.</param>
+    /// <returns>Texto "Foram gerados 3 dos 10 jogos pedidos: poucos jogos atendem aos filtros.".</returns>
+    public static string AvisoFiltros(int gerados, int pedidos)
+    {
+        string inicio = gerados == 1 ? "Foi gerado 1" : $"Foram gerados {gerados}";
+
+        return $"{inicio} dos {pedidos} jogos pedidos: poucos jogos atendem aos filtros.";
+    }
+
+    /// <summary>
+    /// Resumo exibido no cabeçalho da seção de filtros.
+    /// </summary>
+    /// <param name="ligados">Quantidade de filtros ligados.</param>
+    /// <returns>"Nenhum filtro ligado", "1 filtro ligado" ou "3 filtros ligados".</returns>
+    public static string FiltrosLigados(int ligados)
+    {
+        return ligados switch
+        {
+            0 => "Nenhum filtro ligado",
+            1 => "1 filtro ligado",
+            _ => $"{ligados} filtros ligados",
+        };
+    }
+
+    /// <summary>
+    /// Rótulo da linha de um perfil na seção de filtros.
+    /// </summary>
+    /// <param name="tipo">Perfil.</param>
+    /// <param name="ultimoConcurso">Número do último concurso gravado, base das repetidas.</param>
+    /// <returns>Rótulo (ex.: "Pares", "Repetidas do 3810").</returns>
+    public static string RotuloFiltro(TipoPerfil tipo, int ultimoConcurso)
+    {
+        return tipo switch
+        {
+            TipoPerfil.Pares => "Pares",
+            TipoPerfil.Primos => "Primos",
+            TipoPerfil.MultiplosDe3 => "Múltiplos de 3",
+            TipoPerfil.Fibonacci => "Fibonacci",
+            TipoPerfil.Soma => "Soma",
+            TipoPerfil.Repetidas => $"Repetidas do {ultimoConcurso}",
+            _ => "Na moldura",
+        };
+    }
+
+    /// <summary>
+    /// Dica da parte das combinações de 15 dezenas que fica dentro dos limites; um lado vazio usa o extremo do perfil.
+    /// </summary>
+    /// <param name="limite">Limites do perfil.</param>
+    /// <returns>Texto "Chance teórica: 57,17%".</returns>
+    public static string ChanceTeorica(LimitePerfil limite)
+    {
+        int minimo = limite.Minimo ?? DistribuicaoTeorica.MenorValor(limite.Tipo);
+        int maximo = limite.Maximo ?? DistribuicaoTeorica.MaiorValor(limite.Tipo);
+        decimal percentual = minimo > maximo ? 0m : DistribuicaoTeorica.Percentual(limite.Tipo, minimo, maximo);
+
+        return $"Chance teórica: {FormatacaoEstatistica.Percentual(percentual)}";
     }
 
     /// <summary>
