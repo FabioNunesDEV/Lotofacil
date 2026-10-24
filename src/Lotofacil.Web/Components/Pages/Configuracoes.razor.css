@@ -1,0 +1,7 @@
+.cartao-preco {
+    max-width: 520px;
+}
+
+.cartao-preco td.numero {
+    white-space: nowrap;
+}

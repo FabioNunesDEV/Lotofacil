@@ -17,7 +17,8 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
 
 ## Regras da Lotofácil relevantes ao código
 - 25 dezenas disponíveis (01 a 25); são sorteadas 15 por concurso.
-- Aposta de 15 a 20 dezenas; preço da aposta mínima configurável (hoje R$ 3,50).
+- Aposta de 15 a 20 dezenas; preço da aposta mínima editável na página Configurações (padrão R$ 3,50 no
+  `appsettings.json`, usado enquanto nada for salvo).
 - Faixas de prêmio: 11, 12, 13, 14 e 15 acertos.
   - 11, 12 e 13: valores fixos hoje (R$ 7, R$ 14, R$ 35), mas já foram diferentes no passado.
   - 14 e 15: variam conforme o rateio do concurso.
@@ -58,6 +59,9 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
   seguidas (9 ao ligar, que corta só as sequências de 10 ou mais, ~1% das combinações). Linhas/colunas completas e
   datas não são padrões populares. Dica de chance teórica só para 15 dezenas. Jogos fora dos filtros são descartados
   no sorteio; se faltarem jogos, a página avisa.
+- Configurações: só o preço da aposta mínima é editável (R$ 0,01 a R$ 100,00, até dois decimais), gravado na base em
+  linha única. Preço único, sem vigência: vale na hora para todos os custos, inclusive dos jogos já cadastrados.
+  Prêmios fixos e dados da fonte da Caixa (URL, pausa) não são editáveis pela interface.
 
 ## Stack
 - .NET 10, C#, Blazor Server com MudBlazor. Roda apenas em `localhost`.
