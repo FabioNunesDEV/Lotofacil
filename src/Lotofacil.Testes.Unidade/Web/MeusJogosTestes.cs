@@ -5,10 +5,11 @@
 using System.Globalization;
 using AngleSharp.Dom;
 using Bunit;
+using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Dominio.Jogos;
-using Lotofacil.Web;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,6 +49,12 @@ public class MeusJogosTestes : ComponenteTesteBase
     private readonly IJogoRepositorio repositorioJogos = Substitute.For<IJogoRepositorio>();
 
     /// <summary>
+    /// Configurações com o preço padrão de R$ 3,50, sobre um repositório falso sem nada gravado.
+    /// </summary>
+    private readonly ConfiguracoesServico configuracoes =
+        new(Substitute.For<IConfiguracaoApostasRepositorio>(), 3.50m);
+
+    /// <summary>
     /// Provedor das listas suspensas, renderizado ao abrir o cadastro.
     /// </summary>
     private IRenderedComponent<MudPopoverProvider> popovers = null!;
@@ -83,7 +90,7 @@ public class MeusJogosTestes : ComponenteTesteBase
             });
 
         this.Services.AddSingleton(new JogosServico(this.repositorioJogos, repositorioConcursos));
-        this.Services.AddSingleton(new OpcoesApostas(3.50m));
+        this.Services.AddSingleton(this.configuracoes);
     }
 
     /// <summary>
@@ -181,6 +188,31 @@ public class MeusJogosTestes : ComponenteTesteBase
         Assert.Equal("16 dezenas", Texto(linhas[2].QuerySelector(".quantidade-dezenas")!));
         Assert.Equal(16, linhas[2].QuerySelectorAll(".bola").Length);
         AssertIndicadores(pagina, "3", "1 concurso", "R$ 63,00", "18 apostas de 15 dezenas", "0", "R$ 0,00");
+    }
+
+    /// <summary>
+    /// Com o preço salvo em Configurações, custo do grupo, investido e cadastro usam o preço novo.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task PrecoSalvoValeNosCustos()
+    {
+        this.concursos.Add(ConcursoFabrica.Criar(numero: 3808));
+        this.Gravar(new Jogo(3810, Enumerable.Range(1, 15), DateTime.Now));
+        this.Gravar(new Jogo(3810, Enumerable.Range(2, 15), DateTime.Now));
+        this.Gravar(new Jogo(3810, Enumerable.Range(1, 16), DateTime.Now));
+        await this.configuracoes.SalvarPrecoApostaMinimaAsync(4.00m, Xunit.TestContext.Current.CancellationToken);
+
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+
+        IElement grupo = pagina.Find(".grupo[data-concurso='3810']");
+        Assert.Equal(["Aguardando sorteio", "3 jogos", "Custo R$ 72,00"], Chips(grupo.QuerySelector(".cabecalho-grupo")!));
+        AssertIndicadores(pagina, "3", "1 concurso", "R$ 72,00", "18 apostas de 15 dezenas", "0", "R$ 0,00");
+
+        pagina.Find(".botao-novo").Click();
+
+        dialogos.WaitForAssertion(() => Assert.Equal("0 de 15 dezenas · R$ 4,00", Texto(dialogos.Find(".contagem"))));
     }
 
     /// <summary>

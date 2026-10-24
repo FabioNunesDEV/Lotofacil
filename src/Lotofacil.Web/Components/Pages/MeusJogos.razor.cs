@@ -2,6 +2,7 @@
 // Copyright (c) Fábio Nunes. Todos os direitos reservados.
 // </copyright>
 
+using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Web.Components.Concursos;
 using Lotofacil.Web.Components.Jogos;
@@ -80,10 +81,10 @@ public partial class MeusJogos
     private NavigationManager Navegacao { get; set; } = null!;
 
     /// <summary>
-    /// Preço da aposta, usado no custo e no valor investido.
+    /// Configurações, com o preço da aposta usado no custo e no valor investido.
     /// </summary>
     [Inject]
-    private OpcoesApostas Opcoes { get; set; } = null!;
+    private ConfiguracoesServico Configuracoes { get; set; } = null!;
 
     /// <summary>
     /// Serviço de diálogos do MudBlazor.
@@ -182,7 +183,7 @@ public partial class MeusJogos
     {
         if (!grupo.Conferido)
         {
-            return $"Custo {FormatacaoJogo.Reais(grupo.QuantidadeApostas * this.Opcoes.PrecoApostaMinima)}";
+            return $"Custo {FormatacaoJogo.Reais(grupo.QuantidadeApostas * this.Configuracoes.PrecoApostaMinima)}";
         }
 
         return grupo.PremioTotal > 0 ? $"Prêmio {FormatacaoJogo.Reais(grupo.PremioTotal)}" : "Sem prêmio";
@@ -197,7 +198,7 @@ public partial class MeusJogos
     {
         var parametros = new DialogParameters<DialogoExportacao>
         {
-            { dialogo => dialogo.Texto, FormatacaoExportacao.Texto(grupo, this.Opcoes.PrecoApostaMinima) },
+            { dialogo => dialogo.Texto, FormatacaoExportacao.Texto(grupo, this.Configuracoes.PrecoApostaMinima) },
             { dialogo => dialogo.NomeArquivo, FormatacaoExportacao.NomeArquivo(grupo.NumeroConcurso) },
         };
         var opcoes = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };

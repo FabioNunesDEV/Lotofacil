@@ -2,6 +2,7 @@
 // Copyright (c) Fábio Nunes. Todos os direitos reservados.
 // </copyright>
 
+using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio;
 using Lotofacil.Dominio.Jogos;
@@ -55,10 +56,10 @@ public partial class CadastroJogo
     private ISnackbar Mensagens { get; set; } = null!;
 
     /// <summary>
-    /// Preço da aposta, usado no custo exibido.
+    /// Configurações, com o preço da aposta usado no custo exibido.
     /// </summary>
     [Inject]
-    private OpcoesApostas Opcoes { get; set; } = null!;
+    private ConfiguracoesServico Configuracoes { get; set; } = null!;
 
     /// <summary>
     /// Indica se o jogo está completo para ser salvo.
@@ -68,7 +69,7 @@ public partial class CadastroJogo
     /// <summary>
     /// Custo da aposta com a quantidade de dezenas escolhida.
     /// </summary>
-    private decimal Custo => Jogo.CalcularQuantidadeApostas(this.dezenasPorJogo) * this.Opcoes.PrecoApostaMinima;
+    private decimal Custo => Jogo.CalcularQuantidadeApostas(this.dezenasPorJogo) * this.Configuracoes.PrecoApostaMinima;
 
     /// <summary>
     /// Preenche o concurso sugerido.

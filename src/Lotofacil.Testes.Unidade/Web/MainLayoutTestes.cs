@@ -49,7 +49,7 @@ public class MainLayoutTestes : ComponenteTesteBase
         IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
 
         var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
-        Assert.Equal(["Painel", "Resultados", "Estatísticas", "Gerar jogos", "Meus jogos"], itens.Select(item => item.TextContent.Trim()));
+        Assert.Equal(["Painel", "Resultados", "Estatísticas", "Gerar jogos", "Meus jogos", "Configurações"], itens.Select(item => item.TextContent.Trim()));
         Assert.Equal("resultados", itens[1].GetAttribute("href"));
         Assert.Contains("active", itens[1].ClassList);
         Assert.DoesNotContain("active", itens[0].ClassList);
@@ -87,6 +87,24 @@ public class MainLayoutTestes : ComponenteTesteBase
         Assert.Equal("meus-jogos", itens[4].GetAttribute("href"));
         Assert.Contains("active", itens[4].ClassList);
         Assert.DoesNotContain("active", itens[3].ClassList);
+    }
+
+    /// <summary>
+    /// O item Configurações é o último, logo abaixo de Meus jogos, e fica selecionado na rota /configuracoes.
+    /// </summary>
+    [Fact]
+    public void ExibeItemConfiguracoesSelecionadoNaRotaConfiguracoes()
+    {
+        this.Services.GetRequiredService<NavigationManager>().NavigateTo("configuracoes");
+
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
+        Assert.Equal(6, itens.Count);
+        Assert.Equal("Configurações", itens[5].TextContent.Trim());
+        Assert.Equal("configuracoes", itens[5].GetAttribute("href"));
+        Assert.Contains("active", itens[5].ClassList);
+        Assert.DoesNotContain("active", itens[4].ClassList);
     }
 
     /// <summary>

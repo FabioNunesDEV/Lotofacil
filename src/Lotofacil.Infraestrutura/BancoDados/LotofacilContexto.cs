@@ -3,6 +3,7 @@
 // </copyright>
 
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Dominio.Jogos;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,11 @@ public class LotofacilContexto : DbContext
     /// Jogos do usuário.
     /// </summary>
     public DbSet<Jogo> Jogos => this.Set<Jogo>();
+
+    /// <summary>
+    /// Configuração das apostas, em linha única.
+    /// </summary>
+    public DbSet<ConfiguracaoApostas> ConfiguracoesApostas => this.Set<ConfiguracaoApostas>();
 
     /// <summary>
     /// Aplica os mapeamentos das entidades.

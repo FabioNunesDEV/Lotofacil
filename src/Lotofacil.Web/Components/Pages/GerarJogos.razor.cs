@@ -2,6 +2,7 @@
 // Copyright (c) Fábio Nunes. Todos os direitos reservados.
 // </copyright>
 
+using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Geracao;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio;
@@ -96,10 +97,10 @@ public partial class GerarJogos
     private GeracaoJogosServico Servico { get; set; } = null!;
 
     /// <summary>
-    /// Preço da aposta, usado nos custos.
+    /// Configurações, com o preço da aposta usado nos custos.
     /// </summary>
     [Inject]
-    private OpcoesApostas Opcoes { get; set; } = null!;
+    private ConfiguracoesServico Configuracoes { get; set; } = null!;
 
     /// <summary>
     /// Mensagens rápidas exibidas ao usuário.
@@ -111,13 +112,13 @@ public partial class GerarJogos
     /// Custo da geração pedida no formulário.
     /// </summary>
     private decimal CustoGeracao =>
-        this.quantidade * Jogo.CalcularQuantidadeApostas(this.dezenasPorJogo) * this.Opcoes.PrecoApostaMinima;
+        this.quantidade * Jogo.CalcularQuantidadeApostas(this.dezenasPorJogo) * this.Configuracoes.PrecoApostaMinima;
 
     /// <summary>
     /// Custo dos jogos da lista.
     /// </summary>
     private decimal CustoLista =>
-        this.gerados.Sum(jogo => Jogo.CalcularQuantidadeApostas(jogo.Dezenas.Count)) * this.Opcoes.PrecoApostaMinima;
+        this.gerados.Sum(jogo => Jogo.CalcularQuantidadeApostas(jogo.Dezenas.Count)) * this.Configuracoes.PrecoApostaMinima;
 
     /// <summary>
     /// Carrega o contexto e sugere o próximo concurso.

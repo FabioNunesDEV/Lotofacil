@@ -5,12 +5,13 @@
 using System.Globalization;
 using AngleSharp.Dom;
 using Bunit;
+using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Aplicacao.Geracao;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Dominio.Concursos;
+using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Dominio.Jogos;
-using Lotofacil.Web;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -82,7 +83,7 @@ public class GerarJogosTestes : ComponenteTesteBase
             new EstatisticasServico(repositorioConcursos),
             servicoJogos,
             new Random(11)));
-        this.Services.AddSingleton(new OpcoesApostas(3.50m));
+        this.Services.AddSingleton(new ConfiguracoesServico(Substitute.For<IConfiguracaoApostasRepositorio>(), 3.50m));
     }
 
     /// <summary>

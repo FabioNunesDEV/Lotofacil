@@ -3,10 +3,12 @@
 // </copyright>
 
 using Lotofacil.Aplicacao.Concursos;
+using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Aplicacao.Geracao;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Aplicacao.Painel;
+using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Infraestrutura;
 using Lotofacil.Infraestrutura.Caixa;
 using Lotofacil.Web;
@@ -39,7 +41,9 @@ builder.Services.AddSingleton<JogosServico>();
 builder.Services.AddSingleton<PainelServico>();
 builder.Services.AddSingleton(Random.Shared);
 builder.Services.AddSingleton<GeracaoJogosServico>();
-builder.Services.AddSingleton(new OpcoesApostas(builder.Configuration.GetValue("Lotofacil:PrecoApostaMinima", 3.50m)));
+decimal precoPadrao = builder.Configuration.GetValue("Lotofacil:PrecoApostaMinima", 3.50m);
+builder.Services.AddSingleton(provedor =>
+    new ConfiguracoesServico(provedor.GetRequiredService<IConfiguracaoApostasRepositorio>(), precoPadrao));
 
 var app = builder.Build();
 
@@ -60,5 +64,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 await app.Services.InicializarBancoDadosAsync();
+await app.Services.GetRequiredService<ConfiguracoesServico>().CarregarAsync();
 
 app.Run();

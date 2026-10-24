@@ -49,6 +49,19 @@ namespace Lotofacil.Infraestrutura.Migracoes
                     b.ToTable("Concurso", (string)null);
                 });
 
+            modelBuilder.Entity("Lotofacil.Dominio.Configuracoes.ConfiguracaoApostas", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("PrecoApostaMinima")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracaoApostas", (string)null);
+                });
+
             modelBuilder.Entity("Lotofacil.Dominio.Jogos.Jogo", b =>
                 {
                     b.Property<int>("Id")

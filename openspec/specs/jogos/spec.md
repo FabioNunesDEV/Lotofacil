@@ -219,7 +219,8 @@ algum jogo premiado), e mostrar os indicadores, sempre sobre todos os jogos:
 - "Premiados": quantidade de jogos com prêmio;
 - "Total em prêmios": soma dos prêmios dos jogos conferidos.
 
-O preço da aposta mínima MUST vir da configuração (padrão R$ 3,50).
+O preço da aposta mínima MUST ser o preço atual da página Configurações (o gravado ou, sem preço gravado, o da
+configuração da aplicação, R$ 3,50 por padrão), o mesmo para todos os jogos.
 
 #### Scenario: Indicadores
 - **WHEN** há 3 jogos de 15 dezenas aguardando o concurso 3810 e 2 jogos de 15 dezenas conferidos no 3808, um deles
@@ -229,6 +230,10 @@ O preço da aposta mínima MUST vir da configuração (padrão R$ 3,50).
 #### Scenario: Indicadores com aposta múltipla
 - **WHEN** há 2 jogos de 15 dezenas e 1 jogo de 16 dezenas, com preço da aposta de R$ 3,50
 - **THEN** "Jogos salvos" mostra 3 e "Investido" mostra "R$ 63,00" e "18 apostas de 15 dezenas"
+
+#### Scenario: Investido com preço alterado
+- **WHEN** há 2 jogos de 15 dezenas e 1 jogo de 16 dezenas e o preço salvo em Configurações é R$ 4,00
+- **THEN** "Investido" mostra "R$ 72,00"
 
 #### Scenario: Filtrar premiados
 - **WHEN** o usuário escolhe "Premiados"

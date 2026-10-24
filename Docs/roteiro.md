@@ -4,7 +4,7 @@
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
   4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos` ·
   9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao` · 11 `aviso-jogos-premiados` ·
-  12 `exportar-jogos`
+  12 `exportar-jogos` · 13 `pagina-configuracoes`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -116,16 +116,23 @@ jogos e os botões "Copiar" (área de transferência), "Baixar .txt" (`concurso-
 **Decidido:** sem conferência no texto, nem em concursos sorteados; só em Meus jogos; linhas com quebra do Windows;
 cópia e download sem pacote nem arquivo `.js` (interop do navegador e link com data URL).
 
+## Fatia 13 — `pagina-configuracoes` (concluída)
+
+Página "Configurações" (`/configuracoes`), último item do menu, com o campo "Aposta mínima (15 dezenas)", o botão
+"Salvar" ("Configurações salvas.") e a tabela de 15 a 20 dezenas (apostas equivalentes e valor), que acompanha o
+preço digitado.
+
+- O preço salvo fica na tabela `ConfiguracaoApostas` (linha única) e vale na hora em cadastro, Gerar jogos, Meus jogos
+  e exportação. Sem linha gravada, vale `Lotofacil:PrecoApostaMinima` do `appsettings.json` (R$ 3,50).
+- Preço aceito de R$ 0,01 a R$ 100,00, com até dois decimais; fora disso o campo avisa e nada é gravado.
+
+**Decidido:** só o preço é editável (prêmios fixos de 11 a 13 não são usados em cálculo; URL e pausa da Caixa
+continuam no `appsettings.json`); preço único, sem vigência (jogos antigos também passam a usar o preço novo); tabela
+só exibida.
+
 ## Próximas fatias (ordem de esforço, do menor para o maior)
 
 Ordem combinada com o usuário em 24/10/2026. As decisões **a confirmar** são perguntadas no início de cada fatia.
-
-### Fatia 13 — página Configurações
-
-Preço da aposta mínima (hoje no `appsettings.json`) editável pela interface e gravado na base.
-
-**A confirmar:** quais valores entram além do preço (valores fixos das faixas 11 a 13 para estimativas, pausa entre
-requisições, URL da Caixa) e se a tabela de preços de 16 a 20 dezenas é só exibida.
 
 ### Fatia 14 — ordem do sorteio dos concursos antigos
 
