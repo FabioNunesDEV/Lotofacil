@@ -69,6 +69,10 @@
             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@FormatacaoJogo.QuantidadeJogos(grupo.Jogos.Count)</MudChip>
             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
                      Color="@(grupo.PremioTotal > 0 ? Color.Success : Color.Default)">@this.ValorGrupo(grupo)</MudChip>
+            <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Outlined.FileDownload"
+                       OnClick="() => this.AbrirExportacaoAsync(grupo)" Class="botao-exportar ms-auto">
+                Exportar
+            </MudButton>
         </div>
 
         @if (grupo.Concurso is Concurso concurso)

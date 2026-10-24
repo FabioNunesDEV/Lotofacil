@@ -1,0 +1,6 @@
+.exportacao ::deep textarea {
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 0.875rem;
+    white-space: pre;
+    overflow-x: auto;
+}
