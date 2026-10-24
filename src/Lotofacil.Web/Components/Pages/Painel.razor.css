@@ -45,3 +45,21 @@
     text-align: right;
     font-variant-numeric: tabular-nums;
 }
+
+/* No celular, o resultado desce para baixo das dezenas para a linha caber na largura da tela, como em Meus jogos. */
+@media (max-width: 600px) {
+    .linha-jogo {
+        grid-template-columns: 28px 1fr;
+        align-items: start;
+    }
+
+    .resultado-jogo {
+        grid-column: 2;
+        flex-wrap: wrap;
+    }
+
+    .premio {
+        min-width: 0;
+        text-align: left;
+    }
+}
