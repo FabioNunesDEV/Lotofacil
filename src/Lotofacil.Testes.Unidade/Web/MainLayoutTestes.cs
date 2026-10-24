@@ -6,6 +6,7 @@ using Bunit;
 using Lotofacil.Web.Components.Layout;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using MudBlazor;
 
 namespace Lotofacil.Testes.Unidade.Web;
 
@@ -157,6 +158,37 @@ public class MainLayoutTestes : ComponenteTesteBase
 
         botaoMenu.Click();
         Assert.Equal(abertoNoInicio, MenuLateralAberto(layout));
+    }
+
+    /// <summary>
+    /// O menu lateral usa a variante mini, que recolhe deixando só os ícones em telas largas.
+    /// </summary>
+    [Fact]
+    public void MenuLateralUsaAVarianteMini()
+    {
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        Assert.Equal(DrawerVariant.Mini, layout.FindComponent<MudDrawer>().Instance.Variant);
+    }
+
+    /// <summary>
+    /// Cada item do menu tem a dica com o nome da página, que só funciona com o menu recolhido.
+    /// </summary>
+    [Fact]
+    public void DicaComONomeSoNoMenuRecolhido()
+    {
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+        IReadOnlyList<IRenderedComponent<MudTooltip>> dicas = layout.FindComponents<MudTooltip>();
+        bool abertoNoInicio = MenuLateralAberto(layout);
+
+        Assert.Equal(
+            ["Painel", "Resultados", "Estatísticas", "Gerar jogos", "Meus jogos", "Teimosinhas", "Configurações"],
+            dicas.Select(dica => dica.Instance.Text));
+        Assert.All(dicas, dica => Assert.Equal(abertoNoInicio, dica.Instance.Disabled));
+
+        layout.Find("button[aria-label='Abrir ou fechar menu']").Click();
+
+        Assert.All(layout.FindComponents<MudTooltip>(), dica => Assert.Equal(!abertoNoInicio, dica.Instance.Disabled));
     }
 
     /// <summary>

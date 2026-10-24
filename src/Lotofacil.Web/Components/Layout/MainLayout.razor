@@ -12,15 +12,30 @@
         <MudText Typo="Typo.h6">Lotofácil</MudText>
     </MudAppBar>
 
-    <MudDrawer @bind-Open="this.menuAberto" ClipMode="DrawerClipMode.Always" Elevation="1">
+    @* Mini: recolhido mostra só os ícones em telas largas; abaixo do breakpoint some, como gaveta temporária. *@
+    <MudDrawer @bind-Open="this.menuAberto" Variant="DrawerVariant.Mini" ClipMode="DrawerClipMode.Always" Elevation="1">
         <MudNavMenu>
-            <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Painel</MudNavLink>
-            <MudNavLink Href="resultados" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">Resultados</MudNavLink>
-            <MudNavLink Href="estatisticas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.BarChart">Estatísticas</MudNavLink>
-            <MudNavLink Href="gerar-jogos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Casino">Gerar jogos</MudNavLink>
-            <MudNavLink Href="meus-jogos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ConfirmationNumber">Meus jogos</MudNavLink>
-            <MudNavLink Href="teimosinhas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Repeat">Teimosinhas</MudNavLink>
-            <MudNavLink Href="configuracoes" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Configurações</MudNavLink>
+            <MudTooltip Text="Painel" Placement="Placement.Right" Disabled="this.menuAberto" Inline="false">
+                <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Painel</MudNavLink>
+            </MudTooltip>
+            <MudTooltip Text="Resultados" Placement="Placement.Right" Disabled="this.menuAberto" Inline="false">
+                <MudNavLink Href="resultados" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">Resultados</MudNavLink>
+            </MudTooltip>
+            <MudTooltip Text="Estatísticas" Placement="Placement.Right" Disabled="this.menuAberto" Inline="false">
+                <MudNavLink Href="estatisticas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.BarChart">Estatísticas</MudNavLink>
+            </MudTooltip>
+            <MudTooltip Text="Gerar jogos" Placement="Placement.Right" Disabled="this.menuAberto" Inline="false">
+                <MudNavLink Href="gerar-jogos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Casino">Gerar jogos</MudNavLink>
+            </MudTooltip>
+            <MudTooltip Text="Meus jogos" Placement="Placement.Right" Disabled="this.menuAberto" Inline="false">
+                <MudNavLink Href="meus-jogos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ConfirmationNumber">Meus jogos</MudNavLink>
+            </MudTooltip>
+            <MudTooltip Text="Teimosinhas" Placement="Placement.Right" Disabled="this.menuAberto" Inline="false">
+                <MudNavLink Href="teimosinhas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Repeat">Teimosinhas</MudNavLink>
+            </MudTooltip>
+            <MudTooltip Text="Configurações" Placement="Placement.Right" Disabled="this.menuAberto" Inline="false">
+                <MudNavLink Href="configuracoes" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Configurações</MudNavLink>
+            </MudTooltip>
         </MudNavMenu>
     </MudDrawer>
 
