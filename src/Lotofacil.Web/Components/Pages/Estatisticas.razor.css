@@ -17,3 +17,38 @@
 ::deep .abaixo {
     color: var(--mud-palette-error);
 }
+
+.grade-perfis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+    gap: 16px;
+}
+
+.legenda-perfis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.legenda-perfis > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.amostra-observado {
+    display: inline-block;
+    width: 40px;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--mud-palette-primary);
+}
+
+.amostra-teorico {
+    display: inline-block;
+    width: 2px;
+    height: 16px;
+    background: var(--mud-palette-text-primary);
+}

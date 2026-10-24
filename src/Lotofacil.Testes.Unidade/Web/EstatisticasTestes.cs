@@ -216,6 +216,92 @@ public class EstatisticasTestes : ComponenteTesteBase
     }
 
     /// <summary>
+    /// Ao abrir, a aba "Por dezena" está selecionada e mostra o mapa, os rankings e a tabela.
+    /// </summary>
+    [Fact]
+    public void AbreNaAbaPorDezena()
+    {
+        this.AdicionarHistoricoPadrao();
+
+        IRenderedComponent<Lotofacil.Web.Components.Pages.Estatisticas> pagina = this.RenderizarPagina();
+
+        Assert.Equal(["Por dezena", "Por perfil do concurso"], pagina.FindAll(".abas .mud-tab").Select(Texto));
+        Assert.Equal("Por dezena", Texto(pagina.Find(".abas .mud-tab-active")));
+        Assert.Single(pagina.FindAll(".mapa-calor"));
+        Assert.Equal(4, pagina.FindAll(".ranking").Count);
+        Assert.Single(pagina.FindAll(".tabela-dezenas"));
+        Assert.Empty(pagina.FindAll(".cartao-perfil"));
+    }
+
+    /// <summary>
+    /// A aba de perfis mostra os 7 cartões na ordem da spec, com o aviso fixo fora das abas.
+    /// </summary>
+    [Fact]
+    public void AbaDePerfisMostraOsCartoesNaOrdem()
+    {
+        this.AdicionarHistoricoPadrao();
+        IRenderedComponent<Lotofacil.Web.Components.Pages.Estatisticas> pagina = this.RenderizarPagina();
+
+        Aba(pagina, "Por perfil do concurso").Click();
+
+        Assert.Equal(
+            [
+                "Pares e ímpares",
+                "Números primos",
+                "Múltiplos de 3",
+                "Fibonacci",
+                "Soma das dezenas",
+                "Repetidas do concurso anterior",
+                "Moldura e miolo",
+            ],
+            pagina.FindAll(".cartao-perfil h2").Select(Texto));
+        Assert.Single(pagina.FindAll(".aviso"));
+        Assert.Empty(pagina.FindAll(".mapa-calor"));
+    }
+
+    /// <summary>
+    /// Na soma, sobre todo o histórico, 2.312 dos 3.808 concursos (as dezenas 11 a 25) caem em "≥ 225".
+    /// </summary>
+    [Fact]
+    public void AbaDePerfisMostraOObservadoDeTodoOHistorico()
+    {
+        this.AdicionarHistoricoPadrao();
+        IRenderedComponent<Lotofacil.Web.Components.Pages.Estatisticas> pagina = this.RenderizarPagina();
+
+        Aba(pagina, "Por perfil do concurso").Click();
+
+        IReadOnlyList<IElement> linhas = LinhasDoCartao(pagina, "Soma das dezenas");
+        Assert.Equal(
+            ["≤ 164", "165–179", "180–194", "195–209", "210–224", "≥ 225"],
+            linhas.Select(linha => Texto(linha.QuerySelector(".rotulo")!)));
+        Assert.Equal("39,29%", Texto(linhas[0].QuerySelectorAll("td")[2]));
+        Assert.Equal("60,71%", Texto(linhas[^1].QuerySelectorAll("td")[2]));
+        Assert.Equal("último", Texto(linhas[0].QuerySelectorAll("td")[4]));
+        Assert.Equal("3", Texto(linhas[^1].QuerySelectorAll("td")[4]));
+        Assert.Equal("—", Texto(linhas[1].QuerySelectorAll("td")[4]));
+    }
+
+    /// <summary>
+    /// Trocar para "Últimos 10" na aba de perfis mantém a aba e recalcula o observado nos 10 concursos.
+    /// </summary>
+    [Fact]
+    public void TrocarAJanelaMantemAAbaDePerfis()
+    {
+        this.AdicionarHistoricoPadrao();
+        IRenderedComponent<Lotofacil.Web.Components.Pages.Estatisticas> pagina = this.RenderizarPagina();
+        Aba(pagina, "Por perfil do concurso").Click();
+
+        Chip(pagina, "Últimos 10").Click();
+
+        // Dos concursos 3799 a 3808, só 3803 a 3805 têm as dezenas 11 a 25 (soma 270).
+        pagina.WaitForAssertion(() => Assert.Equal(
+            "30,00%",
+            Texto(LinhasDoCartao(pagina, "Soma das dezenas")[^1].QuerySelectorAll("td")[2])));
+        Assert.Equal("Por perfil do concurso", Texto(pagina.Find(".abas .mud-tab-active")));
+        Assert.Equal("70,00%", Texto(LinhasDoCartao(pagina, "Soma das dezenas")[0].QuerySelectorAll("td")[2]));
+    }
+
+    /// <summary>
     /// Texto do elemento sem espaços nas pontas.
     /// </summary>
     /// <param name="elemento">Elemento lido.</param>
@@ -234,6 +320,32 @@ public class EstatisticasTestes : ComponenteTesteBase
     private static IElement Chip(IRenderedComponent<Lotofacil.Web.Components.Pages.Estatisticas> pagina, string texto)
     {
         return pagina.FindAll(".janelas .mud-chip").Single(chip => Texto(chip) == texto);
+    }
+
+    /// <summary>
+    /// Encontra a aba pelo texto.
+    /// </summary>
+    /// <param name="pagina">Página renderizada.</param>
+    /// <param name="texto">Texto da aba.</param>
+    /// <returns>Elemento da aba.</returns>
+    private static IElement Aba(IRenderedComponent<Lotofacil.Web.Components.Pages.Estatisticas> pagina, string texto)
+    {
+        return pagina.FindAll(".abas .mud-tab").Single(aba => Texto(aba) == texto);
+    }
+
+    /// <summary>
+    /// Linhas do cartão de perfil com o título informado.
+    /// </summary>
+    /// <param name="pagina">Página renderizada.</param>
+    /// <param name="titulo">Título do cartão.</param>
+    /// <returns>Linhas da tabela do cartão.</returns>
+    private static IReadOnlyList<IElement> LinhasDoCartao(
+        IRenderedComponent<Lotofacil.Web.Components.Pages.Estatisticas> pagina,
+        string titulo)
+    {
+        IElement cartao = pagina.FindAll(".cartao-perfil").Single(item => Texto(item.QuerySelector("h2")!) == titulo);
+
+        return cartao.QuerySelectorAll("tbody tr").ToList();
     }
 
     /// <summary>

@@ -1,0 +1,32 @@
+.coluna-barra {
+    width: 100%;
+}
+
+.rotulo {
+    white-space: nowrap;
+}
+
+.barra-perfil {
+    position: relative;
+    height: 10px;
+    min-width: 32px;
+    border-radius: 5px;
+    background: var(--mud-palette-action-disabled-background);
+}
+
+.barra-perfil .observado {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 5px;
+    background: var(--mud-palette-primary);
+}
+
+.barra-perfil .teorico {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    background: var(--mud-palette-text-primary);
+}

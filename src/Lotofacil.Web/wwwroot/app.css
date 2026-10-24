@@ -9,6 +9,19 @@ h1:focus {
     text-align: right;
 }
 
+/* Cartões de perfil: células mais estreitas para a tabela caber na largura do celular. */
+.tabela-perfil.mud-simple-table.mud-table-dense * tr td,
+.tabela-perfil.mud-simple-table.mud-table-dense * tr th {
+    padding: 6px 8px;
+}
+
+@media (max-width: 600px) {
+    .tabela-perfil.mud-simple-table.mud-table-dense * tr td,
+    .tabela-perfil.mud-simple-table.mud-table-dense * tr th {
+        padding: 6px 3px;
+    }
+}
+
 .linha-clicavel {
     cursor: pointer;
 }

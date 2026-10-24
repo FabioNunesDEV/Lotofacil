@@ -1,0 +1,42 @@
+<MudPaper Class="pa-4 cartao-perfil" Elevation="1">
+    <MudText Typo="Typo.h6" HtmlTag="h2">@FormatacaoPerfil.Titulo(this.Distribuicao.Tipo)</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2 descricao">@FormatacaoPerfil.Descricao(this.Distribuicao.Tipo)</MudText>
+    <MudSimpleTable Dense="true" Elevation="0" Class="tabela-perfil">
+        <thead>
+            <tr>
+                <th>Faixa</th>
+                <th class="coluna-barra"></th>
+                <th class="numero">Obs.</th>
+                <th class="numero">Teór.</th>
+                <th class="numero">Atraso</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (FaixaPerfil faixa in this.Distribuicao.Faixas)
+            {
+                <tr>
+                    <td class="rotulo">@FormatacaoPerfil.Rotulo(this.Distribuicao.Tipo, faixa)</td>
+                    <td class="coluna-barra">
+                        <div class="barra-perfil">
+                            <span class="observado" style="width: @this.Posicao(faixa.Observado)"></span>
+                            <span class="teorico" style="left: @this.Posicao(faixa.Teorico)"></span>
+                        </div>
+                    </td>
+                    <td class="numero">@FormatacaoEstatistica.Percentual(faixa.Observado)</td>
+                    <td class="numero mud-text-secondary">@FormatacaoEstatistica.Percentual(faixa.Teorico)</td>
+                    <td class="numero atraso">
+                        @if (faixa.Atraso == 0)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Class="ma-0 ultimo"
+                                     Text="@FormatacaoPerfil.Ultimo" />
+                        }
+                        else
+                        {
+                            @FormatacaoPerfil.Atraso(faixa.Atraso)
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>

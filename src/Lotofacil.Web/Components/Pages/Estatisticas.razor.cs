@@ -4,13 +4,14 @@
 
 using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Dominio.Estatisticas;
+using Lotofacil.Dominio.Estatisticas.Perfis;
 using Lotofacil.Web.Components.Estatisticas;
 using Microsoft.AspNetCore.Components;
 
 namespace Lotofacil.Web.Components.Pages;
 
 /// <summary>
-/// Estatísticas por dezena na janela escolhida: mapa de calor, rankings e tabela.
+/// Estatísticas na janela escolhida, em duas abas: por dezena (mapa de calor, rankings e tabela) e por perfil do concurso.
 /// </summary>
 public partial class Estatisticas
 {
@@ -40,6 +41,16 @@ public partial class Estatisticas
     /// Estatísticas calculadas, ou <c>null</c> antes do cálculo ou com a base vazia.
     /// </summary>
     private EstatisticasDezenas? estatisticas;
+
+    /// <summary>
+    /// Perfis dos concursos calculados, ou <c>null</c> antes do cálculo ou com a base vazia.
+    /// </summary>
+    private IReadOnlyList<DistribuicaoPerfil>? perfis;
+
+    /// <summary>
+    /// Aba selecionada; fica no estado da página para não mudar ao trocar a janela.
+    /// </summary>
+    private int abaAtiva;
 
     /// <summary>
     /// Indica que o primeiro cálculo já terminou.
@@ -82,12 +93,13 @@ public partial class Estatisticas
     }
 
     /// <summary>
-    /// Calcula as estatísticas na janela selecionada.
+    /// Calcula as estatísticas por dezena e os perfis na janela selecionada.
     /// </summary>
     /// <returns>Tarefa do cálculo.</returns>
     private async Task CalcularAsync()
     {
         int? ultimos = this.janela == TodasAsJanelas ? null : this.janela;
         this.estatisticas = await this.Servico.CalcularAsync(ultimos);
+        this.perfis = await this.Servico.CalcularPerfisAsync(ultimos);
     }
 }
