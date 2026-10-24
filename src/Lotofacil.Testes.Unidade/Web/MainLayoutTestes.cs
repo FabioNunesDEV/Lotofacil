@@ -49,7 +49,7 @@ public class MainLayoutTestes : ComponenteTesteBase
         IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
 
         var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
-        Assert.Equal(["Painel", "Resultados", "Estatísticas", "Gerar jogos", "Meus jogos", "Configurações"], itens.Select(item => item.TextContent.Trim()));
+        Assert.Equal(["Painel", "Resultados", "Estatísticas", "Gerar jogos", "Meus jogos", "Teimosinhas", "Configurações"], itens.Select(item => item.TextContent.Trim()));
         Assert.Equal("resultados", itens[1].GetAttribute("href"));
         Assert.Contains("active", itens[1].ClassList);
         Assert.DoesNotContain("active", itens[0].ClassList);
@@ -90,7 +90,24 @@ public class MainLayoutTestes : ComponenteTesteBase
     }
 
     /// <summary>
-    /// O item Configurações é o último, logo abaixo de Meus jogos, e fica selecionado na rota /configuracoes.
+    /// O item Teimosinhas vem logo abaixo de Meus jogos e fica selecionado na rota /teimosinhas.
+    /// </summary>
+    [Fact]
+    public void ExibeItemTeimosinhasSelecionadoNaRotaTeimosinhas()
+    {
+        this.Services.GetRequiredService<NavigationManager>().NavigateTo("teimosinhas");
+
+        IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
+
+        var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
+        Assert.Equal("Teimosinhas", itens[5].TextContent.Trim());
+        Assert.Equal("teimosinhas", itens[5].GetAttribute("href"));
+        Assert.Contains("active", itens[5].ClassList);
+        Assert.DoesNotContain("active", itens[4].ClassList);
+    }
+
+    /// <summary>
+    /// O item Configurações é o último, logo abaixo de Teimosinhas, e fica selecionado na rota /configuracoes.
     /// </summary>
     [Fact]
     public void ExibeItemConfiguracoesSelecionadoNaRotaConfiguracoes()
@@ -100,11 +117,11 @@ public class MainLayoutTestes : ComponenteTesteBase
         IRenderedComponent<MainLayout> layout = this.RenderizarLayout();
 
         var itens = layout.FindAll(".mud-drawer a.mud-nav-link");
-        Assert.Equal(6, itens.Count);
-        Assert.Equal("Configurações", itens[5].TextContent.Trim());
-        Assert.Equal("configuracoes", itens[5].GetAttribute("href"));
-        Assert.Contains("active", itens[5].ClassList);
-        Assert.DoesNotContain("active", itens[4].ClassList);
+        Assert.Equal(7, itens.Count);
+        Assert.Equal("Configurações", itens[6].TextContent.Trim());
+        Assert.Equal("configuracoes", itens[6].GetAttribute("href"));
+        Assert.Contains("active", itens[6].ClassList);
+        Assert.DoesNotContain("active", itens[5].ClassList);
     }
 
     /// <summary>

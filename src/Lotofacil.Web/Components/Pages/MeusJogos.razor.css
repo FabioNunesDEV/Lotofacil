@@ -30,6 +30,17 @@
     font-variant-numeric: tabular-nums;
 }
 
+.dezenas-jogo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.dezenas-jogo ::deep .marca-teimosinha {
+    align-self: flex-start;
+}
+
 .resultado-jogo {
     display: flex;
     align-items: center;

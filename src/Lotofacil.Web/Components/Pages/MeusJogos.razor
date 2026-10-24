@@ -91,7 +91,14 @@
             <div class="@(grupo.Conferido ? "linha-jogo clicavel" : "linha-jogo")"
                  @onclick="() => this.AbrirConferenciaAsync(grupo, jogo)">
                 <span class="numero-jogo">@FormatacaoJogo.NumeroJogo(jogo.Numero)</span>
-                <BolasJogo Dezenas="jogo.Jogo.Dezenas" Sorteadas="grupo.Concurso?.Dezenas" />
+                <div class="dezenas-jogo">
+                    <BolasJogo Dezenas="jogo.Jogo.Dezenas" Sorteadas="grupo.Concurso?.Dezenas" />
+                    @if (this.NomeTeimosinha(jogo) is string teimosinha)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                                 Class="marca-teimosinha ma-0">@FormatacaoTeimosinha.Marca(teimosinha)</MudChip>
+                    }
+                </div>
                 <div class="resultado-jogo">
                     @if (jogo.Jogo.Dezenas.Count > RegrasLotofacil.MinimoDezenasPorJogo)
                     {

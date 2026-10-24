@@ -78,12 +78,39 @@ namespace Lotofacil.Infraestrutura.Migracoes
                     b.Property<int>("NumeroConcurso")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("TeimosinhaId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TeimosinhaId");
 
                     b.HasIndex("NumeroConcurso", "Dezenas")
                         .IsUnique();
 
                     b.ToTable("Jogo", (string)null);
+                });
+
+            modelBuilder.Entity("Lotofacil.Dominio.Teimosinhas.Teimosinha", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UltimoConcursoCriado")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Teimosinha", (string)null);
                 });
 
             modelBuilder.Entity("Lotofacil.Dominio.Concursos.Concurso", b =>
@@ -111,6 +138,45 @@ namespace Lotofacil.Infraestrutura.Migracoes
                         });
 
                     b.Navigation("Rateios");
+                });
+
+            modelBuilder.Entity("Lotofacil.Dominio.Jogos.Jogo", b =>
+                {
+                    b.HasOne("Lotofacil.Dominio.Teimosinhas.Teimosinha", null)
+                        .WithMany()
+                        .HasForeignKey("TeimosinhaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Lotofacil.Dominio.Teimosinhas.Teimosinha", b =>
+                {
+                    b.OwnsMany("Lotofacil.Dominio.Teimosinhas.JogoTeimosinha", "Jogos", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("ConcursoInicial")
+                                .HasColumnType("INTEGER");
+
+                            b1.PrimitiveCollection<string>("Dezenas")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("TeimosinhaId")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("TeimosinhaId");
+
+                            b1.ToTable("TeimosinhaJogo", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("TeimosinhaId");
+                        });
+
+                    b.Navigation("Jogos");
                 });
 #pragma warning restore 612, 618
         }

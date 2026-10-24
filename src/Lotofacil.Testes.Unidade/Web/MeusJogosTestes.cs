@@ -7,9 +7,11 @@ using AngleSharp.Dom;
 using Bunit;
 using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Dominio.Teimosinhas;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +57,11 @@ public class MeusJogosTestes : ComponenteTesteBase
         new(Substitute.For<IConfiguracaoApostasRepositorio>(), 3.50m);
 
     /// <summary>
+    /// Teimosinhas gravadas em memória.
+    /// </summary>
+    private readonly TeimosinhaRepositorioFalso teimosinhas = new();
+
+    /// <summary>
     /// Provedor das listas suspensas, renderizado ao abrir o cadastro.
     /// </summary>
     private IRenderedComponent<MudPopoverProvider> popovers = null!;
@@ -89,8 +96,10 @@ public class MeusJogosTestes : ComponenteTesteBase
                 return Task.CompletedTask;
             });
 
-        this.Services.AddSingleton(new JogosServico(this.repositorioJogos, repositorioConcursos));
+        var servicoJogos = new JogosServico(this.repositorioJogos, repositorioConcursos);
+        this.Services.AddSingleton(servicoJogos);
         this.Services.AddSingleton(this.configuracoes);
+        this.Services.AddSingleton(new TeimosinhaServico(this.teimosinhas, this.repositorioJogos, servicoJogos));
     }
 
     /// <summary>
@@ -291,6 +300,82 @@ public class MeusJogosTestes : ComponenteTesteBase
         Assert.Equal("17 de 17 dezenas · R$ 476,00", Texto(dialogos.Find(".contagem")));
         Assert.False(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
         Assert.True(Dezena(dialogos, 18).HasAttribute("disabled"));
+    }
+
+    /// <summary>
+    /// Os jogos criados por Teimosinhas, também removidas, mostram a marca com o nome; o jogo avulso não.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task MarcaOsJogosDaTeimosinha()
+    {
+        var ativa = new Teimosinha("Minhas fixas", 3810);
+        ativa.Acrescentar(Enumerable.Range(1, 15), 3810);
+        var removida = new Teimosinha("Antiga", 3810);
+        removida.Acrescentar(Enumerable.Range(11, 15), 3810);
+        await this.teimosinhas.SalvarAsync(ativa, Xunit.TestContext.Current.CancellationToken);
+        await this.teimosinhas.SalvarAsync(removida, Xunit.TestContext.Current.CancellationToken);
+        removida.Remover();
+        this.concursos.Add(ConcursoFabrica.Criar(numero: 3808));
+        this.Gravar(new Jogo(3810, Enumerable.Range(1, 15), DateTime.Now, ativa.Id));
+        this.Gravar(new Jogo(3810, Enumerable.Range(11, 15), DateTime.Now, removida.Id));
+        this.Gravar(new Jogo(3810, Enumerable.Range(2, 15), DateTime.Now));
+
+        IRenderedComponent<MeusJogos> pagina = this.RenderizarPagina();
+
+        IReadOnlyList<IElement> linhas = pagina.FindAll(".grupo[data-concurso='3810'] .linha-jogo");
+        Assert.Equal("Teimosinha · Minhas fixas", Texto(linhas[0].QuerySelector(".marca-teimosinha")!));
+        Assert.Equal("Teimosinha · Antiga", Texto(linhas[1].QuerySelector(".marca-teimosinha")!));
+        Assert.Null(linhas[2].QuerySelector(".marca-teimosinha"));
+    }
+
+    /// <summary>
+    /// Com o switch ligado, o cadastro exige o nome e salva o jogo numa Teimosinha nova.
+    /// </summary>
+    [Fact]
+    public void CadastraComoTeimosinha()
+    {
+        this.MontarCenarioPadrao();
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.AbrirCadastro();
+        MarcarDezenas(dialogos, Enumerable.Range(1, 15));
+
+        dialogos.Find(".switch-teimosinha input").Change(true);
+        Assert.True(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
+        dialogos.Find(".nome-teimosinha input").Input("Minhas fixas");
+        Assert.False(dialogos.Find(".botao-salvar").HasAttribute("disabled"));
+
+        dialogos.Find(".botao-salvar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Jogo salvo para o concurso 3809 na Teimosinha Minhas fixas.",
+            MensagensExibidas(mensagens)));
+        Teimosinha teimosinha = Assert.Single(this.teimosinhas.Todas);
+        Assert.Equal(3809, Assert.Single(teimosinha.Jogos).ConcursoInicial);
+        Assert.Equal(teimosinha.Id, this.jogos.Single(jogo => jogo.NumeroConcurso == 3809).TeimosinhaId);
+    }
+
+    /// <summary>
+    /// Um jogo já cadastrado no concurso é recusado com a mensagem atual, sem criar a Teimosinha.
+    /// </summary>
+    [Fact]
+    public void CadastroComoTeimosinhaRecusado()
+    {
+        this.MontarCenarioPadrao();
+        this.Gravar(new Jogo(3809, Enumerable.Range(1, 15), DateTime.Now));
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.AbrirCadastro();
+        MarcarDezenas(dialogos, Enumerable.Range(1, 15));
+        dialogos.Find(".switch-teimosinha input").Change(true);
+        dialogos.Find(".nome-teimosinha input").Input("Minhas fixas");
+
+        dialogos.Find(".botao-salvar").Click();
+
+        mensagens.WaitForAssertion(() => Assert.Contains(
+            "Este jogo já está cadastrado para o concurso 3809.",
+            MensagensExibidas(mensagens)));
+        Assert.Empty(this.teimosinhas.Todas);
+        Assert.NotEmpty(dialogos.FindAll(".campo-concurso"));
     }
 
     /// <summary>

@@ -16,6 +16,9 @@
         <MudText Typo="Typo.body2" Class="mud-text-secondary mt-3 contagem">
             @FormatacaoJogo.Contagem(this.marcadas.Count, this.dezenasPorJogo, this.Custo)
         </MudText>
+        <div class="mt-3">
+            <CampoTeimosinha @bind-Ligada="this.teimosinha" @bind-Nome="this.nomeTeimosinha" />
+        </div>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="this.Cancelar" Class="botao-cancelar">Cancelar</MudButton>

@@ -4,6 +4,7 @@
 
 using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Web.Components.Concursos;
 using Lotofacil.Web.Components.Jogos;
 using Microsoft.AspNetCore.Components;
@@ -25,6 +26,11 @@ public partial class MeusJogos
     /// Grupos de jogos, do concurso de maior número para o menor.
     /// </summary>
     private IReadOnlyList<GrupoJogos> grupos = [];
+
+    /// <summary>
+    /// Nome de cada Teimosinha, inclusive as removidas, para marcar os jogos criados por elas.
+    /// </summary>
+    private IReadOnlyDictionary<int, string> nomesTeimosinhas = new Dictionary<int, string>();
 
     /// <summary>
     /// Filtro selecionado.
@@ -73,6 +79,12 @@ public partial class MeusJogos
     /// </summary>
     [Inject]
     private JogosServico Servico { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço das Teimosinhas, com os nomes usados na marca dos jogos.
+    /// </summary>
+    [Inject]
+    private TeimosinhaServico Teimosinhas { get; set; } = null!;
 
     /// <summary>
     /// Navegação, usada para tirar o pedido de cadastro do endereço.
@@ -221,6 +233,17 @@ public partial class MeusJogos
     private async Task CarregarAsync()
     {
         this.grupos = await this.Servico.ListarAsync();
+        this.nomesTeimosinhas = await this.Teimosinhas.ListarNomesAsync();
+    }
+
+    /// <summary>
+    /// Nome da Teimosinha que criou o jogo.
+    /// </summary>
+    /// <param name="jogo">Jogo da lista.</param>
+    /// <returns>O nome, ou <c>null</c> para um jogo avulso.</returns>
+    private string? NomeTeimosinha(JogoConferido jogo)
+    {
+        return jogo.Jogo.TeimosinhaId is int id ? this.nomesTeimosinhas.GetValueOrDefault(id) : null;
     }
 
     /// <summary>

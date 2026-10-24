@@ -8,6 +8,7 @@ using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Aplicacao.Geracao;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Aplicacao.Painel;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Infraestrutura;
 using Lotofacil.Infraestrutura.Caixa;
@@ -39,6 +40,7 @@ builder.Services.AddSingleton<AtualizacaoConcursosServico>();
 builder.Services.AddSingleton<OrdemSorteioServico>();
 builder.Services.AddSingleton<EstatisticasServico>();
 builder.Services.AddSingleton<JogosServico>();
+builder.Services.AddSingleton<TeimosinhaServico>();
 builder.Services.AddSingleton<PainelServico>();
 builder.Services.AddSingleton(Random.Shared);
 builder.Services.AddSingleton<GeracaoJogosServico>();
@@ -66,5 +68,6 @@ app.MapRazorComponents<App>()
 
 await app.Services.InicializarBancoDadosAsync();
 await app.Services.GetRequiredService<ConfiguracoesServico>().CarregarAsync();
+await app.Services.GetRequiredService<TeimosinhaServico>().CriarJogosAsync();
 
 app.Run();

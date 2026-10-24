@@ -9,9 +9,11 @@ using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Estatisticas;
 using Lotofacil.Aplicacao.Geracao;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Dominio.Teimosinhas;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -38,6 +40,11 @@ public class GerarJogosTestes : ComponenteTesteBase
     /// Jogos gravados na base falsa.
     /// </summary>
     private readonly List<Jogo> jogos = [];
+
+    /// <summary>
+    /// Teimosinhas gravadas em memória.
+    /// </summary>
+    private readonly TeimosinhaRepositorioFalso teimosinhas = new();
 
     /// <summary>
     /// Provedor dos popovers, usado para escolher opções das listas.
@@ -78,6 +85,7 @@ public class GerarJogosTestes : ComponenteTesteBase
 
         var servicoJogos = new JogosServico(repositorioJogos, repositorioConcursos);
         this.Services.AddSingleton(servicoJogos);
+        this.Services.AddSingleton(new TeimosinhaServico(this.teimosinhas, repositorioJogos, servicoJogos));
         this.Services.AddSingleton(new GeracaoJogosServico(
             repositorioConcursos,
             new EstatisticasServico(repositorioConcursos),
@@ -355,6 +363,31 @@ public class GerarJogosTestes : ComponenteTesteBase
         meusJogos.WaitForAssertion(() => Assert.Equal(
             "10 jogos",
             meusJogos.FindAll(".grupo[data-concurso='3811'] .cabecalho-grupo .mud-chip").Select(Texto).ElementAt(1)));
+    }
+
+    /// <summary>
+    /// Com o switch ligado, o salvar exige o nome e grava os jogos na Teimosinha, com o nome no resumo.
+    /// </summary>
+    [Fact]
+    public void SalvaComoTeimosinha()
+    {
+        this.AdicionarConcursos();
+        IRenderedComponent<GerarJogos> pagina = this.GerarDez();
+
+        pagina.Find(".switch-teimosinha input").Change(true);
+        Assert.True(pagina.Find(".botao-salvar").HasAttribute("disabled"));
+        pagina.Find(".nome-teimosinha input").Input("Geradas");
+        Assert.False(pagina.Find(".botao-salvar").HasAttribute("disabled"));
+
+        pagina.Find(".botao-salvar").Click();
+
+        this.mensagens.WaitForAssertion(() => Assert.Contains(
+            "10 jogos salvos para o concurso 3811 na Teimosinha Geradas.",
+            this.MensagensExibidas()));
+        Teimosinha teimosinha = Assert.Single(this.teimosinhas.Todas);
+        Assert.Equal("Geradas", teimosinha.Nome);
+        Assert.Equal(10, teimosinha.Jogos.Count);
+        Assert.All(this.jogos, jogo => Assert.Equal(teimosinha.Id, jogo.TeimosinhaId));
     }
 
     /// <summary>

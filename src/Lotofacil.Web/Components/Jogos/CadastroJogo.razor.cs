@@ -4,8 +4,10 @@
 
 using Lotofacil.Aplicacao.Configuracoes;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio;
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Web.Components.Teimosinhas;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -32,6 +34,16 @@ public partial class CadastroJogo
     private int dezenasPorJogo = RegrasLotofacil.MinimoDezenasPorJogo;
 
     /// <summary>
+    /// Indica se o jogo será salvo numa Teimosinha.
+    /// </summary>
+    private bool teimosinha;
+
+    /// <summary>
+    /// Nome da Teimosinha digitado.
+    /// </summary>
+    private string? nomeTeimosinha;
+
+    /// <summary>
     /// Concurso sugerido ao abrir, ou <c>null</c> com a base vazia.
     /// </summary>
     [Parameter]
@@ -50,6 +62,12 @@ public partial class CadastroJogo
     private JogosServico Servico { get; set; } = null!;
 
     /// <summary>
+    /// Serviço das Teimosinhas, usado quando o jogo é salvo numa Teimosinha.
+    /// </summary>
+    [Inject]
+    private TeimosinhaServico Teimosinhas { get; set; } = null!;
+
+    /// <summary>
     /// Mensagens rápidas exibidas ao usuário.
     /// </summary>
     [Inject]
@@ -64,7 +82,10 @@ public partial class CadastroJogo
     /// <summary>
     /// Indica se o jogo está completo para ser salvo.
     /// </summary>
-    private bool PodeSalvar => this.numeroConcurso is not null && this.marcadas.Count == this.dezenasPorJogo;
+    private bool PodeSalvar =>
+        this.numeroConcurso is not null
+        && this.marcadas.Count == this.dezenasPorJogo
+        && CampoTeimosinha.Completo(this.teimosinha, this.nomeTeimosinha);
 
     /// <summary>
     /// Custo da aposta com a quantidade de dezenas escolhida.
@@ -107,7 +128,9 @@ public partial class CadastroJogo
             return;
         }
 
-        ResultadoCadastro resultado = await this.Servico.CadastrarAsync(concurso, this.marcadas);
+        ResultadoCadastro resultado = this.teimosinha
+            ? await this.SalvarNaTeimosinhaAsync(concurso)
+            : await this.Servico.CadastrarAsync(concurso, this.marcadas);
         if (!resultado.Sucesso)
         {
             this.Mensagens.Add(resultado.Mensagem, Severity.Warning);
@@ -116,5 +139,20 @@ public partial class CadastroJogo
 
         this.Mensagens.Add(resultado.Mensagem, Severity.Success);
         this.Dialogo.Close(DialogResult.Ok(true));
+    }
+
+    /// <summary>
+    /// Salva o jogo para o concurso como jogo da Teimosinha com o nome digitado.
+    /// </summary>
+    /// <param name="concurso">Concurso do jogo.</param>
+    /// <returns>Se o jogo foi gravado e a mensagem para o usuário.</returns>
+    private async Task<ResultadoCadastro> SalvarNaTeimosinhaAsync(int concurso)
+    {
+        ResultadoSalvarTeimosinha resultado =
+            await this.Teimosinhas.SalvarAsync(this.nomeTeimosinha ?? string.Empty, concurso, [this.marcadas]);
+
+        return resultado.Recusa is string recusa
+            ? new ResultadoCadastro(false, recusa)
+            : new ResultadoCadastro(true, FormatacaoTeimosinha.JogoSalvo(concurso, resultado.Nome));
     }
 }

@@ -15,35 +15,18 @@ public sealed class Jogo
     /// <param name="numeroConcurso">Número do concurso a que o jogo se destina, maior que zero.</param>
     /// <param name="dezenas">As 15 a 20 dezenas do jogo, em qualquer ordem.</param>
     /// <param name="cadastradoEm">Momento do cadastro.</param>
-    public Jogo(int numeroConcurso, IEnumerable<int> dezenas, DateTime cadastradoEm)
+    /// <param name="teimosinhaId">Teimosinha que criou o jogo, ou <c>null</c> para um jogo avulso.</param>
+    public Jogo(int numeroConcurso, IEnumerable<int> dezenas, DateTime cadastradoEm, int? teimosinhaId = null)
     {
         if (numeroConcurso <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(numeroConcurso), "O número do concurso deve ser maior que zero.");
         }
 
-        List<int> dezenasOrdenadas = dezenas.Order().ToList();
-        if (dezenasOrdenadas.Count < RegrasLotofacil.MinimoDezenasPorJogo
-            || dezenasOrdenadas.Count > RegrasLotofacil.MaximoDezenasPorJogo)
-        {
-            throw new ArgumentException(
-                $"O jogo deve ter de 15 a 20 dezenas; foram informadas {dezenasOrdenadas.Count}.",
-                nameof(dezenas));
-        }
-
-        if (dezenasOrdenadas.Any(dezena => dezena < RegrasLotofacil.DezenaMinima || dezena > RegrasLotofacil.DezenaMaxima))
-        {
-            throw new ArgumentOutOfRangeException(nameof(dezenas), "As dezenas do jogo vão de 1 a 25.");
-        }
-
-        if (dezenasOrdenadas.Distinct().Count() != dezenasOrdenadas.Count)
-        {
-            throw new ArgumentException("O jogo não pode ter dezena repetida.", nameof(dezenas));
-        }
-
         this.NumeroConcurso = numeroConcurso;
-        this.Dezenas = dezenasOrdenadas;
+        this.Dezenas = OrdenarEValidar(dezenas);
         this.CadastradoEm = cadastradoEm;
+        this.TeimosinhaId = teimosinhaId;
     }
 
     /// <summary>
@@ -80,6 +63,11 @@ public sealed class Jogo
     public DateTime CadastradoEm { get; private set; }
 
     /// <summary>
+    /// Teimosinha que criou o jogo, ou <c>null</c> para um jogo avulso.
+    /// </summary>
+    public int? TeimosinhaId { get; private set; }
+
+    /// <summary>
     /// Calcula quantas apostas de 15 dezenas vale um jogo com a quantidade de dezenas informada.
     /// </summary>
     /// <param name="quantidadeDezenas">Quantidade de dezenas do jogo.</param>
@@ -87,5 +75,35 @@ public sealed class Jogo
     public static int CalcularQuantidadeApostas(int quantidadeDezenas)
     {
         return Combinatoria.Combinacoes(quantidadeDezenas, RegrasLotofacil.DezenasSorteadas);
+    }
+
+    /// <summary>
+    /// Ordena as dezenas de um jogo e confere as regras; lança <see cref="ArgumentException"/> se alguma não for
+    /// atendida.
+    /// </summary>
+    /// <param name="dezenas">As 15 a 20 dezenas, em qualquer ordem.</param>
+    /// <returns>As dezenas em ordem crescente.</returns>
+    public static List<int> OrdenarEValidar(IEnumerable<int> dezenas)
+    {
+        List<int> dezenasOrdenadas = dezenas.Order().ToList();
+        if (dezenasOrdenadas.Count < RegrasLotofacil.MinimoDezenasPorJogo
+            || dezenasOrdenadas.Count > RegrasLotofacil.MaximoDezenasPorJogo)
+        {
+            throw new ArgumentException(
+                $"O jogo deve ter de 15 a 20 dezenas; foram informadas {dezenasOrdenadas.Count}.",
+                nameof(dezenas));
+        }
+
+        if (dezenasOrdenadas.Any(dezena => dezena < RegrasLotofacil.DezenaMinima || dezena > RegrasLotofacil.DezenaMaxima))
+        {
+            throw new ArgumentOutOfRangeException(nameof(dezenas), "As dezenas do jogo vão de 1 a 25.");
+        }
+
+        if (dezenasOrdenadas.Distinct().Count() != dezenasOrdenadas.Count)
+        {
+            throw new ArgumentException("O jogo não pode ter dezena repetida.", nameof(dezenas));
+        }
+
+        return dezenasOrdenadas;
     }
 }

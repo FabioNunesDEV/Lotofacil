@@ -5,6 +5,7 @@
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Dominio.Teimosinhas;
 using Lotofacil.Infraestrutura.BancoDados;
 using Lotofacil.Infraestrutura.Caixa;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,7 @@ public static class ConfiguracaoInfraestrutura
         servicos.AddSingleton<IConcursoRepositorio, ConcursoRepositorio>();
         servicos.AddSingleton<IJogoRepositorio, JogoRepositorio>();
         servicos.AddSingleton<IConfiguracaoApostasRepositorio, ConfiguracaoApostasRepositorio>();
+        servicos.AddSingleton<ITeimosinhaRepositorio, TeimosinhaRepositorio>();
 
         // Um único cliente da Caixa para todas as fontes, para a pausa valer entre todas as requisições.
         servicos.AddSingleton(_ => new ClienteCaixa(CriarClienteHttp(opcoesFonte), opcoesFonte));

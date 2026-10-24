@@ -4,7 +4,7 @@
 - **Concluídas:** 0 `estrutura-solucao` · 1 `concursos-base` · 2 `importacao-historico` · 3 `atualizacao-concursos` ·
   4 `estatisticas` · 5 `jogos-e-conferencia` · 6 `apostas-multiplas` · 7 `painel` · 8 `geracao-de-jogos` ·
   9 `estatisticas-por-perfil` · 10 `filtros-de-perfil-na-geracao` · 11 `aviso-jogos-premiados` ·
-  12 `exportar-jogos` · 13 `pagina-configuracoes` · 14 `ordem-sorteio-antigos`
+  12 `exportar-jogos` · 13 `pagina-configuracoes` · 14 `ordem-sorteio-antigos` · 15 `teimosinha`
 
 Cada fatia vira uma change do OpenSpec (`/opsx:propose` → `/opsx:apply` → `/opsx:archive`), numa branch própria
 criada a partir da `main` atualizada. As decisões marcadas como **a confirmar** são perguntadas ao usuário no início
@@ -146,12 +146,21 @@ concurso sem ela, e grava cada uma assim que chega.
 **Decidido:** botão em Resultados; tudo num clique com "Interromper"; falhas puladas com resumo no fim; espera com
 nova tentativa no limite de consultas (decidido depois de achado na verificação manual).
 
-## Próximas fatias (ordem de esforço, do menor para o maior)
+## Fatia 15 — `teimosinha` (concluída)
 
-Ordem combinada com o usuário em 24/10/2026. As decisões **a confirmar** são perguntadas no início de cada fatia.
+Teimosinha: grupo com nome de um ou mais jogos que se repete em todo concurso até o usuário remover. É marcada com o
+switch "Teimosinha (repetir em todo concurso)" ao salvar no cadastro manual ou em Gerar jogos, com o nome sugerido
+entre as ativas.
 
-### Fatia 15 — Teimosinha e Bolão
+- Os jogos dela viram jogos comuns em Meus jogos, com a marca "Teimosinha · <nome>": criados ao salvar e, a cada
+  atualização/importação e na inicialização, até o próximo concurso (concursos pulados também), antes do aviso de
+  jogos premiados. Aviso "Teimosinhas: 2 jogos criados para o concurso 3814.".
+- Página "Teimosinhas" (`/teimosinhas`) com nome, "Desde o concurso", jogos, custo por concurso e "Remover"
+  (desativa e mantém os jogos já criados).
 
-Continuam pendentes de definição de negócio (ver `CLAUDE.md`).
+**Decidido:** registro permanente até remover (não o número fixo de concursos da Caixa); grupo com nome; criar jogos
+a cada concurso em vez de conferir à parte; página própria. Bolão descartado pelo usuário.
 
-**A confirmar:** regras de cada modalidade, como cadastrar, conferir e mostrar.
+## Próximas fatias
+
+O roteiro combinado terminou. Novas fatias dependem de pedido do usuário.

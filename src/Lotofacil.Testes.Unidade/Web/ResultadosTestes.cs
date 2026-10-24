@@ -7,8 +7,10 @@ using AngleSharp.Dom;
 using Bunit;
 using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Dominio.Jogos;
+using Lotofacil.Dominio.Teimosinhas;
 using Lotofacil.Web.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,6 +44,11 @@ public class ResultadosTestes : ComponenteTesteBase
     /// Jogos cadastrados na base falsa.
     /// </summary>
     private readonly List<Jogo> jogos = [];
+
+    /// <summary>
+    /// Teimosinhas gravadas em memória.
+    /// </summary>
+    private readonly TeimosinhaRepositorioFalso teimosinhas = new();
 
     /// <summary>
     /// Concursos devolvidos pelo repositório falso.
@@ -116,8 +123,21 @@ public class ResultadosTestes : ComponenteTesteBase
         IJogoRepositorio repositorioJogos = Substitute.For<IJogoRepositorio>();
         repositorioJogos.ListarAsync(Arg.Any<CancellationToken>()).Returns(_ => this.jogos.ToList());
 
+        repositorioJogos.ExisteAsync(Arg.Any<int>(), Arg.Any<IEnumerable<int>>(), Arg.Any<CancellationToken>())
+            .Returns(chamada => this.jogos.Any(jogo =>
+                jogo.NumeroConcurso == chamada.ArgAt<int>(0)
+                && jogo.Dezenas.SequenceEqual(chamada.ArgAt<IEnumerable<int>>(1).Order())));
+        repositorioJogos.AdicionarAsync(Arg.Any<Jogo>(), Arg.Any<CancellationToken>())
+            .Returns(chamada =>
+            {
+                this.jogos.Add(chamada.ArgAt<Jogo>(0));
+                return Task.CompletedTask;
+            });
+
+        var servicoJogos = new JogosServico(repositorioJogos, this.repositorio);
         this.Services.AddSingleton(new ConsultaConcursosServico(this.repositorio));
-        this.Services.AddSingleton(new JogosServico(repositorioJogos, this.repositorio));
+        this.Services.AddSingleton(servicoJogos);
+        this.Services.AddSingleton(new TeimosinhaServico(this.teimosinhas, repositorioJogos, servicoJogos));
         this.Services.AddSingleton(new ImportacaoHistoricoServico(this.fonte, this.repositorio));
         this.Services.AddSingleton(new AtualizacaoConcursosServico(this.fonteConcursos, this.repositorio));
         this.Services.AddSingleton(new OrdemSorteioServico(this.fonteConcursos, this.repositorio));
@@ -583,6 +603,35 @@ public class ResultadosTestes : ComponenteTesteBase
         Assert.Equal("1 de 1 jogo conferido foi premiado.", Texto(dialogos.Find(".resumo-premios")));
         Assert.Equal(["Concurso 3809 · 17/10/2026"], dialogos.FindAll(".titulo-concurso").Select(Texto));
         Assert.Equal("Jogo 01 · 13 acertos · R$ 35,00", Texto(dialogos.Find(".jogo-premiado")));
+    }
+
+    /// <summary>
+    /// A atualização cria os jogos da Teimosinha para os concursos novos, avisa, e o jogo criado para um concurso já
+    /// sorteado entra no aviso de premiados.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task AtualizacaoCriaJogosDaTeimosinhaAntesDoAviso()
+    {
+        this.AdicionarConcursos(3808);
+        var teimosinha = new Teimosinha("Fixas", 3809);
+        teimosinha.Acrescentar(TrezeAcertos, 3809);
+        await this.teimosinhas.SalvarAsync(teimosinha, Xunit.TestContext.Current.CancellationToken);
+        this.jogos.Add(new Jogo(3809, TrezeAcertos, DateTime.Now, teimosinha.Id));
+        this.fonteConcursos.ObterNumeroUltimoConcursoAsync(Arg.Any<CancellationToken>()).Returns(3810);
+        IRenderedComponent<MudSnackbarProvider> mensagens = this.Render<MudSnackbarProvider>();
+        IRenderedComponent<MudDialogProvider> dialogos = this.Render<MudDialogProvider>();
+        IRenderedComponent<Resultados> pagina = this.RenderizarPagina();
+
+        pagina.Find(".botao-atualizar").Click();
+
+        dialogos.WaitForAssertion(() => Assert.NotEmpty(dialogos.FindAll(".resumo-premios")));
+        Assert.Contains("Teimosinhas: 2 jogos criados para os concursos 3810 a 3811.", MensagensExibidas(mensagens));
+        Assert.Equal("2 de 2 jogos conferidos foram premiados.", Texto(dialogos.Find(".resumo-premios")));
+        Assert.Equal(
+            ["Concurso 3809 · 17/10/2026", "Concurso 3810 · 17/10/2026"],
+            dialogos.FindAll(".titulo-concurso").Select(Texto));
+        Assert.Equal(3811, teimosinha.UltimoConcursoCriado);
     }
 
     /// <summary>

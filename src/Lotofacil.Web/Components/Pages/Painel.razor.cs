@@ -5,10 +5,12 @@
 using Lotofacil.Aplicacao.Concursos;
 using Lotofacil.Aplicacao.Jogos;
 using Lotofacil.Aplicacao.Painel;
+using Lotofacil.Aplicacao.Teimosinhas;
 using Lotofacil.Dominio;
 using Lotofacil.Dominio.Concursos;
 using Lotofacil.Web.Components.Concursos;
 using Lotofacil.Web.Components.Jogos;
+using Lotofacil.Web.Components.Teimosinhas;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -57,6 +59,12 @@ public partial class Painel
     /// </summary>
     [Inject]
     private JogosServico Jogos { get; set; } = null!;
+
+    /// <summary>
+    /// Serviço das Teimosinhas, que cria os jogos delas depois da atualização.
+    /// </summary>
+    [Inject]
+    private TeimosinhaServico Teimosinhas { get; set; } = null!;
 
     /// <summary>
     /// Serviço de diálogos, usado no aviso de jogos premiados.
@@ -120,6 +128,8 @@ public partial class Painel
 
             if (resultado.ConcursosGravados > 0)
             {
+                // Os jogos das Teimosinhas vêm antes do aviso, para os criados em concursos já sorteados entrarem nele.
+                await AvisoTeimosinhas.CriarJogosAsync(this.Teimosinhas, this.Mensagens);
                 await this.CarregarAsync();
                 await this.AvisarJogosPremiadosAsync(resultado);
             }
