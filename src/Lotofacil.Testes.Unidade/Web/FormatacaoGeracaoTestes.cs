@@ -4,6 +4,7 @@
 
 using System.Globalization;
 using Lotofacil.Aplicacao.Jogos;
+using Lotofacil.Dominio.Estatisticas.Perfis;
 using Lotofacil.Dominio.Geracao;
 using Lotofacil.Web.Components.Geracao;
 
@@ -77,17 +78,72 @@ public class FormatacaoGeracaoTestes
     }
 
     /// <summary>
-    /// Aviso de poucas combinações no singular e no plural.
+    /// Aviso de poucas combinações no singular e no plural, sem e com filtros.
     /// </summary>
     [Fact]
     public void AvisoCombinacoes()
     {
         Assert.Equal(
             "Só existe 1 jogo diferente com essas fixas e excluídas; foi gerado 1.",
-            FormatacaoGeracao.AvisoCombinacoes(1));
+            FormatacaoGeracao.AvisoCombinacoes(1, false));
         Assert.Equal(
             "Só existem 6 jogos diferentes com essas fixas e excluídas; foram gerados 6.",
-            FormatacaoGeracao.AvisoCombinacoes(6));
+            FormatacaoGeracao.AvisoCombinacoes(6, false));
+        Assert.Equal(
+            "Só existem 2 jogos diferentes com essas fixas, excluídas e filtros; foram gerados 2.",
+            FormatacaoGeracao.AvisoCombinacoes(2, true));
+        Assert.Equal(
+            "Só existe 1 jogo diferente com essas fixas, excluídas e filtros; foi gerado 1.",
+            FormatacaoGeracao.AvisoCombinacoes(1, true));
+    }
+
+    /// <summary>
+    /// Aviso de jogos a menos por causa dos filtros, no plural e no singular.
+    /// </summary>
+    [Fact]
+    public void AvisoFiltros()
+    {
+        Assert.Equal(
+            "Foram gerados 3 dos 10 jogos pedidos: poucos jogos atendem aos filtros.",
+            FormatacaoGeracao.AvisoFiltros(3, 10));
+        Assert.Equal(
+            "Foi gerado 1 dos 10 jogos pedidos: poucos jogos atendem aos filtros.",
+            FormatacaoGeracao.AvisoFiltros(1, 10));
+    }
+
+    /// <summary>
+    /// Resumo dos filtros ligados.
+    /// </summary>
+    [Fact]
+    public void FiltrosLigados()
+    {
+        Assert.Equal("Nenhum filtro ligado", FormatacaoGeracao.FiltrosLigados(0));
+        Assert.Equal("1 filtro ligado", FormatacaoGeracao.FiltrosLigados(1));
+        Assert.Equal("2 filtros ligados", FormatacaoGeracao.FiltrosLigados(2));
+    }
+
+    /// <summary>
+    /// Rótulos das linhas de filtro, com o último concurso nas repetidas.
+    /// </summary>
+    [Fact]
+    public void RotulosDosFiltros()
+    {
+        Assert.Equal(
+            ["Pares", "Primos", "Múltiplos de 3", "Fibonacci", "Soma", "Repetidas do 3810", "Na moldura"],
+            Enum.GetValues<TipoPerfil>().Select(tipo => FormatacaoGeracao.RotuloFiltro(tipo, 3810)));
+    }
+
+    /// <summary>
+    /// Dica de chance teórica para 15 dezenas; um lado vazio vai até o extremo do perfil.
+    /// </summary>
+    [Fact]
+    public void ChanceTeorica()
+    {
+        Assert.Equal("Chance teórica: 57,17%", FormatacaoGeracao.ChanceTeorica(new LimitePerfil(TipoPerfil.Pares, 7, 8)));
+        Assert.Equal("Chance teórica: 58,73%", FormatacaoGeracao.ChanceTeorica(new LimitePerfil(TipoPerfil.Soma, 180, 209)));
+        Assert.Equal("Chance teórica: 100,00%", FormatacaoGeracao.ChanceTeorica(new LimitePerfil(TipoPerfil.Pares, 0, null)));
+        Assert.Equal("Chance teórica: 0,00%", FormatacaoGeracao.ChanceTeorica(new LimitePerfil(TipoPerfil.Pares, 13, null)));
+        Assert.Equal("Chance teórica: 0,00%", FormatacaoGeracao.ChanceTeorica(new LimitePerfil(TipoPerfil.Soma, 210, 180)));
     }
 
     /// <summary>

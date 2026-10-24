@@ -17,6 +17,11 @@ public sealed class GeradorJogos
     private const int TentativasPorJogo = 1_000;
 
     /// <summary>
+    /// Menor limite de tentativas com filtros, para achar jogos mesmo quando poucas combinações passam.
+    /// </summary>
+    private const int TentativasMinimasComFiltros = 100_000;
+
+    /// <summary>
     /// Fonte dos números aleatórios.
     /// </summary>
     private readonly Random aleatorio;
@@ -31,12 +36,16 @@ public sealed class GeradorJogos
     }
 
     /// <summary>
-    /// Gera os jogos pedidos, ou recusa quando as fixas e excluídas não permitem montar um jogo.
+    /// Gera os jogos pedidos que atendem aos filtros, ou recusa quando as fixas, excluídas e filtros não permitem.
     /// </summary>
-    /// <param name="parametros">Quantidade, tamanho, estratégia, fixas e excluídas.</param>
+    /// <param name="parametros">Quantidade, tamanho, estratégia, fixas, excluídas e filtros.</param>
     /// <param name="estatisticas">Estatísticas das 25 dezenas, base dos pesos.</param>
+    /// <param name="ultimoResultado">Dezenas do último concurso gravado, base do filtro de repetidas.</param>
     /// <returns>Os jogos gerados ou o motivo da recusa.</returns>
-    public ResultadoGeracao Gerar(ParametrosGeracao parametros, IReadOnlyList<EstatisticaDezena> estatisticas)
+    public ResultadoGeracao Gerar(
+        ParametrosGeracao parametros,
+        IReadOnlyList<EstatisticaDezena> estatisticas,
+        IReadOnlyCollection<int> ultimoResultado)
     {
         int fixas = parametros.Fixas.Count;
         int dezenasPorJogo = parametros.DezenasPorJogo;
@@ -57,17 +66,39 @@ public sealed class GeradorJogos
                     + $"{livres.Count} livres, e cada jogo precisa de mais {aSortear}.");
         }
 
-        int possiveis = Combinatoria.Combinacoes(livres.Count, aSortear);
-        if (possiveis <= parametros.Quantidade)
+        FiltrosGeracao filtros = parametros.Filtros;
+        LimitePerfil? invertido = filtros.Limites.FirstOrDefault(limite => limite.Invertido);
+        if (invertido is not null)
         {
-            List<IReadOnlyList<int>> todos = Combinar(livres, aSortear)
-                .Select(escolhidas => Juntar(parametros.Fixas, escolhidas))
-                .ToList();
-
-            return new ResultadoGeracao(todos, possiveis < parametros.Quantidade ? possiveis : null, null);
+            return ResultadoGeracao.Recusada(
+                $"No filtro {FiltrosGeracao.NomeNaMensagem(invertido.Tipo)}, o mínimo ({invertido.Minimo}) é maior que "
+                    + $"o máximo ({invertido.Maximo}).");
         }
 
-        return new ResultadoGeracao(this.Sortear(parametros, livres, estatisticas), null, null);
+        bool comFiltros = filtros.Ligados > 0;
+        List<IReadOnlyList<int>> jogos;
+        int? possiveis = null;
+        int? pedidos = null;
+        if (Combinatoria.Combinacoes(livres.Count, aSortear) <= parametros.Quantidade)
+        {
+            jogos = Combinar(livres, aSortear)
+                .Select(escolhidas => Juntar(parametros.Fixas, escolhidas))
+                .Where(jogo => filtros.Atende(jogo, ultimoResultado))
+                .ToList();
+            possiveis = jogos.Count < parametros.Quantidade ? jogos.Count : null;
+        }
+        else
+        {
+            jogos = this.Sortear(parametros, livres, estatisticas, ultimoResultado);
+            pedidos = comFiltros && jogos.Count < parametros.Quantidade ? parametros.Quantidade : null;
+        }
+
+        if (jogos.Count == 0)
+        {
+            return ResultadoGeracao.Recusada(ResultadoGeracao.MensagemNenhumJogo);
+        }
+
+        return new ResultadoGeracao(jogos, possiveis, null, comFiltros, pedidos);
     }
 
     /// <summary>
@@ -131,16 +162,18 @@ public sealed class GeradorJogos
     }
 
     /// <summary>
-    /// Sorteia jogos até ter a quantidade pedida de jogos distintos.
+    /// Sorteia jogos até ter a quantidade pedida de jogos distintos que atendem aos filtros, ou esgotar as tentativas.
     /// </summary>
     /// <param name="parametros">Parâmetros da geração.</param>
     /// <param name="livres">Dezenas livres.</param>
     /// <param name="estatisticas">Estatísticas das dezenas.</param>
+    /// <param name="ultimoResultado">Dezenas do último concurso gravado.</param>
     /// <returns>Os jogos sorteados.</returns>
     private List<IReadOnlyList<int>> Sortear(
         ParametrosGeracao parametros,
         IReadOnlyList<int> livres,
-        IReadOnlyList<EstatisticaDezena> estatisticas)
+        IReadOnlyList<EstatisticaDezena> estatisticas,
+        IReadOnlyCollection<int> ultimoResultado)
     {
         int aSortear = parametros.DezenasPorJogo - parametros.Fixas.Count;
         List<(IReadOnlyDictionary<int, int> Pesos, int Quantidade)> etapas =
@@ -149,6 +182,11 @@ public sealed class GeradorJogos
         List<IReadOnlyList<int>> jogos = [];
         HashSet<string> gerados = [];
         int tentativas = parametros.Quantidade * TentativasPorJogo;
+        if (parametros.Filtros.Ligados > 0)
+        {
+            tentativas = Math.Max(tentativas, TentativasMinimasComFiltros);
+        }
+
         while (jogos.Count < parametros.Quantidade && tentativas-- > 0)
         {
             List<int> disponiveis = [.. livres];
@@ -164,7 +202,7 @@ public sealed class GeradorJogos
             }
 
             IReadOnlyList<int> jogo = Juntar(parametros.Fixas, escolhidas);
-            if (gerados.Add(string.Join(',', jogo)))
+            if (parametros.Filtros.Atende(jogo, ultimoResultado) && gerados.Add(string.Join(',', jogo)))
             {
                 jogos.Add(jogo);
             }

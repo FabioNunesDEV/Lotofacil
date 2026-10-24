@@ -25,8 +25,8 @@ else if (this.contexto is ContextoGeracao dados)
                 <MudNumericField T="int" @bind-Value="this.quantidade" Label="Quantidade de jogos" Variant="Variant.Outlined"
                                  Margin="Margin.Dense" Min="ParametrosGeracao.QuantidadeMinima"
                                  Max="ParametrosGeracao.QuantidadeMaxima" Class="campo-quantidade" />
-                <MudSelect T="int" @bind-Value="this.dezenasPorJogo" Label="Dezenas por jogo" Variant="Variant.Outlined"
-                           Margin="Margin.Dense" Class="campo-dezenas-por-jogo">
+                <MudSelect T="int" @bind-Value="this.dezenasPorJogo" @bind-Value:after="this.AjustarFiltros"
+                           Label="Dezenas por jogo" Variant="Variant.Outlined" Margin="Margin.Dense" Class="campo-dezenas-por-jogo">
                     @for (int opcao = RegrasLotofacil.MinimoDezenasPorJogo; opcao <= RegrasLotofacil.MaximoDezenasPorJogo; opcao++)
                     {
                         int valor = opcao;
@@ -62,6 +62,8 @@ else if (this.contexto is ContextoGeracao dados)
                 <MudText Typo="Typo.body2" Class="contagem-fixas">Fixas: @this.fixas.Count · Excluídas: @this.excluidas.Count</MudText>
                 <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="this.Limpar" Class="botao-limpar">Limpar</MudButton>
             </div>
+
+            <FiltrosPerfil @bind-Filtros="this.filtros" DezenasPorJogo="this.dezenasPorJogo" UltimoConcurso="dados.UltimoConcurso" />
 
             <MudText Typo="Typo.body1" Class="custo mt-4">@FormatacaoGeracao.Custo(this.quantidade, this.dezenasPorJogo, this.CustoGeracao)</MudText>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Casino"

@@ -80,6 +80,11 @@ public partial class GerarJogos
     private IReadOnlyCollection<int> excluidas = [];
 
     /// <summary>
+    /// Filtros de perfil e de sequência.
+    /// </summary>
+    private FiltrosGeracao filtros = FiltrosGeracao.Nenhum;
+
+    /// <summary>
     /// Jogos gerados ainda não salvos.
     /// </summary>
     private List<JogoGerado> gerados = [];
@@ -145,6 +150,14 @@ public partial class GerarJogos
     }
 
     /// <summary>
+    /// Traz os limites dos filtros para a faixa possível depois de trocar as dezenas por jogo.
+    /// </summary>
+    private void AjustarFiltros()
+    {
+        this.filtros = this.filtros.AjustarPara(this.dezenasPorJogo);
+    }
+
+    /// <summary>
     /// Gera os jogos com os parâmetros do formulário, substituindo a lista, ou mostra a recusa.
     /// </summary>
     /// <returns>Tarefa da geração.</returns>
@@ -158,7 +171,8 @@ public partial class GerarJogos
                 this.dezenasPorJogo,
                 this.estrategia,
                 this.fixas,
-                this.excluidas);
+                this.excluidas,
+                this.filtros);
             JogosGerados resultado = await this.Servico.GerarAsync(
                 parametros,
                 this.janela == TodasAsJanelas ? null : this.janela);
@@ -172,7 +186,12 @@ public partial class GerarJogos
             this.gerados = [.. resultado.Jogos];
             if (resultado.CombinacoesPossiveis is int possiveis)
             {
-                this.Mensagens.Add(FormatacaoGeracao.AvisoCombinacoes(possiveis), Severity.Info);
+                this.Mensagens.Add(FormatacaoGeracao.AvisoCombinacoes(possiveis, resultado.ComFiltros), Severity.Info);
+            }
+
+            if (resultado.JogosPedidos is int pedidos)
+            {
+                this.Mensagens.Add(FormatacaoGeracao.AvisoFiltros(resultado.Jogos.Count, pedidos), Severity.Info);
             }
         }
         finally

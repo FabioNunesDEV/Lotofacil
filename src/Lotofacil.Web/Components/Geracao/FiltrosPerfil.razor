@@ -1,0 +1,49 @@
+<MudExpansionPanels Elevation="0" Outlined="true" Class="mt-4 filtros-perfil">
+    <MudExpansionPanel>
+        <TitleContent>
+            <div class="titulo-filtros">
+                <MudText Typo="Typo.subtitle2">Filtros de perfil</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary resumo-filtros">@FormatacaoGeracao.FiltrosLigados(this.Filtros.Ligados)</MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-2 aviso-filtros">@AvisoFiltros</MudText>
+
+            @foreach (TipoPerfil tipo in Enum.GetValues<TipoPerfil>())
+            {
+                LimitePerfil? limite = this.Limite(tipo);
+                <div class="linha-filtro" data-perfil="@tipo">
+                    <span class="rotulo-filtro">@FormatacaoGeracao.RotuloFiltro(tipo, this.UltimoConcurso)</span>
+                    <MudNumericField T="int?" Value="limite?.Minimo" ValueChanged="valor => this.AlterarMinimoAsync(tipo, valor)"
+                                     Label="Mín." Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                     Min="FiltrosGeracao.MenorLimite(tipo, this.DezenasPorJogo)"
+                                     Max="FiltrosGeracao.MaiorLimite(tipo, this.DezenasPorJogo)" Class="campo-minimo" />
+                    <MudNumericField T="int?" Value="limite?.Maximo" ValueChanged="valor => this.AlterarMaximoAsync(tipo, valor)"
+                                     Label="Máx." Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
+                                     Min="FiltrosGeracao.MenorLimite(tipo, this.DezenasPorJogo)"
+                                     Max="FiltrosGeracao.MaiorLimite(tipo, this.DezenasPorJogo)" Class="campo-maximo" />
+                    @if (limite is not null && this.DezenasPorJogo == RegrasLotofacil.DezenasSorteadas)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary dica-filtro">@FormatacaoGeracao.ChanceTeorica(limite)</MudText>
+                    }
+                </div>
+            }
+
+            <MudSwitch T="bool" Value="this.EvitarPadroesPopulares" ValueChanged="this.AlterarEvitarAsync" Color="Color.Primary"
+                       Label="Evitar padrões populares" Class="mt-3 evitar-populares" />
+            @if (this.Filtros.MaiorSequenciaPermitida is int permitida)
+            {
+                <MudNumericField T="int" Value="permitida" ValueChanged="this.AlterarSequenciaAsync"
+                                 Label="Maior sequência permitida" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                 Min="1" Max="this.DezenasPorJogo" Class="campo-sequencia mt-2" />
+                <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-1 aviso-populares">@AvisoPopulares</MudText>
+            }
+
+            <div class="d-flex justify-end mt-2">
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="this.LimparAsync" Class="botao-limpar-filtros">
+                    Limpar filtros
+                </MudButton>
+            </div>
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>

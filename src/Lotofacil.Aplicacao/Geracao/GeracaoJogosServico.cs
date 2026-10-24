@@ -87,7 +87,7 @@ public class GeracaoJogosServico
     /// <summary>
     /// Gera os jogos com as estatísticas da janela, com o perfil de cada um em relação ao último concurso gravado.
     /// </summary>
-    /// <param name="parametros">Quantidade, tamanho, estratégia, fixas e excluídas.</param>
+    /// <param name="parametros">Quantidade, tamanho, estratégia, fixas, excluídas e filtros.</param>
     /// <param name="ultimosConcursos">Janela da frequência, ou <c>null</c> para todo o histórico.</param>
     /// <param name="cancelamento">Sinal de cancelamento.</param>
     /// <returns>Os jogos gerados, o aviso de poucas combinações ou o motivo da recusa.</returns>
@@ -103,12 +103,18 @@ public class GeracaoJogosServico
             return new JogosGerados([], null, MensagemBaseVazia);
         }
 
-        ResultadoGeracao resultado = new GeradorJogos(this.aleatorio).Gerar(parametros, dados.Dezenas);
+        ResultadoGeracao resultado =
+            new GeradorJogos(this.aleatorio).Gerar(parametros, dados.Dezenas, contexto.UltimoResultado);
         List<JogoGerado> gerados = resultado.Jogos
             .Select(jogo => new JogoGerado(jogo, PerfilJogo.Calcular(jogo, contexto.UltimoResultado)))
             .ToList();
 
-        return new JogosGerados(gerados, resultado.CombinacoesPossiveis, resultado.Recusa);
+        return new JogosGerados(
+            gerados,
+            resultado.CombinacoesPossiveis,
+            resultado.Recusa,
+            resultado.ComFiltros,
+            resultado.JogosPedidos);
     }
 
     /// <summary>

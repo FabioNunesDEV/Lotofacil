@@ -3,6 +3,7 @@
 // </copyright>
 
 using Lotofacil.Dominio.Estatisticas;
+using Lotofacil.Dominio.Estatisticas.Perfis;
 using Lotofacil.Dominio.Geracao;
 
 namespace Lotofacil.Testes.Unidade.Dominio;
@@ -19,6 +20,11 @@ public class GeradorJogosTestes
     private static readonly List<EstatisticaDezena> Estatisticas = Enumerable.Range(1, 25)
         .Select(dezena => new EstatisticaDezena(dezena, 100 + dezena, 0m, 0m, 0d, 25 - dezena, null))
         .ToList();
+
+    /// <summary>
+    /// Último resultado usado no filtro de repetidas: 11 a 25.
+    /// </summary>
+    private static readonly List<int> UltimoResultado = Enumerable.Range(11, 15).ToList();
 
     /// <summary>
     /// Gera a quantidade pedida de jogos distintos, cada um com as dezenas certas e em ordem.
@@ -144,7 +150,7 @@ public class GeradorJogosTestes
         var aleatorio = new AleatorioZero();
         var gerador = new GeradorJogos(aleatorio);
 
-        gerador.Gerar(new ParametrosGeracao(1, 15, EstrategiaGeracao.Equilibrada, [23, 24, 25], []), Estatisticas);
+        gerador.Gerar(new ParametrosGeracao(1, 15, EstrategiaGeracao.Equilibrada, [23, 24, 25], []), Estatisticas, UltimoResultado);
 
         // O sorteio fixo em zero escolhe sempre a menor dezena disponível: 1 a 6 pelos pesos d, 7 a 12 pelos 26 − d.
         List<int> esperados = [];
@@ -169,7 +175,7 @@ public class GeradorJogosTestes
     {
         var gerador = new GeradorJogos(new Random(42));
 
-        ResultadoGeracao resultado = gerador.Gerar(new ParametrosGeracao(100, 15, EstrategiaGeracao.MaisSorteadas, [], []), Estatisticas);
+        ResultadoGeracao resultado = gerador.Gerar(new ParametrosGeracao(100, 15, EstrategiaGeracao.MaisSorteadas, [], []), Estatisticas, UltimoResultado);
 
         int comAMaisSorteada = resultado.Jogos.Count(jogo => jogo.Contains(25));
         int comAMenosSorteada = resultado.Jogos.Count(jogo => jogo.Contains(1));
@@ -193,12 +199,184 @@ public class GeradorJogosTestes
     }
 
     /// <summary>
+    /// Limites fora da faixa possível para o tamanho do jogo são rejeitados; mínimo maior que o máximo é aceito.
+    /// </summary>
+    [Fact]
+    public void ValidaAsFaixasDosFiltros()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => ComFiltros(15, Limite(TipoPerfil.Pares, null, 16)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ComFiltros(15, Limite(TipoPerfil.Pares, -1, null)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ComFiltros(15, Limite(TipoPerfil.Soma, 119, null)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ComFiltros(15, Limite(TipoPerfil.Soma, null, 271)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ComFiltros(15, new FiltrosGeracao([], 0)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ComFiltros(15, new FiltrosGeracao([], 16)));
+
+        Assert.Equal(1, ComFiltros(20, Limite(TipoPerfil.Soma, 210, 310)).Filtros.Ligados);
+        Assert.Equal(1, ComFiltros(18, Limite(TipoPerfil.Pares, 18, null)).Filtros.Ligados);
+        Assert.Equal(1, ComFiltros(15, Limite(TipoPerfil.Soma, 210, 180)).Filtros.Ligados);
+        Assert.Same(FiltrosGeracao.Nenhum, new ParametrosGeracao(10, 15, EstrategiaGeracao.Aleatoria, [], []).Filtros);
+    }
+
+    /// <summary>
+    /// Todos os jogos atendem a pares de 7 a 8 e soma de 180 a 209.
+    /// </summary>
+    [Fact]
+    public void JogosAtendemAosLimites()
+    {
+        var filtros = new FiltrosGeracao(
+            [new LimitePerfil(TipoPerfil.Pares, 7, 8), new LimitePerfil(TipoPerfil.Soma, 180, 209)], null);
+
+        ResultadoGeracao resultado = Gerar(new ParametrosGeracao(30, 15, EstrategiaGeracao.MaisSorteadas, [], [], filtros));
+
+        Assert.Equal(30, resultado.Jogos.Count);
+        Assert.True(resultado.ComFiltros);
+        Assert.Null(resultado.JogosPedidos);
+        Assert.All(resultado.Jogos, jogo =>
+        {
+            Assert.InRange(jogo.Count(dezena => dezena % 2 == 0), 7, 8);
+            Assert.InRange(jogo.Sum(), 180, 209);
+        });
+    }
+
+    /// <summary>
+    /// O filtro de repetidas conta as dezenas do último resultado; em jogos de 18 conta o jogo inteiro.
+    /// </summary>
+    [Fact]
+    public void RepetidasEmJogosDe18()
+    {
+        ResultadoGeracao resultado = Gerar(ComFiltros(18, Limite(TipoPerfil.Repetidas, 8, 10)));
+
+        Assert.Equal(10, resultado.Jogos.Count);
+        Assert.All(resultado.Jogos, jogo =>
+        {
+            Assert.Equal(18, jogo.Count);
+            Assert.InRange(jogo.Count(UltimoResultado.Contains), 8, 10);
+        });
+    }
+
+    /// <summary>
+    /// Nenhum jogo passa da maior sequência permitida.
+    /// </summary>
+    /// <param name="permitida">Maior sequência permitida.</param>
+    [Theory]
+    [InlineData(9)]
+    [InlineData(4)]
+    public void RespeitaAMaiorSequencia(int permitida)
+    {
+        ResultadoGeracao resultado = Gerar(ComFiltros(15, new FiltrosGeracao([], permitida)));
+
+        Assert.Equal(10, resultado.Jogos.Count);
+        Assert.All(resultado.Jogos, jogo => Assert.True(FiltrosGeracao.MaiorSequencia(jogo) <= permitida));
+    }
+
+    /// <summary>
+    /// Fixas de 01 a 10 já formam uma sequência de 10: com limite 9, nenhum jogo atende.
+    /// </summary>
+    [Fact]
+    public void FixasQueFormamASequenciaSaoRecusadas()
+    {
+        ResultadoGeracao resultado = Gerar(
+            new ParametrosGeracao(10, 15, EstrategiaGeracao.Aleatoria, Enumerable.Range(1, 10), [], new FiltrosGeracao([], 9)));
+
+        Assert.Empty(resultado.Jogos);
+        Assert.Equal(ResultadoGeracao.MensagemNenhumJogo, resultado.Recusa);
+    }
+
+    /// <summary>
+    /// O volante só tem 12 pares: mínimo de 13 pares em jogos de 15 é recusado.
+    /// </summary>
+    [Fact]
+    public void FiltroImpossivelERecusado()
+    {
+        ResultadoGeracao resultado = Gerar(ComFiltros(15, Limite(TipoPerfil.Pares, 13, null)));
+
+        Assert.Empty(resultado.Jogos);
+        Assert.Equal("Nenhum jogo atendeu aos filtros. Afrouxe os limites ou revise as fixas e excluídas.", resultado.Recusa);
+    }
+
+    /// <summary>
+    /// Mínimo maior que o máximo recusa com o nome do filtro.
+    /// </summary>
+    [Fact]
+    public void MinimoMaiorQueMaximoERecusado()
+    {
+        ResultadoGeracao resultado = Gerar(ComFiltros(15, Limite(TipoPerfil.Soma, 210, 180)));
+
+        Assert.Empty(resultado.Jogos);
+        Assert.Equal("No filtro de soma, o mínimo (210) é maior que o máximo (180).", resultado.Recusa);
+    }
+
+    /// <summary>
+    /// Com 13 fixas e 8 excluídas há 6 jogos possíveis; só 2 têm soma de pelo menos 139.
+    /// </summary>
+    [Fact]
+    public void PoucasCombinacoesComFiltros()
+    {
+        ResultadoGeracao resultado = Gerar(new ParametrosGeracao(
+            10, 15, EstrategiaGeracao.Aleatoria, Enumerable.Range(1, 13), Enumerable.Range(14, 8), Limite(TipoPerfil.Soma, 139, null)));
+
+        Assert.Equal(2, resultado.CombinacoesPossiveis);
+        Assert.True(resultado.ComFiltros);
+        Assert.Equal(["23,25", "24,25"], resultado.Jogos.Select(jogo => string.Join(',', jogo.Skip(13))));
+    }
+
+    /// <summary>
+    /// Sem os pares de 02 a 16, sobram 136 jogos possíveis e só 6 têm no máximo 2 pares: o sorteio acha os 6 e
+    /// informa a quantidade pedida.
+    /// </summary>
+    [Fact]
+    public void FiltroQuaseImpossivelGeraMenosJogos()
+    {
+        ResultadoGeracao resultado = Gerar(new ParametrosGeracao(
+            100, 15, EstrategiaGeracao.Aleatoria, [], [2, 4, 6, 8, 10, 12, 14, 16], Limite(TipoPerfil.Pares, null, 2)));
+
+        Assert.Equal(6, resultado.Jogos.Count);
+        Assert.Equal(100, resultado.JogosPedidos);
+        Assert.Null(resultado.CombinacoesPossiveis);
+    }
+
+    /// <summary>
+    /// Sem filtros, o resultado não marca filtros nem quantidade pedida.
+    /// </summary>
+    [Fact]
+    public void SemFiltrosNaoMarcaFiltros()
+    {
+        ResultadoGeracao resultado = Gerar(new ParametrosGeracao(10, 15, EstrategiaGeracao.Aleatoria, [], []));
+
+        Assert.False(resultado.ComFiltros);
+        Assert.Null(resultado.JogosPedidos);
+    }
+
+    /// <summary>
+    /// Cria filtros com um único limite.
+    /// </summary>
+    /// <param name="tipo">Perfil limitado.</param>
+    /// <param name="minimo">Mínimo.</param>
+    /// <param name="maximo">Máximo.</param>
+    /// <returns>Os filtros.</returns>
+    private static FiltrosGeracao Limite(TipoPerfil tipo, int? minimo, int? maximo)
+    {
+        return new FiltrosGeracao([new LimitePerfil(tipo, minimo, maximo)], null);
+    }
+
+    /// <summary>
+    /// Cria parâmetros de 10 jogos aleatórios, sem fixas nem excluídas, com os filtros.
+    /// </summary>
+    /// <param name="dezenasPorJogo">Dezenas de cada jogo.</param>
+    /// <param name="filtros">Filtros da geração.</param>
+    /// <returns>Os parâmetros.</returns>
+    private static ParametrosGeracao ComFiltros(int dezenasPorJogo, FiltrosGeracao filtros)
+    {
+        return new ParametrosGeracao(10, dezenasPorJogo, EstrategiaGeracao.Aleatoria, [], [], filtros);
+    }
+
+    /// <summary>
     /// Gera com um aleatório de semente fixa e as estatísticas de teste.
     /// </summary>
     /// <param name="parametros">Parâmetros da geração.</param>
     /// <returns>Resultado da geração.</returns>
     private static ResultadoGeracao Gerar(ParametrosGeracao parametros)
     {
-        return new GeradorJogos(new Random(7)).Gerar(parametros, Estatisticas);
+        return new GeradorJogos(new Random(7)).Gerar(parametros, Estatisticas, UltimoResultado);
     }
 }
