@@ -17,6 +17,10 @@ if (Test-Path $publicacao) { Remove-Item $publicacao -Recurse -Force }
 dotnet publish (Join-Path $raiz 'src\Lotofacil.Web') -c Release -r win-x64 --self-contained true -p:Distribuicao=true -o $publicacao
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao publicar o app.' }
 
+# Sem o script do Blazor, as páginas do app instalado abrem, mas nenhum botão responde.
+$scriptBlazor = Join-Path $publicacao 'wwwroot\_framework\blazor.web.js'
+if (-not (Test-Path $scriptBlazor)) { throw "A publicação não tem o script do Blazor: $scriptBlazor" }
+
 $compilador = @(
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",

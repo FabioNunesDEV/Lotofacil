@@ -9,9 +9,12 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
-  <!-- Na geração do instalador (-p:Distribuicao=true), o app abre sem janela de console. -->
+  <!--
+    Na geração do instalador (-p:Distribuicao=true), o app abre sem janela de console. O OutputType continua Exe:
+    com WinExe o SDK deixa o _framework/blazor.web.js fora da publicação e as páginas perdem a interatividade.
+  -->
   <PropertyGroup Condition="'$(Distribuicao)' == 'true'">
-    <OutputType>WinExe</OutputType>
+    <_UseWindowsGraphicalUserInterface>true</_UseWindowsGraphicalUserInterface>
   </PropertyGroup>
 
   <!-- O Windows Forms só serve à bandeja; sem os using globais, Color e Size continuam sendo os do MudBlazor. -->
