@@ -68,9 +68,17 @@ Sistema **local** para apoiar a escolha de dezenas da Lotofácil (loteria federa
   jogos comuns em Meus jogos, criados ao salvar e, a cada atualização/importação e na inicialização, até o próximo
   concurso, preenchendo concursos pulados mesmo já sorteados (única exceção à regra de concurso futuro), antes do
   aviso de jogos premiados. Remover desativa (não apaga) e mantém os jogos já criados, com a marca do nome.
+- Distribuição: instalador para Windows 64 bits (Inno Setup), só para o usuário (sem administrador), com o .NET
+  incluído. O assistente pergunta a pasta do programa, a pasta dos dados (base `lotofacil.db` e subpasta `log`) e o
+  atalho na Área de trabalho, e grava as pastas em `appsettings.Production.json`. Reinstalar mantém pastas e dados;
+  desinstalar apaga sempre os dados do app (só a base e o log, nunca outros arquivos da pasta). Instalado, o app roda
+  sem console, abre o navegador e fica na bandeja ("Abrir o Lotofácil"/"Sair"), uma instância por usuário; em
+  `Development` tudo continua como antes. Ícone próprio, sem a marca da Caixa.
 
 ## Stack
 - .NET 10, C#, Blazor Server com MudBlazor. Roda apenas em `localhost`.
+- `Lotofacil.Web` e os projetos de teste usam o alvo `net10.0-windows`: o Windows Forms serve só ao ícone da bandeja e
+  às mensagens do app instalado (`AreaDeTrabalho/`), sem os `using` globais dele.
 - **Sem** controllers e **sem** minimal API. A interface usa o próprio circuito SignalR do
   Blazor Server: componentes chamam serviços via injeção de dependência. Não criar Hubs próprios.
 - Entity Framework Core com SQLite (arquivo local). O banco é apenas repositório: sem regra de
@@ -82,6 +90,9 @@ Autorizadas:
 - `Microsoft.EntityFrameworkCore.Sqlite` (e ferramentas do EF Core para migrations)
 - Log: `Serilog.Extensions.Logging`, `Serilog.Sinks.File` (somente erros, em arquivo na pasta `log`)
 - Testes: `xunit` (`xunit.v3`, executado pela Microsoft.Testing.Platform), `NSubstitute`, `bunit`
+
+Ferramentas fora do código (instaladas na máquina de quem gera o instalador, não são pacotes):
+- Inno Setup 6, para gerar o instalador (`instalador/gerar-instalador.ps1`).
 
 Regras:
 - **Nunca** adicionar pacote fora desta lista sem pedir autorização e explicar o motivo.
@@ -96,7 +107,7 @@ Arquitetura limpa, enxuta. Projetos:
 | `Lotofacil.Dominio` | Entidades, regras de negócio, interfaces (repositórios, fonte de resultados) | nada |
 | `Lotofacil.Aplicacao` | Casos de uso / serviços que orquestram o domínio | Dominio |
 | `Lotofacil.Infraestrutura` | EF Core/SQLite, cliente da API da Caixa, implementações das interfaces | Dominio, Aplicacao |
-| `Lotofacil.Web` | Blazor Server + MudBlazor, composição da injeção de dependência | Dominio (somente leitura dos tipos), Aplicacao, Infraestrutura |
+| `Lotofacil.Web` | Blazor Server + MudBlazor, composição da injeção de dependência, execução do app instalado (bandeja) | Dominio (somente leitura dos tipos), Aplicacao, Infraestrutura |
 | `Lotofacil.Testes.Unidade` | Testes de unidade (Dominio, Aplicacao, componentes com bUnit) | — |
 | `Lotofacil.Testes.Integracao` | Testes com SQLite em memória e cliente HTTP falso | — |
 

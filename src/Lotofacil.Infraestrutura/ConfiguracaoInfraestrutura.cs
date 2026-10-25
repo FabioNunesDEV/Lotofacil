@@ -8,6 +8,7 @@ using Lotofacil.Dominio.Jogos;
 using Lotofacil.Dominio.Teimosinhas;
 using Lotofacil.Infraestrutura.BancoDados;
 using Lotofacil.Infraestrutura.Caixa;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -50,7 +51,7 @@ public static class ConfiguracaoInfraestrutura
     }
 
     /// <summary>
-    /// Cria o arquivo da base, se ainda não existir, e aplica as migrations pendentes.
+    /// Cria a pasta e o arquivo da base, se ainda não existirem, e aplica as migrations pendentes.
     /// </summary>
     /// <param name="provedor">Provedor de serviços já montado.</param>
     /// <param name="cancelamento">Sinal de cancelamento.</param>
@@ -61,6 +62,14 @@ public static class ConfiguracaoInfraestrutura
     {
         IDbContextFactory<LotofacilContexto> fabrica = provedor.GetRequiredService<IDbContextFactory<LotofacilContexto>>();
         await using LotofacilContexto contexto = await fabrica.CreateDbContextAsync(cancelamento);
+
+        // O SQLite cria o arquivo, mas não a pasta escolhida na instalação.
+        string arquivo = new SqliteConnectionStringBuilder(contexto.Database.GetConnectionString()).DataSource;
+        string? pasta = Path.GetDirectoryName(Path.GetFullPath(arquivo));
+        if (!string.IsNullOrEmpty(pasta))
+        {
+            Directory.CreateDirectory(pasta);
+        }
 
         await contexto.Database.MigrateAsync(cancelamento);
     }
