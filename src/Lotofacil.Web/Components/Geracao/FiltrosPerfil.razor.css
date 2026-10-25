@@ -14,7 +14,19 @@
 }
 
 .rotulo-filtro {
+    grid-row: 1;
+    grid-column: 1;
     font-size: 14px;
+}
+
+/* A explicação ocupa a linha toda, embaixo do nome e dos campos, para não espremer em coluna estreita. */
+.explicacao-filtro {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    margin-top: -4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--mud-palette-text-secondary);
 }
 
 ::deep .dica-filtro {

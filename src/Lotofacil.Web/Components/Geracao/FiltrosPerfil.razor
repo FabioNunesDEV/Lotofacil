@@ -7,13 +7,15 @@
             </div>
         </TitleContent>
         <ChildContent>
-            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-2 aviso-filtros">@AvisoFiltros</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block aviso-filtros">@AvisoFiltros</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-2 instrucao-filtros">@FormatacaoGeracao.InstrucaoFiltros</MudText>
 
             @foreach (TipoPerfil tipo in Enum.GetValues<TipoPerfil>())
             {
                 LimitePerfil? limite = this.Limite(tipo);
                 <div class="linha-filtro" data-perfil="@tipo">
                     <span class="rotulo-filtro">@FormatacaoGeracao.RotuloFiltro(tipo, this.UltimoConcurso)</span>
+                    <span class="explicacao-filtro">@this.Explicacao(tipo)</span>
                     <MudNumericField T="int?" Value="limite?.Minimo" ValueChanged="valor => this.AlterarMinimoAsync(tipo, valor)"
                                      Label="Mín." Variant="Variant.Outlined" Margin="Margin.Dense" HideSpinButtons="true"
                                      Min="FiltrosGeracao.MenorLimite(tipo, this.DezenasPorJogo)"

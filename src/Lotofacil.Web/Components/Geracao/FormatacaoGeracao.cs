@@ -16,6 +16,11 @@ namespace Lotofacil.Web.Components.Geracao;
 public static class FormatacaoGeracao
 {
     /// <summary>
+    /// Frase do topo da seção de filtros, abaixo do aviso.
+    /// </summary>
+    public const string InstrucaoFiltros = "Mín. e Máx.: quantas dezenas do jogo entram em cada grupo. Deixe vazio para não limitar.";
+
+    /// <summary>
     /// Nome da estratégia exibido na lista de opções.
     /// </summary>
     /// <param name="estrategia">Estratégia.</param>
@@ -166,6 +171,41 @@ public static class FormatacaoGeracao
             TipoPerfil.Repetidas => $"Repetidas do {ultimoConcurso}",
             _ => "Na moldura",
         };
+    }
+
+    /// <summary>
+    /// Explicação exibida embaixo do nome de um filtro.
+    /// </summary>
+    /// <param name="tipo">Perfil.</param>
+    /// <param name="ultimoConcurso">Número do último concurso gravado, base das repetidas.</param>
+    /// <param name="dezenasPorJogo">Dezenas por jogo, que definem a menor e a maior soma.</param>
+    /// <returns>Explicação (ex.: "12 pares no volante").</returns>
+    public static string ExplicacaoFiltro(TipoPerfil tipo, int ultimoConcurso, int dezenasPorJogo)
+    {
+        return tipo switch
+        {
+            TipoPerfil.Pares => "12 pares no volante",
+            TipoPerfil.Primos => "02 03 05 07 11 13 17 19 23",
+            TipoPerfil.MultiplosDe3 => "03 06 09 12 15 18 21 24",
+            TipoPerfil.Fibonacci => "01 02 03 05 08 13 21",
+            TipoPerfil.Soma => $"Soma das dezenas do jogo (de {FiltrosGeracao.MenorLimite(tipo, dezenasPorJogo)} a {FiltrosGeracao.MaiorLimite(tipo, dezenasPorJogo)})",
+            TipoPerfil.Repetidas => $"Dezenas do jogo que saíram no {ultimoConcurso}",
+            _ => "As 16 dezenas da borda do volante (miolo: 07 08 09 12 13 14 17 18 19)",
+        };
+    }
+
+    /// <summary>
+    /// Valor mais comum do perfil entre as combinações de 15 dezenas, para completar a explicação.
+    /// </summary>
+    /// <param name="tipo">Perfil.</param>
+    /// <returns>Texto " · mais comum: 7 ou 8 (57%)" ou, na soma, " · mais comum: 180 a 209 (59%)".</returns>
+    public static string MaisComum(TipoPerfil tipo)
+    {
+        (int minimo, int maximo) = DistribuicaoTeorica.FaixaMaisComum(tipo);
+        decimal percentual = DistribuicaoTeorica.Percentual(tipo, minimo, maximo);
+        string separador = tipo == TipoPerfil.Soma ? "a" : "ou";
+
+        return $" · mais comum: {minimo} {separador} {maximo} ({Math.Round(percentual):0}%)";
     }
 
     /// <summary>

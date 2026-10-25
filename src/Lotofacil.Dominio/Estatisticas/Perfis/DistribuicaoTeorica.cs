@@ -10,6 +10,11 @@ namespace Lotofacil.Dominio.Estatisticas.Perfis;
 public static class DistribuicaoTeorica
 {
     /// <summary>
+    /// Largura das faixas de soma, a partir da menor soma possível.
+    /// </summary>
+    public const int LarguraFaixaSoma = 15;
+
+    /// <summary>
     /// Quantidade de combinações de 15 dezenas entre 25.
     /// </summary>
     public static readonly int TotalCombinacoes =
@@ -66,6 +71,37 @@ public static class DistribuicaoTeorica
     public static int MaiorValor(TipoPerfil tipo)
     {
         return Array.FindLastIndex(CombinacoesPorValor[tipo], combinacoes => combinacoes > 0);
+    }
+
+    /// <summary>
+    /// Par de valores vizinhos com mais combinações; na soma, par de faixas vizinhas de <see cref="LarguraFaixaSoma"/>.
+    /// </summary>
+    /// <param name="tipo">Perfil.</param>
+    /// <returns>Menor e maior valor do par; no empate, o par de menor valor.</returns>
+    public static (int Minimo, int Maximo) FaixaMaisComum(TipoPerfil tipo)
+    {
+        int menor = MenorValor(tipo);
+        int maior = MaiorValor(tipo);
+        int largura = tipo == TipoPerfil.Soma ? LarguraFaixaSoma : 1;
+        int quantidadeFaixas = (maior - menor + 1) / largura;
+
+        (int Minimo, int Maximo) maisComum = (menor, menor);
+        decimal maiorPercentual = -1m;
+        for (int posicao = 0; posicao < quantidadeFaixas - 1; posicao++)
+        {
+            int minimo = menor + (posicao * largura);
+
+            // O último par vai até o maior valor, como a última faixa da soma (255–270).
+            int maximo = posicao == quantidadeFaixas - 2 ? maior : minimo + (2 * largura) - 1;
+            decimal percentual = Percentual(tipo, minimo, maximo);
+            if (percentual > maiorPercentual)
+            {
+                maisComum = (minimo, maximo);
+                maiorPercentual = percentual;
+            }
+        }
+
+        return maisComum;
     }
 
     /// <summary>

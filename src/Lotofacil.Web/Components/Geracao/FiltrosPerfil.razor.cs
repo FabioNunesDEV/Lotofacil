@@ -65,6 +65,18 @@ public partial class FiltrosPerfil
     }
 
     /// <summary>
+    /// Explicação do filtro, com o valor mais comum só em jogos de 15 dezenas.
+    /// </summary>
+    /// <param name="tipo">Perfil.</param>
+    /// <returns>Texto exibido embaixo do nome do filtro.</returns>
+    private string Explicacao(TipoPerfil tipo)
+    {
+        string explicacao = FormatacaoGeracao.ExplicacaoFiltro(tipo, this.UltimoConcurso, this.DezenasPorJogo);
+
+        return this.DezenasPorJogo == RegrasLotofacil.DezenasSorteadas ? explicacao + FormatacaoGeracao.MaisComum(tipo) : explicacao;
+    }
+
+    /// <summary>
     /// Troca o mínimo do perfil, mantendo o máximo.
     /// </summary>
     /// <param name="tipo">Perfil.</param>
