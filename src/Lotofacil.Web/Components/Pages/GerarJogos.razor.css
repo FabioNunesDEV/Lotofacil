@@ -17,11 +17,13 @@
     gap: 12px;
 }
 
+/* Dezenas na largura da linha e chips de perfil embaixo delas: lado a lado, os chips espremiam as dezenas.
+   Com bolas de 28 px, as 15 dezenas cabem numa linha a partir de 1280 px de tela. */
 .linha-gerado {
     display: grid;
-    grid-template-columns: 28px 1fr auto;
+    grid-template-columns: 24px 1fr;
     align-items: center;
-    gap: 12px;
+    gap: 6px 12px;
     padding: 8px;
     border-bottom: 1px solid var(--mud-palette-lines-default);
 }
@@ -31,6 +33,7 @@
 }
 
 .numero-jogo {
+    grid-row: span 2;
     color: var(--mud-palette-text-secondary);
     font-variant-numeric: tabular-nums;
 }
@@ -44,8 +47,8 @@
 .bola {
     display: inline-grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: var(--mud-palette-background-gray);
     color: var(--mud-palette-text-primary);
@@ -60,9 +63,13 @@
 }
 
 .perfil {
+    grid-column: 2;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: flex-end;
     gap: 4px;
+}
+
+.perfil ::deep .botao-remover {
+    margin-left: auto;
 }
