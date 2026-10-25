@@ -134,6 +134,34 @@ public class FormatacaoGeracaoTestes
     }
 
     /// <summary>
+    /// Explicações dos filtros com o mais comum, como aparecem com 15 dezenas.
+    /// </summary>
+    [Fact]
+    public void ExplicacoesDosFiltrosCom15Dezenas()
+    {
+        Assert.Equal(
+            [
+                "12 pares no volante · mais comum: 7 ou 8 (57%)",
+                "02 03 05 07 11 13 17 19 23 · mais comum: 5 ou 6 (60%)",
+                "03 06 09 12 15 18 21 24 · mais comum: 4 ou 5 (60%)",
+                "01 02 03 05 08 13 21 · mais comum: 4 ou 5 (62%)",
+                "Soma das dezenas do jogo (de 120 a 270) · mais comum: 180 a 209 (59%)",
+                "Dezenas do jogo que saíram no 3813 · mais comum: 8 ou 9 (56%)",
+                "As 16 dezenas da borda do volante (miolo: 07 08 09 12 13 14 17 18 19) · mais comum: 9 ou 10 (60%)",
+            ],
+            Enum.GetValues<TipoPerfil>().Select(tipo => FormatacaoGeracao.ExplicacaoFiltro(tipo, 3813, 15) + FormatacaoGeracao.MaisComum(tipo)));
+    }
+
+    /// <summary>
+    /// A soma possível acompanha as dezenas por jogo: de 171 a 297 com 18 dezenas.
+    /// </summary>
+    [Fact]
+    public void ExplicacaoDaSomaCom18Dezenas()
+    {
+        Assert.Equal("Soma das dezenas do jogo (de 171 a 297)", FormatacaoGeracao.ExplicacaoFiltro(TipoPerfil.Soma, 3813, 18));
+    }
+
+    /// <summary>
     /// Dica de chance teórica para 15 dezenas; um lado vazio vai até o extremo do perfil.
     /// </summary>
     [Fact]

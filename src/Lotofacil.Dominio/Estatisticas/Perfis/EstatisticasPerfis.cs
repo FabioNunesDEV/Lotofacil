@@ -17,11 +17,6 @@ public static class EstatisticasPerfis
     private const decimal ChanceMinimaDaLinha = 1m;
 
     /// <summary>
-    /// Largura das faixas de soma.
-    /// </summary>
-    private const int LarguraFaixaSoma = 15;
-
-    /// <summary>
     /// Calcula os 7 perfis; lança <see cref="ArgumentException"/> com histórico vazio ou janela menor que 1.
     /// </summary>
     /// <param name="historico">Todos os concursos da base, em qualquer ordem.</param>
@@ -100,7 +95,7 @@ public static class EstatisticasPerfis
     {
         int menor = DistribuicaoTeorica.MenorValor(tipo);
         int maior = DistribuicaoTeorica.MaiorValor(tipo);
-        int largura = tipo == TipoPerfil.Soma ? LarguraFaixaSoma : 1;
+        int largura = tipo == TipoPerfil.Soma ? DistribuicaoTeorica.LarguraFaixaSoma : 1;
         int quantidade = (maior - menor + 1) / largura;
 
         return Enumerable.Range(0, quantidade)

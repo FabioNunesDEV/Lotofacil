@@ -52,6 +52,48 @@ public class FiltrosPerfilTestes : ComponenteTesteBase
     }
 
     /// <summary>
+    /// Com 15 dezenas, a frase do topo e as explicações com o valor mais comum aparecem sem ligar filtros.
+    /// </summary>
+    [Fact]
+    public void ExplicacoesCom15Dezenas()
+    {
+        IRenderedComponent<FiltrosPerfil> secao = this.Renderizar(FiltrosGeracao.Nenhum, 15);
+        Abrir(secao);
+
+        Assert.Equal(
+            "Mín. e Máx.: quantas dezenas do jogo entram em cada grupo. Deixe vazio para não limitar.",
+            secao.Find(".instrucao-filtros").TextContent.Trim());
+        Assert.Equal(
+            [
+                "12 pares no volante · mais comum: 7 ou 8 (57%)",
+                "02 03 05 07 11 13 17 19 23 · mais comum: 5 ou 6 (60%)",
+                "03 06 09 12 15 18 21 24 · mais comum: 4 ou 5 (60%)",
+                "01 02 03 05 08 13 21 · mais comum: 4 ou 5 (62%)",
+                "Soma das dezenas do jogo (de 120 a 270) · mais comum: 180 a 209 (59%)",
+                "Dezenas do jogo que saíram no 3810 · mais comum: 8 ou 9 (56%)",
+                "As 16 dezenas da borda do volante (miolo: 07 08 09 12 13 14 17 18 19) · mais comum: 9 ou 10 (60%)",
+            ],
+            secao.FindAll(".explicacao-filtro").Select(explicacao => explicacao.TextContent.Trim()));
+        Assert.Equal("Nenhum filtro ligado", secao.Find(".resumo-filtros").TextContent.Trim());
+    }
+
+    /// <summary>
+    /// Com 18 dezenas, as explicações aparecem sem o valor mais comum, e a soma vai de 171 a 297.
+    /// </summary>
+    [Fact]
+    public void ExplicacoesSemMaisComumCom18Dezenas()
+    {
+        IRenderedComponent<FiltrosPerfil> secao = this.Renderizar(FiltrosGeracao.Nenhum, 18);
+        Abrir(secao);
+
+        Assert.Equal("12 pares no volante", Linha(secao, TipoPerfil.Pares).QuerySelector(".explicacao-filtro")!.TextContent.Trim());
+        Assert.Equal(
+            "Soma das dezenas do jogo (de 171 a 297)",
+            Linha(secao, TipoPerfil.Soma).QuerySelector(".explicacao-filtro")!.TextContent.Trim());
+        Assert.DoesNotContain(secao.FindAll(".explicacao-filtro"), explicacao => explicacao.TextContent.Contains("mais comum"));
+    }
+
+    /// <summary>
     /// Preencher o mínimo e o máximo avisa os novos limites; com 15 dezenas aparece a dica de chance teórica.
     /// </summary>
     [Fact]

@@ -89,4 +89,27 @@ public class DistribuicaoTeoricaTestes
         Assert.Equal(7, DistribuicaoTeorica.MaiorValor(TipoPerfil.Fibonacci));
         Assert.Equal(0, DistribuicaoTeorica.Combinacoes(TipoPerfil.Pares, 13));
     }
+
+    /// <summary>
+    /// A faixa mais comum é o par de valores vizinhos (na soma, de faixas de 15) com mais combinações.
+    /// </summary>
+    /// <param name="tipo">Perfil.</param>
+    /// <param name="minimo">Menor valor esperado.</param>
+    /// <param name="maximo">Maior valor esperado.</param>
+    /// <param name="percentual">Percentual esperado, arredondado para inteiro.</param>
+    [Theory]
+    [InlineData(TipoPerfil.Pares, 7, 8, 57)]
+    [InlineData(TipoPerfil.Primos, 5, 6, 60)]
+    [InlineData(TipoPerfil.MultiplosDe3, 4, 5, 60)]
+    [InlineData(TipoPerfil.Fibonacci, 4, 5, 62)]
+    [InlineData(TipoPerfil.Soma, 180, 209, 59)]
+    [InlineData(TipoPerfil.Repetidas, 8, 9, 56)]
+    [InlineData(TipoPerfil.Moldura, 9, 10, 60)]
+    public void FaixaMaisComum(TipoPerfil tipo, int minimo, int maximo, int percentual)
+    {
+        (int Minimo, int Maximo) faixa = DistribuicaoTeorica.FaixaMaisComum(tipo);
+
+        Assert.Equal((minimo, maximo), faixa);
+        Assert.Equal(percentual, Math.Round(DistribuicaoTeorica.Percentual(tipo, faixa.Minimo, faixa.Maximo)));
+    }
 }
