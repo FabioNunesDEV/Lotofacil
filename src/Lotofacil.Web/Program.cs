@@ -13,22 +13,39 @@ using Lotofacil.Dominio.Configuracoes;
 using Lotofacil.Infraestrutura;
 using Lotofacil.Infraestrutura.Caixa;
 using Lotofacil.Web;
+using Lotofacil.Web.AreaDeTrabalho;
 using Lotofacil.Web.Components;
 using MudBlazor.Services;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+bool areaDeTrabalho = ExecucaoAreaDeTrabalho.Ativa();
 
-string pastaLog = Path.Combine(builder.Environment.ContentRootPath, builder.Configuration["Log:Pasta"] ?? "log");
+// Instalado, o appsettings e o wwwroot ficam na pasta do executável, qualquer que seja o diretório atual.
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = areaDeTrabalho ? AppContext.BaseDirectory : null,
+});
+string endereco = builder.Configuration["Kestrel:Endpoints:Http:Url"] ?? "http://localhost:5080";
+
+using InstanciaUnica? instancia = areaDeTrabalho ? new InstanciaUnica() : null;
+if (instancia is { Primeira: false })
+{
+    Navegador.Abrir(endereco);
+    return;
+}
+
+string pastaLog = CaminhoConfigurado.Resolver(builder.Environment.ContentRootPath, builder.Configuration["Log:Pasta"], "log");
 builder.Logging.AddSerilog(ConfiguracaoLog.Criar(pastaLog).CreateLogger(), dispose: true);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
 
-string caminhoBanco = Path.Combine(
+string caminhoBanco = CaminhoConfigurado.Resolver(
     builder.Environment.ContentRootPath,
-    builder.Configuration["BancoDados:Arquivo"] ?? "lotofacil.db");
+    builder.Configuration["BancoDados:Arquivo"],
+    "lotofacil.db");
 var opcoesFonte = new OpcoesFonteResultados(
     builder.Configuration["FonteResultados:UrlBase"] ?? "https://servicebus3.caixa.gov.br/portaldeloterias",
     builder.Configuration.GetValue("FonteResultados:TempoLimiteSegundos", 60),
@@ -66,8 +83,20 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-await app.Services.InicializarBancoDadosAsync();
-await app.Services.GetRequiredService<ConfiguracoesServico>().CarregarAsync();
-await app.Services.GetRequiredService<TeimosinhaServico>().CriarJogosAsync();
+if (areaDeTrabalho)
+{
+    await ExecucaoAreaDeTrabalho.ExecutarAsync(app, () => InicializarAsync(app), endereco);
+}
+else
+{
+    await InicializarAsync(app);
+    app.Run();
+}
 
-app.Run();
+// Prepara a base e os serviços antes de aceitar conexões.
+static async Task InicializarAsync(WebApplication app)
+{
+    await app.Services.InicializarBancoDadosAsync();
+    await app.Services.GetRequiredService<ConfiguracoesServico>().CarregarAsync();
+    await app.Services.GetRequiredService<TeimosinhaServico>().CriarJogosAsync();
+}

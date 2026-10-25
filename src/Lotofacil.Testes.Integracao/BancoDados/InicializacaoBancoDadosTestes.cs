@@ -52,6 +52,22 @@ public sealed class InicializacaoBancoDadosTestes : IDisposable
     }
 
     /// <summary>
+    /// Com um caminho absoluto numa pasta que ainda não existe, a pasta é criada e a base fica vazia nela.
+    /// </summary>
+    /// <returns>Tarefa do teste.</returns>
+    [Fact]
+    public async Task CriaAPastaDaBaseQuandoNaoExiste()
+    {
+        Assert.False(Directory.Exists(this.pasta));
+
+        await using ServiceProvider execucao = await this.IniciarAsync();
+
+        Assert.True(File.Exists(this.CaminhoBanco));
+        IConcursoRepositorio repositorio = execucao.GetRequiredService<IConcursoRepositorio>();
+        Assert.Equal(0, await repositorio.ContarAsync(TestContext.Current.CancellationToken));
+    }
+
+    /// <summary>
     /// Remove a pasta temporária, liberando antes o arquivo mantido aberto pelo pool de conexões do SQLite.
     /// </summary>
     public void Dispose()
