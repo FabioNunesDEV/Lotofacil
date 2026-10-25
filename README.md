@@ -6,7 +6,8 @@ guarda jogos e confere os prêmios. Estatística não aumenta a chance de acerto
 
 ## Instalar (Windows 64 bits)
 
-1. Execute `Lotofacil-Setup-<versão>.exe`. Não é preciso instalar o .NET nem ter senha de administrador.
+1. Execute `Lotofacil-Setup-<versão>.exe`. Não é preciso instalar o .NET nem ter senha de administrador. O instalador
+   não fica no repositório: gere-o como em [Gerar o instalador](#gerar-o-instalador).
 2. O Windows pode mostrar "O Windows protegeu o computador", porque o instalador não tem assinatura digital. Clique em
    **Mais informações** e depois em **Executar assim mesmo**.
 3. No assistente, escolha:
